@@ -57,15 +57,6 @@ D['3'] = {
           'LU': {'Quadrant':'0', 'Direction':'H'}
           }
 
-L = {
-     '0': [0,999],
-     '1': [0,499,999],
-     '2': [0,249,499,749,999],
-     '3': [0,124,249,374,499,624,749,874,999],
-     '4': [0,62,124,186,249,311,374,436,499,561,624,686,749,811,874,936,999],
-     '5': [0,31,62,93,124,155,186,217,249,]
-     }
-
 
 class Node():
     ROOT = 0
@@ -78,6 +69,8 @@ class Node():
         self.imsize = imageSize
         self.parent = parent
         self.children = [None, None, None, None]
+        self.has_children = False
+
 #        self.maxdepth = 0
         if parent == None:
             self.depth = 0
@@ -99,7 +92,6 @@ class Node():
 ###        self.j = p4.y / dy
 
 
-        self.has_children = False
 
             
         if self.parent == None:
@@ -138,8 +130,15 @@ class Node():
         rects.append((cMid12,p2,cMid23,cMid24)) #NE child
         rects.append((cMid14,cMid24,cMid34,p4)) #SW child
         rects.append((cMid24,cMid23,p3,cMid34)) #SE child
+
+#        if p1.x == 0 and p2.x == 31 and p1.y == 467 and p3.y == 499:
+#            self.printRect()
+#            print self.division_criterion(rects[0], self.inImage, self.outImage),self.division_criterion(rects[1], self.inImage, self.outImage),self.division_criterion(rects[2], self.inImage, self.outImage),self.division_criterion(rects[3], self.inImage, self.outImage)
+#            print [ has_inclusions(self.inImage,p1,p2,p3,p4)]
         for n in range(len(rects)):
             span = self.division_criterion(rects[n], self.inImage, self.outImage)
+#            pi1,pi2,pi3,pi4 = self.children[n].rect
+
             if span == True:
                 self.children[n] = self.getinstance(rects[n], self.inImage, self.outImage,imageSize)
                 self.children[n].index = str(convert_to_base_4(tomorton(self.children[n].i, self.children[n].j)))
@@ -150,18 +149,19 @@ class Node():
                 self.children[n].subdivide()
                 
         
-        if self.children != [None,None,None,None]:# and root.parent != None:
-           self.has_children = True
-        else:
-            self.has_children = False       
-
-#        if ( self.children[0].children != [None,None,None,None] or
-#             self.children[1].children != [None,None,None,None] or
-#             self.children[2].children != [None,None,None,None] or
-#             self.children[3].children != [None,None,None,None] ):
-#            self.has_grandchildren = True
+#        if self.children == [None,None,None,None]:# and root.parent != None:
+#           self.has_children = False
+#        elif self.children != [None,None,None,None]:
+#            self.has_children = True       
 #        else:
-#            self.has_grandchildren = False
+#            print 'why here?', self.children
+        if ( self.children[0] != None and
+             self.children[1] != None and
+             self.children[2] != None and
+             self.children[3] != None ):
+            self.has_children = True
+        else:
+            self.has_children = False
     def divideOnce(self): 
     # this method divides once a given node
         
@@ -188,11 +188,18 @@ class Node():
                 if diff_level != 0:
                     self.children[n].index = '0'*diff_level + self.children[n].index 
         
-        if self.children != [None,None,None,None]:# and root.parent != None:
-           self.has_children = True
+#        if self.children != [None,None,None,None]:# and root.parent != None:
+#           self.has_children = True
+#        else:
+#            self.has_children = False               
+
+        if ( self.children[0] != None and
+             self.children[1] != None and
+             self.children[2] != None and
+             self.children[3] != None ):
+                self.has_children = True
         else:
-            self.has_children = False               
-                
+                self.has_children = False        
     def printRect(self):
         print [self.rect[0].x, self.rect[1].x, self.rect[0].y, self.rect[3].y]
         
@@ -271,6 +278,8 @@ class QuadTree(Node):
 #        
 
     def neighbors_of_SE(self,root,masterNode):
+        p1,p2,p3,p4 = root.rect
+        
         # looking West:
         west_sibling = root.parent.children[2]
         if west_sibling.has_children:
@@ -297,10 +306,13 @@ class QuadTree(Node):
                     if east_neighbor.children[0].has_children or east_neighbor.children[2].has_children:
                         print ' neighbors of SE: east'
                         root.divideOnce()
+
         # looking South:
         # look up index of South neighbor
         if p4.y < root.imsize[0]-1:
             south_neigh_index = str(find_neighbor_of(root.index,'D'))
+            
+            
             # checking to see if the south neighbor exists or is a ghost
             if it_exists(south_neigh_index,masterNode):
                 south_neighbor = get_node(root, root.index, south_neigh_index)
@@ -311,6 +323,8 @@ class QuadTree(Node):
   
         
     def neighbors_of_SW(self,root,masterNode):
+        p1,p2,p3,p4 = root.rect
+        
         # looking North:
         north_sibling = root.parent.children[0]
         if north_sibling.has_children:
@@ -327,7 +341,7 @@ class QuadTree(Node):
                 print ' neighbors of SW: east'
                 root.divideOnce()
          
-        p1,p2,p3,p4 = root.rect
+        
         
         # looking West
         # look up index of West neighbor
@@ -355,6 +369,8 @@ class QuadTree(Node):
     
     def neighbors_of_NE(self,root,masterNode):
 
+        p1,p2,p3,p4 = root.rect
+        
         # looking West
         west_sibling = root.parent.children[0]
         if west_sibling.has_children:
@@ -370,7 +386,6 @@ class QuadTree(Node):
                 print ' neighbors of NE: south'
                 root.divideOnce()
           
-        p1,p2,p3,p4 = root.rect
               
         # looking East
         # look for East neighbor - on the right: R
@@ -398,7 +413,8 @@ class QuadTree(Node):
 
             
     def neighbors_of_NW(self,root,masterNode):
-        
+        p1,p2,p3,p4 = root.rect
+
         # looking East
         east_sibling = root.parent.children[1]
         if east_sibling.has_children:
@@ -410,11 +426,14 @@ class QuadTree(Node):
         south_sibling = root.parent.children[2]
 #        print south_sibling.index, root.index
         if south_sibling.has_children:
+#            print south_sibling.has_children, south_sibling.children
+#            south_sibling.printRect()
+#            if p1.x == 0 and p2.x == 31 and p1.y == 467 and p3.y == 499:
+#                has_inclusions(self.inImage, p1,p2,p3,p4)
             if south_sibling.children[0].has_children or south_sibling.children[1].has_children:
                 print ' neighbors of NW: south'
                 root.divideOnce()
 
-        p1,p2,p3,p4 = root.rect
         
         # looking West
         # look up West neighbor
@@ -441,50 +460,6 @@ class QuadTree(Node):
                         print ' neighbors of NW: north'
                         root.divideOnce()
         
-#####        # looking North
-#####        uncleNE = root.parent.parent.children[1]
-#####        
-#####        if uncleNE.has_children:
-#####            uncleNE_childSW = uncleNE.children[2]
-#####            if uncleNE_childSW.has_children:
-#####                
-#####                uncleNE_childSW_grandchildSE = uncleNE_childSW.children[3]
-#####                uncleNE_childSW_grandchildSW = uncleNE_childSW.children[2]
-#####                if (uncleNE_childSW_grandchildSE.has_children or
-#####                    uncleNE_childSW_grandchildSW.has_children):
-#####                        print 'dividing myself: looking North from NW child'
-#####                        root.children[0].divideOnce()
-#####
-#####        # looking South
-#####        if root.children[3].has_children:
-#####            nephew_NW = root.children[2].children[0]
-#####            nephew_NE = root.children[2].children[1]
-#####            
-#####            if nephew_NW.has_children or nephew_NE.has_children:
-#####                print 'dividing myself: looking South from NW child'
-#####                root.children[0].divideOnce()
-#####
-#####        # looking East
-#####        if root.children[1].has_children:
-#####            nephew_NW = root.children[1].children[0]
-#####            nephew_SW = root.children[1].children[2]
-#####            
-#####            if nephew_NW.has_children or nephew_SW.has_children:
-#####                print 'dividing myself: looking East from NW child'
-#####                root.children[0].divideOnce()
-#####                
-#####        # looking West
-#####        uncleSW = root.parent.parent.children[2]
-#####        if uncleSW.has_children:
-#####            uncleSW_childNE = uncleSW.children[1]
-#####            if uncleSW_childNE.has_children:
-#####                uncleSW_childNE_grandchildNE = uncleSW_childNE.children[1]
-#####                uncleSW_childNE_grandchildSE = uncleSW_childNE.children[3]
-#####                
-#####                if (uncleSW_childNE_grandchildNE.has_children or
-#####                    uncleSW_childNE_grandchildSE.has_children):
-#####                        print 'dividing myself: looking West from NW child'
-######                        root.children[0].divideOnce()
 
     def balance_tree(self,root,masterNode):
    
@@ -503,30 +478,6 @@ class QuadTree(Node):
                 self.neighbors_of_SW(root.children[2],masterNode)  
             if root.children[3].has_children == False:
                 self.neighbors_of_SE(root.children[3],masterNode)              
-#        if root.has_children == True:
-#             if root.children[1].has_children == False:# and str(root.children[1].index)[-1] == '1':
-#                 print root.children[1].index#, str(root.children[1].index)[-1] == '1'
-#                 print str(root.parent.children[1].index)[-1] 
-#                 self.neighbors_of_NE(root.children[1])
-            
-######        if ( root.has_children == True and 
-######             root.children[0].children != [None,None,None,None] 
-######             and root.children[1].children == [None,None,None,None] 
-######             and root.children[0].children[2].children != [None,None,None,None]  ):
-#######            print root.depth
-######            root.children[3].divideOnce()
-######            #for child in root.children:
-              #  print root.depth, root.children[2].children[2].parent
- #           if root.children[0].children == [None,None,None,None]    
-            # for SE child:
-###            root.printRect()
-###            print ' has children', root.children[2].i, root.children[2].j
-####            print morton_id(root.children[2].i, root.children[2].j)
-###            nr = tomorton(root.children[2].i, root.children[2].j)
-###            print 'and to base 4:', convert_to_base_4(nr)
-###            print 'left neighbor: ', find_neighbor_of(root.children[2].index,'L')
-###            print 'neighbor of 320:',find_neighbor_of(320,'LU')
-###            print  '======', get_node(root,find_neighbor_of(root.children[2].index,'L'))
         
         if root.children[0] != None:
             self.balance_tree(root.children[0],masterNode)
@@ -565,6 +516,7 @@ def balance_tree1(tree, root,masterNode):
 #            print root.index, root.depth
             
         if root.has_children == True:
+            
             if root.children[0].has_children == False:
                 tree.neighbors_of_NW(root.children[0],masterNode)
             if root.children[1].has_children == False:
@@ -823,10 +775,10 @@ def it_exists(index,masterNode):
             
 if __name__ == "__main__":
     print "Reading image in..."
-    #inputImage = sitk.ReadImage("sineh.png");
-    #outputImage = sitk.ReadImage("sineh.png");
-    inputImage = sitk.ReadImage((sys.argv[1]));
-    outputImage = sitk.ReadImage((sys.argv[1]));
+    inputImage = sitk.ReadImage("images/sineh.png");
+    outputImage = sitk.ReadImage("images/sineh.png");
+#    inputImage = sitk.ReadImage((sys.argv[1]));
+#    outputImage = sitk.ReadImage((sys.argv[1]));
 
 
     imageSize = inputImage.GetSize();
@@ -842,14 +794,21 @@ if __name__ == "__main__":
 
     rootNode = CNode(None,rect,inputImage,outputImage,imageSize)
     tree = CQuadTree(rootNode)
-    masterNode = rootNode
+    
+    masterNode = CNode(None,rect,inputImage,outputImage,imageSize)    
+    tree = CQuadTree(masterNode)
+#    masterNode = rootNode
 #    tree.balance_tree(rootNode,masterNode)
-#    balance_tree1(tree,rootNode,masterNode)
+    
+    
+    balance_tree1(tree,rootNode,masterNode)
+    print rootNode.children[2].children[0].children[0].children[0].has_children
 
+    print 'once again rebalancing'
+    
+    balance_tree1(tree,rootNode,masterNode)
 
-#    balance_tree1(tree,rootNode,masterNode)
-
-
+    print rootNode.children[2].children[0].children[0].children[0].has_children
     print 'writing the image out'
     
-    sitk.WriteImage(outputImage,"outSineh.png");
+    sitk.WriteImage(outputImage,"outSineh2.png");

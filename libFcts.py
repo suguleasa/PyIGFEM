@@ -168,13 +168,13 @@ def has_inclusions(image,p1,p2,p3,p4):
 	yHigh = p4.y
 	yLow = p1.y
 	areaElem = abs( (p4.y - p1.y) * (p2.x - p1.x))
-	nr_samples = int(log(PROB)/log ((areaElem - AREA_INCLUSION)/areaElem))
+	nr_samples = int(log(PROB)/log (abs(areaElem - AREA_INCLUSION)/areaElem))
 	
 	for i in range (1,nr_samples):
 		rx = random.randint(xLow,xHigh)
 		ry = random.randint(yLow,yHigh)
 		samplePixel = image.GetPixel(rx,ry,0)
-		if (0==is_in_same_bin(pxVal1,samplePixel)):
+		if (0 == is_in_same_bin(pxVal1,samplePixel)):
 			return True
 
 	return False
@@ -271,7 +271,7 @@ def log_search(image,bbegin,eend):
 		return mid
 
 ## case 1: 3:1 -- P1 the outsider
-def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4):
+def case_NW_polynomial_test(root,image,imageOut,p1,p2,p3,p4):
 	x_is_F_of_y = False;
 	L1 = log_search(image,p1,p2);
 	L4 = log_search(image,p1,p4);
@@ -282,7 +282,8 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4):
 		vecCoord.append(pt);
 		return vecCoord;
 		
-		
+#	root.printRect()
+	
 	# LINEAR POLYNOMIAL
 	# Step 1. Search for the interface along the 45 degree line
 	A = log_search(image,p1,p3);

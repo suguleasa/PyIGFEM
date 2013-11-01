@@ -8,6 +8,7 @@ import string
 from itertools import izip_longest
 import numpy
 
+allnodes = 0
 D = {}
 D['0'] = {
           'R': {'Quadrant':'1', 'Direction':'H'},
@@ -64,7 +65,7 @@ class Node():
     LEAF = 2
     MAX_DEPTH = 0
     
-    def __init__(self, parent, rect, inImage,outImage,imageSize):
+    def __init__(self, parent, rect, enrichNodes, inImage,outImage,imageSize):
 
         self.imsize = imageSize
         self.parent = parent
@@ -81,6 +82,7 @@ class Node():
                 Node.MAX_DEPTH = self.depth
                 
         self.rect = rect 
+        self.enrichNodes = enrichNodes 
         self.index = '-1'
         [p1,p2,p3,p4] = rect
         
@@ -140,7 +142,7 @@ class Node():
 #            pi1,pi2,pi3,pi4 = self.children[n].rect
 
             if span == True:
-                self.children[n] = self.getinstance(rects[n], self.inImage, self.outImage,imageSize)
+                self.children[n] = self.getinstance(rects[n], self.enrichNodes, self.inImage, self.outImage,imageSize)
                 self.children[n].index = str(convert_to_base_4(tomorton(self.children[n].i, self.children[n].j)))
                 diff_level = abs(len(self.children[n].index) - self.children[n].depth)
                 if diff_level != 0:
@@ -181,7 +183,7 @@ class Node():
         for n in range(len(rects)):
             span = self.division_criterionOnce(rects[n], self.inImage, self.outImage)
             if span == True:
-                self.children[n] = self.getinstance(rects[n], self.inImage, self.outImage,imageSize)
+                self.children[n] = self.getinstance(rects[n], self.enrichNodes, self.inImage, self.outImage,imageSize)
                 
                 self.children[n].index = str(convert_to_base_4(tomorton(self.children[n].i, self.children[n].j)))
                 diff_level = abs(len(self.children[n].index) - self.children[n].depth)
@@ -253,7 +255,28 @@ class QuadTree(Node):
 ##            if child != None:
 ##                self.traverse(child) # << recursion      
 ##    
+    def count_nodes(self,root):
+        
+#    allnodes = allnodes + 4
+        allnodes = 0
 
+#        for child in root.children:
+#            if child != None:
+#                allnodes += self.count_nodes(child)
+                
+        if root.has_children == False:
+            return 4 
+        if root.children[0] != None:
+            allnodes += self.count_nodes(root.children[0])
+        if root.children[1] != None:
+            allnodes += self.count_nodes(root.children[1])
+        if root.children[2] != None:
+            allnodes += self.count_nodes(root.children[2])
+        if root.children[3] != None:
+            allnodes += self.count_nodes(root.children[3])
+
+        return allnodes
+    
     def leveling(self,root):
         print root.depth        
         if root.parent == 0:
@@ -491,22 +514,8 @@ class QuadTree(Node):
 
 
 
-    def fringe(self,root):
-        result = []
-       # root.printRect()
-        
-        if root.children[0] != None:
-            result.extend(self.fringe(root.children[0]))
-        if root.children[1] != None:
-            result.extend(self.fringe(root.children[1]))
-        if root.children[2] != None:
-            result.extend(self.fringe(root.children[2]))
-        if root.children[3] != None:
-            result.extend(self.fringe(root.children[3]))
-        if not result:
-            result = [root.children]
-        return result
-    
+
+
 def balance_tree1(tree, root,masterNode):
    
         p1,p2,p3,p4 = root.rect
@@ -624,8 +633,8 @@ def get_node(root,my_ind,neigh_ind):
         
 class CNode(Node):
     
-    def getinstance(self,rect,inImage,outImage,imageSize):
-        return CNode(self,rect,inImage,outImage,imageSize)
+    def getinstance(self,rect,enrichNodes,inImage,outImage,imageSize):
+        return CNode(self,rect,enrichNodes,inImage,outImage,imageSize)
     
     def division_criterionOnce(self, rect, inImage, outImage):
         p1,p2,p3,p4 = self.rect
@@ -673,7 +682,7 @@ class CNode(Node):
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 1"
-                    vecCoord1 = case_NW_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord1 = case_NW_polynomial_test(self,self.inImage,self.outImage,p1,p2,p3,p4);
                     if ( vecCoord1[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
 
                         draw_line(self.outImage,cMid12,cMid34);
@@ -775,8 +784,8 @@ def it_exists(index,masterNode):
             
 if __name__ == "__main__":
     print "Reading image in..."
-    inputImage = sitk.ReadImage("images/sineh.png");
-    outputImage = sitk.ReadImage("images/sineh.png");
+    inputImage = sitk.ReadImage("images/sin2pi.png");
+    outputImage = sitk.ReadImage("images/sin2pi.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -791,24 +800,24 @@ if __name__ == "__main__":
     p4 = Coordinate(0,imageSize[1]-1);
 
     rect = [p1,p2,p3,p4]
-
-    rootNode = CNode(None,rect,inputImage,outputImage,imageSize)
+    enrichNodes = []
+    rootNode = CNode(None,rect,enrichNodes,inputImage,outputImage,imageSize)
     tree = CQuadTree(rootNode)
-    
-    masterNode = CNode(None,rect,inputImage,outputImage,imageSize)    
+#    
+    masterNode = CNode(None,rect,enrichNodes,inputImage,outputImage,imageSize)    
     tree = CQuadTree(masterNode)
 #    masterNode = rootNode
 #    tree.balance_tree(rootNode,masterNode)
     
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
     
-    balance_tree1(tree,rootNode,masterNode)
-    print rootNode.children[2].children[0].children[0].children[0].has_children
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'Rebalancing tree by multiple passes '
+        totalNumberOfNodes = newTotalNumberOfNodes
+        balance_tree1(tree,rootNode,masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
 
-    print 'once again rebalancing'
-    
-    balance_tree1(tree,rootNode,masterNode)
-
-    print rootNode.children[2].children[0].children[0].children[0].has_children
     print 'writing the image out'
     
-    sitk.WriteImage(outputImage,"outSineh2.png");
+    sitk.WriteImage(outputImage,"outSin2pi.png");

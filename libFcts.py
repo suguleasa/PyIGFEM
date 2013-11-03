@@ -949,9 +949,14 @@ def case_horizontal_polynomial_test(image,imageOut,p1,p2,p3,p4):
 		vecCoord.append(pt);
 		return vecCoord;
 
+	p12mid = find_mid_point(p1,p2)
+	p34mid = find_mid_point(p4,p3)
+	
 	#LINEAR POLYNOMIAL
 	# Step 1. Search for the interface along the 45 degree line.
-	A = log_search(image, p2, p4)
+	#A = log_search(image, p2, p4)
+	# Step 1. Search for the interface along the mid line between p1 and p2
+	A = log_search(image, p12mid, p34mid)
 	if L4.x == A.x and L4.y == A.y:
 		A = log_search(image,p1,p3)
 
@@ -959,7 +964,9 @@ def case_horizontal_polynomial_test(image,imageOut,p1,p2,p3,p4):
 	# Step 2. Find intersection of line between L2, L4 and the 45 degrees line.
 	B = line_line_intersection_y(image, p2, p4, L2, L4);
 
-
+#	if p1.x == 186 and p2.x == 249 and p1.y == 436 and p3.y == 499:
+#		print L2.x, L2.y, L4.x, L4.y, A.x, A.y, B.x, B.y
+	
 	# Step 3. If a linear is close enough, return coordinates.
 	if (find_distance(A,B) <= TOL_LINEARS):
 		draw_line(imageOut,L2,L4);

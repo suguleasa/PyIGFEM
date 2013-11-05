@@ -9,6 +9,7 @@ from itertools import izip_longest
 import numpy
 
 allnodes = 0
+LIST = []
 D = {}
 D['0'] = {
           'R': {'Quadrant':'1', 'Direction':'H'},
@@ -81,6 +82,8 @@ class Node():
             if self.depth > Node.MAX_DEPTH:
                 Node.MAX_DEPTH = self.depth
                 
+        
+                
         self.rect = rect 
         self.index = '-1'
         [p1,p2,p3,p4] = rect
@@ -93,7 +96,7 @@ class Node():
 ###        self.j = p4.y / dy
 
 
-
+#        self.mat = 'Epoxy'
         self.enrichNodes = []
         
         if self.parent == None:
@@ -266,15 +269,16 @@ class QuadTree(Node):
 #                allnodes += self.count_nodes(child)
                 
         if root.has_children == False:
-            return 4 
-        if root.children[0] != None:
-            allnodes += self.count_nodes(root.children[0])
-        if root.children[1] != None:
-            allnodes += self.count_nodes(root.children[1])
-        if root.children[2] != None:
-            allnodes += self.count_nodes(root.children[2])
-        if root.children[3] != None:
-            allnodes += self.count_nodes(root.children[3])
+            return 0 
+        else:
+            if root.children[0] != None:
+                allnodes += self.count_nodes(root.children[0]) +1
+            if root.children[1] != None:
+                allnodes += self.count_nodes(root.children[1]) +1
+            if root.children[2] != None:
+                allnodes += self.count_nodes(root.children[2]) +1
+            if root.children[3] != None:
+                allnodes += self.count_nodes(root.children[3]) +1
 
         return allnodes
     
@@ -324,7 +328,7 @@ class QuadTree(Node):
             east_neigh_index = str(find_neighbor_of(root.index,'R'))
             # checking to see if the east neighbor exists or is a ghost
             if it_exists(east_neigh_index,masterNode):
-                east_neighbor = get_node(root, root.index, east_neigh_index)
+                east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children:
                     if east_neighbor.children[0].has_children or east_neighbor.children[2].has_children:
 #                        print ' neighbors of SE: east'
@@ -338,7 +342,7 @@ class QuadTree(Node):
             
             # checking to see if the south neighbor exists or is a ghost
             if it_exists(south_neigh_index,masterNode):
-                south_neighbor = get_node(root, root.index, south_neigh_index)
+                south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children:
                     if south_neighbor.children[0].has_children or south_neighbor.children[1].has_children:
 #                        print ' neighbors of SE: south'
@@ -371,7 +375,7 @@ class QuadTree(Node):
             west_neigh_index = str(find_neighbor_of(root.index,'L'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(west_neigh_index,masterNode):
-                west_neighbor = get_node(root, root.index, west_neigh_index)
+                west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children:
                     if west_neighbor.children[1].has_children or west_neighbor.children[3].has_children:
 #                        print ' neighbors of SW: west'
@@ -382,7 +386,7 @@ class QuadTree(Node):
             south_neigh_index = str(find_neighbor_of(root.index,'D'))
             # checking to see if the south neighbor exists or is a ghost
             if it_exists(south_neigh_index,masterNode):
-                south_neighbor = get_node(root, root.index, south_neigh_index)
+                south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children:
                     if south_neighbor.children[0].has_children or south_neighbor.children[1].has_children:
 #                        print ' neighbors of SW: south'
@@ -415,7 +419,7 @@ class QuadTree(Node):
             east_neigh_index = str(find_neighbor_of(root.index,'R'))
             # checking to see if the east neighbor exists or is a ghost
             if it_exists(east_neigh_index,masterNode):
-                east_neighbor = get_node(root, root.index, east_neigh_index)
+                east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children:
                     if east_neighbor.children[0].has_children or east_neighbor.children[2].has_children:
 #                        print ' neighbors of NE: east'
@@ -427,7 +431,7 @@ class QuadTree(Node):
             north_neigh_index = str(find_neighbor_of(root.index,'U'))
             # checking to see if the north neighbor exists or is a ghost
             if it_exists(north_neigh_index,masterNode):
-                north_neighbor = get_node(root, root.index, north_neigh_index)
+                north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children:
                     if north_neighbor.children[2].has_children or north_neighbor.children[3].has_children:
 #                        print ' neighbors of NE: north'
@@ -458,7 +462,7 @@ class QuadTree(Node):
             west_neigh_index = str(find_neighbor_of(root.index,'L'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(west_neigh_index,masterNode):
-                west_neighbor = get_node(root, root.index, west_neigh_index)
+                west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children:
                     if west_neighbor.children[1].has_children or west_neighbor.children[3].has_children:
 #                        print ' neighbors of NW: west'
@@ -471,7 +475,7 @@ class QuadTree(Node):
             north_neigh_index = str(find_neighbor_of(root.index,'U'))
             # checking to see if the north neighbor exists or is a ghost
             if it_exists(north_neigh_index,masterNode):
-                north_neighbor = get_node(root, root.index, north_neigh_index)
+                north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children:
                     if north_neighbor.children[2].has_children or north_neighbor.children[3].has_children:
 #                        print ' neighbors of NW: north'
@@ -525,6 +529,7 @@ class CNode(Node):
         return CNode(self,rect,inImage,outImage,imageSize)
 
     def get_child(node,index):
+        # returns child of node, given index of child
         ll = len(index)
         child = node
         for i in range(0,ll):
@@ -543,7 +548,7 @@ class CNode(Node):
         draw_line(self.outImage,cMid14,cMid23)
         return True
     
-    def division_criterion(self,rect,inImage,outImage ):
+    def division_criterion(self, rect, inImage, outImage):
         p1,p2,p3,p4 = self.rect
         cMid12 = find_mid_point(p1,p2)
         cMid14 = find_mid_point(p1,p4)
@@ -552,8 +557,6 @@ class CNode(Node):
         cMid34 = find_mid_point(p3,p4)
     
         if abs(p1.x - p2.x) >= MAX_SIZE:               
- 
-             #print 'ever here inside?'
             draw_line(self.outImage,cMid12,cMid34);
             draw_line(self.outImage,cMid14,cMid23);
             return True
@@ -568,10 +571,10 @@ class CNode(Node):
 
             # if the four corners test fails
             if ( isHomogeneous == 0) and has_inclusions(self.inImage,p1,p2,p3,p4):
-                l1 = check_ends(self.inImage,p1,p2);
-                l2 = check_ends(self.inImage,p2,p3);
-                l3 = check_ends(self.inImage,p4,p3);
-                l4 = check_ends(self.inImage,p1,p4);
+                l1 = ends_in_same_bin(self.inImage,p1,p2);
+                l2 = ends_in_same_bin(self.inImage,p2,p3);
+                l3 = ends_in_same_bin(self.inImage,p4,p3);
+                l4 = ends_in_same_bin(self.inImage,p1,p4);
             
             
                 # case 1: interface crossing through L1 and L4
@@ -586,6 +589,7 @@ class CNode(Node):
                         return True
                     elif vecCoord1[0] != -1:
                         self.enrichNodes = vecCoord1
+#                        self.mat = 'Fluid'
 #                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
                 # case 2: interface crossing through L1 and L2
@@ -599,6 +603,8 @@ class CNode(Node):
                         return True
                     elif vecCoord2[0] != -1:
                         self.enrichNodes = vecCoord2
+#                        self.mat = 'Fluid'
+
                         
                 # case 3: interface crossing through L2 and L3
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -611,6 +617,7 @@ class CNode(Node):
                         return True
                     elif vecCoord3[0].x != -1:
                         self.enrichNodes = vecCoord3
+#                        self.mat = 'Fluid'
                         
                         
                 # case 4: interface crossing through L4 and L3
@@ -624,6 +631,7 @@ class CNode(Node):
                         return True
                     elif vecCoord4[0].x != -1:
                         self.enrichNodes = vecCoord4
+#                        self.mat = 'Fluid'
 
                 # case 5: interface crossing through L1 and L3
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -636,6 +644,7 @@ class CNode(Node):
                         return True
                     elif vecCoord5[0].x != -1:
                         self.enrichNodes = vecCoord5
+#                        self.mat = 'Fluid'
                         
                 # case 6: interface crossing through L4 and L2
                 if (l1==True and l2==False and l3==True and l4==False) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -648,6 +657,7 @@ class CNode(Node):
                         return True
                     elif vecCoord6[0].x != -1:
                         self.enrichNodes = vecCoord6
+#                        self.mat = 'Fluid'
                                             
                  # case 7: one line crossing through L1 and L4 and one line crossing through L2 and L3
                  # 2-2 non adjacent corners are the same color (diagonally opposed)
@@ -740,28 +750,28 @@ def ghost_nodes_enrichment_nodes(tree, root, masterNode):
             west_neigh_index = str(find_neighbor_of(root.index,'L'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(west_neigh_index, masterNode):
-                west_neighbor = get_node(root, root.index, west_neigh_index)
+                west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children == True:
                     west_has_children = True
                     
             east_neigh_index = str(find_neighbor_of(root.index,'R'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(east_neigh_index, masterNode):
-                east_neighbor = get_node(root, root.index, east_neigh_index)
+                east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children == True:
                     east_has_children = True
 
             south_neigh_index = str(find_neighbor_of(root.index,'D'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(south_neigh_index, masterNode):
-                south_neighbor = get_node(root, root.index, south_neigh_index)
+                south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children == True:
                     south_has_children = True
 
             north_neigh_index = str(find_neighbor_of(root.index,'U'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(north_neigh_index, masterNode):
-                north_neighbor = get_node(root, root.index, north_neigh_index)
+                north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children == True:
                     north_has_children = True
                     
@@ -779,8 +789,54 @@ def ghost_nodes_enrichment_nodes(tree, root, masterNode):
         if root.children[3] != None:
             ghost_nodes_enrichment_nodes(tree,root.children[3],masterNode)
 
-  
+def number_of_generations(tree, root, masterNode):
 
+#        if root.has_children == False:
+#            nrchildren = 0
+#        else:
+#            nrchildren = nrchildren + 1
+    maxx = 0
+    if root.has_children == True:
+        
+        if root.children[0] != None:
+            val = 1 + number_of_generations(tree,root.children[0],masterNode)
+            if maxx < val:
+                maxx = val 
+        if root.children[1] != None:
+            val = 1 + number_of_generations(tree,root.children[1],masterNode)
+            if maxx < val:
+                maxx = val
+        if root.children[2] != None:
+            val = 1 + number_of_generations(tree,root.children[2],masterNode)
+            if maxx < val:
+                maxx = val
+        if root.children[3] != None:
+            val = 1 + number_of_generations(tree,root.children[3],masterNode)
+            if maxx < val:
+                maxx = val
+    return maxx
+
+
+def get_list_of_nodes(tree, root, masterNode,llist):
+
+#        if root.has_children == False:
+#            nrchildren = 0
+#        else:
+#            nrchildren = nrchildren + 1
+        if root.has_children == False:
+            llist.append([int(root.index)]) 
+            
+        if root.children[0] != None:
+            get_list_of_nodes(tree,root.children[0],masterNode,llist)
+        if root.children[1] != None:
+            get_list_of_nodes(tree,root.children[1],masterNode,llist)
+        if root.children[2] != None:
+            get_list_of_nodes(tree,root.children[2],masterNode,llist)
+        if root.children[3] != None:
+            get_list_of_nodes(tree,root.children[3],masterNode,llist)
+
+        return llist
+    
 def three_neighbor_rule(tree, root, masterNode):
 
         p1,p2,p3,p4 = root.rect
@@ -798,28 +854,28 @@ def three_neighbor_rule(tree, root, masterNode):
             west_neigh_index = str(find_neighbor_of(root.index,'L'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(west_neigh_index, masterNode):
-                west_neighbor = get_node(root, root.index, west_neigh_index)
+                west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children == True:
                     west_has_children = True
                     
             east_neigh_index = str(find_neighbor_of(root.index,'R'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(east_neigh_index, masterNode):
-                east_neighbor = get_node(root, root.index, east_neigh_index)
+                east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children == True:
                     east_has_children = True
 
             south_neigh_index = str(find_neighbor_of(root.index,'D'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(south_neigh_index, masterNode):
-                south_neighbor = get_node(root, root.index, south_neigh_index)
+                south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children == True:
                     south_has_children = True
 
             north_neigh_index = str(find_neighbor_of(root.index,'U'))    
             # checking to see if the west neighbor exists or is a ghost
             if it_exists(north_neigh_index, masterNode):
-                north_neighbor = get_node(root, root.index, north_neigh_index)
+                north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children == True:
                     north_has_children = True
                     
@@ -897,8 +953,8 @@ def find_neighbor_of(index,direction):
 
     return str("".join(llist_str))
 
-def get_node(root,my_ind,neigh_ind):
-#    loc = str(index)
+def get_node_of_neighbor(root,my_ind,neigh_ind):
+    
     p = root
     for i in range(0,len(my_ind)):
         p = p.parent
@@ -912,10 +968,10 @@ def get_node(root,my_ind,neigh_ind):
                
 if __name__ == "__main__":
     print "Reading image in..."
-#    inputImage = sitk.ReadImage("images/channels.png");
-#    outputImage = sitk.ReadImage("images/channels.png");
-    inputImage = sitk.ReadImage("images/circles.png");
-    outputImage = sitk.ReadImage("images/circles.png");
+    inputImage = sitk.ReadImage("images/channels.png");
+    outputImage = sitk.ReadImage("images/channels.png");
+#    inputImage = sitk.ReadImage("images/circles.png");
+#    outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -934,7 +990,7 @@ if __name__ == "__main__":
     tree = CQuadTree(rootNode)
 #    
     masterNode = CNode(None,rect,inputImage,outputImage,imageSize)    
-    tree = CQuadTree(masterNode)
+#    tree = CQuadTree(masterNode)
 #    masterNode = rootNode
 #    tree.balance_tree(rootNode,masterNode)
 
@@ -946,9 +1002,9 @@ if __name__ == "__main__":
         masterNode = rootNode
         ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-    
+     
     masterNode = rootNode
-    
+     
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
     
@@ -964,10 +1020,11 @@ if __name__ == "__main__":
 #    node.printRect()
 #    print 'has kids', node.has_children
 #    masterNode.children[0].children[2].children[3].children[3].printRect()
+
     masterNode = rootNode
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
-    
+     
     while totalNumberOfNodes != newTotalNumberOfNodes:
         print '3 neighbor rule'
         totalNumberOfNodes = newTotalNumberOfNodes
@@ -975,7 +1032,15 @@ if __name__ == "__main__":
         three_neighbor_rule(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
     
-    print 'writing the image out'
     
-    sitk.WriteImage(outputImage,"outCircles.png");
-#    sitk.WriteImage(outputImage,"outChannels.png");
+    masterNode = rootNode
+    node = CNode.get_child(masterNode,'2')
+    print number_of_generations(tree, node, masterNode), node.depth
+    llist = []
+    tree_list_of_nodes = get_list_of_nodes(tree,rootNode,masterNode,llist)
+    print len(tree_list_of_nodes)
+#    print CNode.get_child(masterNode,'21213').mat
+#    
+    print 'writing the image out'
+#    sitk.WriteImage(outputImage,"outCircles.png");
+    sitk.WriteImage(outputImage,"outChannels.png");

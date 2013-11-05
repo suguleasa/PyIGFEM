@@ -93,9 +93,9 @@ def is_in_same_bin(pxVal1, pxVal2):
 #		return isHomogeneous
 
 ## Check if the ends of a line are from the same bin
-def check_ends(image, p1, p2):
+def ends_in_same_bin(image, p1, p2):
 	pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-	pxVal2 = image.GetPixel(int(p2.x), int(p2.y), 0);
+	pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
 	val1 = pxVal1 == pxVal2
 	val2 = is_in_same_bin(pxVal1, pxVal2)
 	return (val1 or val2)
@@ -107,7 +107,7 @@ def newt_fct_eval(a,xData,x):
     p = a[n]
     for k in range(1,n+1):
         p = a[n-k] + (x - xData[n-k]) * p
-    return p
+    return p 
  
 # Compute the coefficients in the Newton polynomial in the a vector
 def newt_coef(xData,yData):
@@ -197,7 +197,7 @@ def ilog_search(image, begin, end):
     searching = True
 
     while searching:
-        if check_ends(image, begin, mid):
+        if ends_in_same_bin(image, begin, mid):
             begin.x = mid.x
             begin.y = mid.y
             mid.x = (begin.x + end.x)/2
@@ -242,6 +242,44 @@ def line_line_intersection_y(image,p2,p4,L2,L4):
 
 	return ptIntersection
 
+def linear_search(image,bbegin,eend):
+		
+		list_nodes = []
+		begin = Coordinate(bbegin.x,bbegin.y)
+		end = Coordinate(eend.x,eend.y)
+		
+		old = Coordinate(bbegin.x,bbegin.y)
+		dist = find_distance(begin,end)
+		if bbegin.x == eend.x and dist>2: # vertical line
+			
+			next = Coordinate(begin.x,begin.y+1)
+			while next.y <= end.y:
+				if not(ends_in_same_bin(image,next,old)):
+					
+					list_nodes = list_nodes + [Coordinate(next.x,next.y)]
+				old = Coordinate(next.x,next.y)
+				next = Coordinate(next.x,next.y+1)
+		
+		elif bbegin.y == eend.y and dist>2: # horizontal line
+		
+			next = Coordinate(begin.x+1,begin.y)			
+			
+			while next.x <= end.x :
+
+				if not(ends_in_same_bin(image, next,old)):
+					list_nodes = list_nodes + [Coordinate(next.x,next.y)]
+				old = Coordinate(next.x,next.y)
+				next = Coordinate(next.x+1,next.y)		
+	
+#		for i in range(0, dist-1):
+#			next = Coordinate(old.x+1,old.y+1)
+#			if not(ends_in_same_bin(image,next,old)):
+#				list_nodes = list_nodes + [Coordinate(next.x,next.y)]
+#			old = next		
+		return list_nodes
+
+
+
 def log_search(image,bbegin,eend):
 		
 		begin = Coordinate(bbegin.x,bbegin.y);
@@ -251,8 +289,8 @@ def log_search(image,bbegin,eend):
 		mid.x = (begin.x + end.x)/2.0;
 		mid.y = (begin.y + end.y)/2.0;
 		dist = find_distance(begin,end)
-		while dist>2 and not(check_ends(image,begin,end)):
-			if check_ends(image,begin, mid):
+		while dist>2 and not(ends_in_same_bin(image,begin,end)):
+			if ends_in_same_bin(image,begin, mid):
 				begin.x = mid.x
 				begin.y = mid.y;
 				mid.x = (begin.x + end.x)/2.0;
@@ -273,15 +311,25 @@ def log_search(image,bbegin,eend):
 ## case 1: 3:1 -- P1 the outsider
 def case_NW_polynomial_test(root,image,imageOut,p1,p2,p3,p4):
 	x_is_F_of_y = False;
-	L1 = log_search(image,p1,p2);
-	L4 = log_search(image,p1,p4);
+	
+	L1 = linear_search(image,p1,p2);
+	L4 = linear_search(image,p1,p4);
 
+	if len(L1)>1 or len(L4) > 1:
+		pt = Coordinate(-1,-1);
+		vecCoord = [];
+		vecCoord.append(pt);
+		return vecCoord;
+	else:
+		L1 = L1[0]
+		L4 = L4[0]
+		
 	if ( find_distance(L1,L4) <= 2.0):
 		pt = Coordinate(-1,-1);
 		vecCoord = [];
 		vecCoord.append(pt);
 		return vecCoord;
-		
+	
 #	root.printRect()
 	
 	# LINEAR POLYNOMIAL
@@ -416,9 +464,19 @@ def case_NW_polynomial_test(root,image,imageOut,p1,p2,p3,p4):
 # case 2: 3:1 -- P2 the outsider
 def case_NE_polynomial_test(image,imageOut,p1,p2,p3,p4):
 	x_is_F_of_y = False;
-	L1 = log_search(image,p1,p2);
-	L2 = log_search(image,p2,p3);
-
+	L1 = linear_search(image,p1,p2);
+	L2 = linear_search(image,p2,p3);
+	
+	if len(L1)>1 or len(L2) > 1:
+		pt = Coordinate(-1,-1);
+		vecCoord = [];
+		vecCoord.append(pt);
+		return vecCoord;
+	else:
+		L1 = L1[0]
+		L2 = L2[0]
+		
+		
 	if ( find_distance(L1,L2) <= 2):
 		pt = Coordinate(-1,-1);
 		vecCoord = [];
@@ -564,8 +622,17 @@ def case_NE_polynomial_test(image,imageOut,p1,p2,p3,p4):
 ## case 3: 3:1 - P3 is the outsider
 def case_SE_polynomial_test(image,imageOut,p1,p2,p3,p4):
 	is_x_F_of_y = False;
-	L2 = log_search(image,p2,p3);
-	L3 = log_search(image,p4,p3);
+	L2 = linear_search(image,p2,p3);
+	L3 = linear_search(image,p4,p3);
+
+	if len(L3)>1 or len(L2) > 1:
+		pt = Coordinate(-1,-1);
+		vecCoord = [];
+		vecCoord.append(pt);
+		return vecCoord;
+	else:
+		L3 = L3[0]
+		L2 = L2[0]
 
 	if ( find_distance(L2,L3) <= 2):
 		pt = Coordinate(-1,-1);
@@ -704,8 +771,18 @@ def case_SE_polynomial_test(image,imageOut,p1,p2,p3,p4):
 # case 4: 3:1 -- P4 the outsider
 def case_SW_polynomial_test(image, imageOut, p1, p2, p3, p4):
 	is_x_F_of_y = False;
-	L4 = log_search(image, p1, p4);
-	L3 = log_search(image, p4, p3);
+	L4 = linear_search(image, p1, p4);
+	L3 = linear_search(image, p4, p3);
+
+	if len(L3)>1 or len(L4) > 1:
+		pt = Coordinate(-1,-1);
+		vecCoord = [];
+		vecCoord.append(pt);
+		return vecCoord;
+	else:
+		L3 = L3[0]
+		L4 = L4[0]
+
 
 	if ( find_distance(L4,L3) <= 2):
 		pt = Coordinate(-1,-1);
@@ -839,9 +916,17 @@ def case_SW_polynomial_test(image, imageOut, p1, p2, p3, p4):
 
 # case 5: 2:2 vertical crossing
 def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4):
-	L1 = log_search(image,p1,p2);
-	L3 = log_search(image,p4,p3); 
+	L1 = linear_search(image,p1,p2);
+	L3 = linear_search(image,p4,p3); 
 
+	if len(L3)>1 or len(L1) > 1:
+		pt = Coordinate(-1,-1);
+		vecCoord = [];
+		vecCoord.append(pt);
+		return vecCoord;
+	else:
+		L3 = L3[0]
+		L1 = L1[0]
 
 	if ( find_distance(L1,L3) <= 2):
 		pt = Coordinate(-1,-1);
@@ -849,10 +934,16 @@ def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4):
 		vecCoord.append(pt);
 		return vecCoord;
 
+	p14mid = find_mid_point(p1,p4)
+	p23mid = find_mid_point(p2,p3)
+	
+
 	# LINEAR POLYNOMIAL
 	# Step 1. Search for the interface along the 45 degree line
-	A = log_search(image, p1, p3);
-
+#	A = log_search(image, p1, p3);
+	# Step 1. Search for the interface along the mid line between p1 and p2
+	A = log_search(image, p14mid, p23mid)
+	
 	# Step 2. Find intersection of line between L1,L3 and the 45 degree line
 	B = line_line_intersection_x(image,p1,p3,L1,L3);
 
@@ -940,8 +1031,18 @@ def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4):
 
 # case 6: 2:2 horizontal crossing
 def case_horizontal_polynomial_test(image,imageOut,p1,p2,p3,p4):
-	L2 = log_search(image, p2, p3);
-	L4 = log_search(image, p1, p4);
+	L2 = linear_search(image, p2, p3);
+	L4 = linear_search(image, p1, p4);
+	
+	if len(L2)>1 or len(L4) > 1:
+		pt = Coordinate(-1,-1);
+		vecCoord = [];
+		vecCoord.append(pt);
+		return vecCoord;
+	else:
+		L2 = L2[0]
+		L4 = L4[0]
+
 
 	if ( find_distance(L2,L4) <= 2):
 		pt = Coordinate(-1,-1);

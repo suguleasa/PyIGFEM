@@ -1,0 +1,5 @@
+Left to do for the meshing:
+
+1. Add the alternative minimum size remeshing constraint (high stress concentrations)
+2. Do the case when interface passes through a corner of the element
+

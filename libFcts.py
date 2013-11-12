@@ -309,20 +309,18 @@ def log_search(image,bbegin,eend):
 		return mid
 
 ## case 1: 3:1 -- P1 the outsider
-def case_NW_polynomial_test(root,image,imageOut,p1,p2,p3,p4):
+def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 	x_is_F_of_y = False;
 	
-	L1 = linear_search(image,p1,p2);
-	L4 = linear_search(image,p1,p4);
 
-	if len(L1)>1 or len(L4) > 1:
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	else:
-		L1 = L1[0]
-		L4 = L4[0]
+# 	if len(L1)>1 or len(L4) > 1:
+# 		pt = Coordinate(-1,-1);
+# 		vecCoord = [];
+# 		vecCoord.append(pt);
+# 		return vecCoord;
+# 	else:
+# 		L1 = L1[0]
+# 		L4 = L4[0]
 		
 	if ( find_distance(L1,L4) <= 2.0):
 		pt = Coordinate(-1,-1);
@@ -462,19 +460,18 @@ def case_NW_polynomial_test(root,image,imageOut,p1,p2,p3,p4):
 
 
 # case 2: 3:1 -- P2 the outsider
-def case_NE_polynomial_test(image,imageOut,p1,p2,p3,p4):
+def case_NE_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L2):
 	x_is_F_of_y = False;
-	L1 = linear_search(image,p1,p2);
-	L2 = linear_search(image,p2,p3);
+
 	
-	if len(L1)>1 or len(L2) > 1:
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	else:
-		L1 = L1[0]
-		L2 = L2[0]
+# 	if len(L1)>1 or len(L2) > 1:
+# 		pt = Coordinate(-1,-1);
+# 		vecCoord = [];
+# 		vecCoord.append(pt);
+# 		return vecCoord;
+# 	else:
+# 		L1 = L1[0]
+# 		L2 = L2[0]
 		
 		
 	if ( find_distance(L1,L2) <= 2):
@@ -620,19 +617,18 @@ def case_NE_polynomial_test(image,imageOut,p1,p2,p3,p4):
 
 
 ## case 3: 3:1 - P3 is the outsider
-def case_SE_polynomial_test(image,imageOut,p1,p2,p3,p4):
+def case_SE_polynomial_test(image,imageOut,p1,p2,p3,p4,L2,L3):
 	is_x_F_of_y = False;
-	L2 = linear_search(image,p2,p3);
-	L3 = linear_search(image,p4,p3);
 
-	if len(L3)>1 or len(L2) > 1:
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	else:
-		L3 = L3[0]
-		L2 = L2[0]
+
+# 	if len(L3)>1 or len(L2) > 1:
+# 		pt = Coordinate(-1,-1);
+# 		vecCoord = [];
+# 		vecCoord.append(pt);
+# 		return vecCoord;
+# 	else:
+# 		L3 = L3[0]
+# 		L2 = L2[0]
 
 	if ( find_distance(L2,L3) <= 2):
 		pt = Coordinate(-1,-1);
@@ -769,19 +765,17 @@ def case_SE_polynomial_test(image,imageOut,p1,p2,p3,p4):
 
 
 # case 4: 3:1 -- P4 the outsider
-def case_SW_polynomial_test(image, imageOut, p1, p2, p3, p4):
+def case_SW_polynomial_test(image, imageOut, p1, p2, p3, p4,L3,L4):
 	is_x_F_of_y = False;
-	L4 = linear_search(image, p1, p4);
-	L3 = linear_search(image, p4, p3);
 
-	if len(L3)>1 or len(L4) > 1:
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	else:
-		L3 = L3[0]
-		L4 = L4[0]
+# 	if len(L3)>1 or len(L4) > 1:
+# 		pt = Coordinate(-1,-1);
+# 		vecCoord = [];
+# 		vecCoord.append(pt);
+# 		return vecCoord;
+# 	else:
+# 		L3 = L3[0]
+# 		L4 = L4[0]
 
 
 	if ( find_distance(L4,L3) <= 2):
@@ -915,18 +909,16 @@ def case_SW_polynomial_test(image, imageOut, p1, p2, p3, p4):
 		
 
 # case 5: 2:2 vertical crossing
-def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4):
-	L1 = linear_search(image,p1,p2);
-	L3 = linear_search(image,p4,p3); 
+def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4,L1,L3):
 
-	if len(L3)>1 or len(L1) > 1:
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	else:
-		L3 = L3[0]
-		L1 = L1[0]
+# 	if len(L3)>1 or len(L1) > 1:
+# 		pt = Coordinate(-1,-1);
+# 		vecCoord = [];
+# 		vecCoord.append(pt);
+# 		return vecCoord;
+# 	else:
+# 		L3 = L3[0]
+# 		L1 = L1[0]
 
 	if ( find_distance(L1,L3) <= 2):
 		pt = Coordinate(-1,-1);
@@ -1030,18 +1022,16 @@ def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4):
 	return vecCoord;
 
 # case 6: 2:2 horizontal crossing
-def case_horizontal_polynomial_test(image,imageOut,p1,p2,p3,p4):
-	L2 = linear_search(image, p2, p3);
-	L4 = linear_search(image, p1, p4);
+def case_horizontal_polynomial_test(image,imageOut,p1,p2,p3,p4,L2,L4):
 	
-	if len(L2)>1 or len(L4) > 1:
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	else:
-		L2 = L2[0]
-		L4 = L4[0]
+# 	if len(L2)>1 or len(L4) > 1:
+# 		pt = Coordinate(-1,-1);
+# 		vecCoord = [];
+# 		vecCoord.append(pt);
+# 		return vecCoord;
+# 	else:
+# 		L2 = L2[0]
+# 		L4 = L4[0]
 
 
 	if ( find_distance(L2,L4) <= 2):

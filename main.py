@@ -555,7 +555,8 @@ class CNode(Node):
         cMid24 = find_mid_point(p2,p4)
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
-    
+             
+
         if abs(p1.x - p2.x) >= MAX_SIZE:               
             draw_line(self.outImage,cMid12,cMid34);
             draw_line(self.outImage,cMid14,cMid23);
@@ -576,11 +577,46 @@ class CNode(Node):
                 l3 = ends_in_same_bin(self.inImage,p4,p3);
                 l4 = ends_in_same_bin(self.inImage,p1,p4);
             
-            
+                L1 = linear_search(self.inImage,p1,p2);
+                L2 = linear_search(self.inImage,p2,p3);
+                L3 = linear_search(self.inImage,p4,p3);
+                L4 = linear_search(self.inImage,p1,p4);
+                
+                if len(L2)>1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1:
+                    return True
+                else:
+                    if len(L1) == 1:
+                        L1 = L1[0]
+                    if len(L2) == 1:
+                        L2 = L2[0]
+                    if len(L3) == 1:
+                        L3 = L3[0]
+                    if len(L4) == 1:
+                        L4 = L4[0]
+                
+                # NW
+                if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
+                    draw_line(self.outImage, L1, L4)
+                # NE
+                if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE):
+                    draw_line(self.outImage, L1, L2)
+                # SE
+                if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
+                    draw_line(self.outImage, L2, L3)
+                # SW
+                if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
+                    draw_line(self.outImage, L3, L4)
+                # vertical
+                if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
+                    draw_line(self.outImage, L1, L3)
+                # horizontal
+                if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
+                    draw_line(self.outImage, L4, L2)
+                    
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 1"
-                    vecCoord1 = case_NW_polynomial_test(self,self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord1 = case_NW_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L1,L4);
 
                     if ( vecCoord1[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
 
@@ -594,7 +630,7 @@ class CNode(Node):
 
                 # case 2: interface crossing through L1 and L2
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE):
-                    vecCoord2 = case_NE_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord2 = case_NE_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L1,L2);
                     if(vecCoord2[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
                     #print "case 2"
 
@@ -609,7 +645,7 @@ class CNode(Node):
                 # case 3: interface crossing through L2 and L3
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 3"
-                    vecCoord3 = case_SE_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord3 = case_SE_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L2,L3);
                     if(vecCoord3[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
 
                         draw_line(self.outImage,cMid12,cMid34);
@@ -623,7 +659,7 @@ class CNode(Node):
                 # case 4: interface crossing through L4 and L3
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 4"
-                    vecCoord4 = case_SW_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord4 = case_SW_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L3,L4);
                     if(vecCoord4[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
  
                         draw_line(self.outImage,cMid12,cMid34);
@@ -636,7 +672,7 @@ class CNode(Node):
                 # case 5: interface crossing through L1 and L3
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                     #print "case 5"
-                    vecCoord5 = case_vertical_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord5 = case_vertical_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L1,L3);
                     if(vecCoord5[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
 
                         draw_line(self.outImage,cMid12,cMid34);
@@ -649,7 +685,7 @@ class CNode(Node):
                 # case 6: interface crossing through L4 and L2
                 if (l1==True and l2==False and l3==True and l4==False) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 6"
-                    vecCoord6 = case_horizontal_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4);
+                    vecCoord6 = case_horizontal_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L2,L4);
                     if(vecCoord6[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
 
                         draw_line(self.outImage,cMid12,cMid34);
@@ -674,7 +710,14 @@ class CQuadTree(QuadTree):
     def __init__(self,rootnode):
         QuadTree.__init__(self, rootnode)
  
- 
+def not_a_corner(root,A):
+    p1,p2,p3,p4 = root.rect
+
+    if ( (A.x != p1.x and A.x != p2.x) and
+         (A.y != p1.y and A.y != p4.y) ):
+        return True
+    return False
+     
 def set_interval(imSize,level):
     my_arr = [0,imSize-1]
     
@@ -891,6 +934,18 @@ def three_neighbor_rule(tree, root, masterNode):
         if root.children[3] != None:
             three_neighbor_rule(tree,root.children[3],masterNode)
 
+def stress_concentration_constraint(tree, root, masterNode):
+
+        print len(root.enrichNodes)
+
+        if root.children[0] != None:
+            stress_concentration_constraint(tree,root.children[0],masterNode)
+        if root.children[1] != None:
+            stress_concentration_constraint(tree,root.children[1],masterNode)
+        if root.children[2] != None:
+            stress_concentration_constraint(tree,root.children[2],masterNode)
+        if root.children[3] != None:
+            stress_concentration_constraint(tree,root.children[3],masterNode)
   
 
 def tomorton(x,y):
@@ -968,10 +1023,10 @@ def get_node_of_neighbor(root,my_ind,neigh_ind):
                
 if __name__ == "__main__":
     print "Reading image in..."
-    inputImage = sitk.ReadImage("images/channels.png");
-    outputImage = sitk.ReadImage("images/channels.png");
-#    inputImage = sitk.ReadImage("images/circles.png");
-#    outputImage = sitk.ReadImage("images/circles.png");
+#     inputImage = sitk.ReadImage("images/channels.png");
+#     outputImage = sitk.ReadImage("images/channels.png");
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -1032,15 +1087,19 @@ if __name__ == "__main__":
         three_neighbor_rule(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
     
+    print newTotalNumberOfNodes
+#     masterNode = rootNode
+#     stress_concentration_constraint(tree,rootNode,masterNode)
     
     masterNode = rootNode
-    node = CNode.get_child(masterNode,'2')
-    print number_of_generations(tree, node, masterNode), node.depth
+#     node = CNode.get_child(masterNode,'2')
+#     print number_of_generations(tree, node, masterNode), node.depth
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,rootNode,masterNode,llist)
     print len(tree_list_of_nodes)
 #    print CNode.get_child(masterNode,'21213').mat
 #    
     print 'writing the image out'
-#    sitk.WriteImage(outputImage,"outCircles.png");
-    sitk.WriteImage(outputImage,"outChannels.png");
+
+    sitk.WriteImage(outputImage,"outCircles.png");
+#     sitk.WriteImage(outputImage,"outChannels.png");

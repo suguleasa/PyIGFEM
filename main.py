@@ -583,6 +583,9 @@ class CNode(Node):
                 L4 = linear_search(self.inImage,p1,p4);
                 
                 if len(L2)>1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1:
+                    # interface croses one edge multiple times
+                    draw_line(self.outImage,cMid12,cMid34);
+                    draw_line(self.outImage,cMid14,cMid23)
                     return True
                 else:
                     if len(L1) == 1:
@@ -693,6 +696,7 @@ class CNode(Node):
                         return True
                     elif vecCoord6[0].x != -1:
                         self.enrichNodes = vecCoord6
+                        
 #                        self.mat = 'Fluid'
                                             
                  # case 7: one line crossing through L1 and L4 and one line crossing through L2 and L3
@@ -704,6 +708,13 @@ class CNode(Node):
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23);
                     return True
+                
+                if (l1==1 and l2==1 and l3==0 and l4==1) or (l1==1 and l2==1 and l3==1 and l4==0) or (l1==0 and l2==1 and l3==1 and l4==1) or (l1==1 and l2==0 and l3==1 and l4==1) :
+
+                    draw_line(self.outImage,cMid12,cMid34);
+                    draw_line(self.outImage,cMid14,cMid23);
+                    return True
+
         return False
  
 class CQuadTree(QuadTree):
@@ -1023,10 +1034,10 @@ def get_node_of_neighbor(root,my_ind,neigh_ind):
                
 if __name__ == "__main__":
     print "Reading image in..."
-#     inputImage = sitk.ReadImage("images/channels.png");
-#     outputImage = sitk.ReadImage("images/channels.png");
-    inputImage = sitk.ReadImage("images/circles.png");
-    outputImage = sitk.ReadImage("images/circles.png");
+    inputImage = sitk.ReadImage("images/channels.png");
+    outputImage = sitk.ReadImage("images/channels.png");
+#    inputImage = sitk.ReadImage("images/circles.png");
+#    outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -1087,7 +1098,7 @@ if __name__ == "__main__":
         three_neighbor_rule(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
     
-    print newTotalNumberOfNodes
+    print 'total number of nodes', newTotalNumberOfNodes
 #     masterNode = rootNode
 #     stress_concentration_constraint(tree,rootNode,masterNode)
     
@@ -1096,10 +1107,10 @@ if __name__ == "__main__":
 #     print number_of_generations(tree, node, masterNode), node.depth
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,rootNode,masterNode,llist)
-    print len(tree_list_of_nodes)
+    print 'length of list of nodes: ',len(tree_list_of_nodes)
 #    print CNode.get_child(masterNode,'21213').mat
 #    
     print 'writing the image out'
 
-    sitk.WriteImage(outputImage,"outCircles.png");
-#     sitk.WriteImage(outputImage,"outChannels.png");
+#    sitk.WriteImage(outputImage,"outCircles.png");
+    sitk.WriteImage(outputImage,"outChannels.png");

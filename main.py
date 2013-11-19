@@ -1034,10 +1034,10 @@ def get_node_of_neighbor(root,my_ind,neigh_ind):
                
 if __name__ == "__main__":
     print "Reading image in..."
-    inputImage = sitk.ReadImage("images/channels.png");
-    outputImage = sitk.ReadImage("images/channels.png");
-#    inputImage = sitk.ReadImage("images/circles.png");
-#    outputImage = sitk.ReadImage("images/circles.png");
+#    inputImage = sitk.ReadImage("images/channels.png");
+#    outputImage = sitk.ReadImage("images/channels.png");
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -1112,5 +1112,5 @@ if __name__ == "__main__":
 #    
     print 'writing the image out'
 
-#    sitk.WriteImage(outputImage,"outCircles.png");
-    sitk.WriteImage(outputImage,"outChannels.png");
+    sitk.WriteImage(outputImage,"outCircles.png");
+#    sitk.WriteImage(outputImage,"outChannels.png");

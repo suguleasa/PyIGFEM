@@ -6,7 +6,18 @@ from libFcts import *
 from globalVars import *
 import string
 from itertools import izip_longest
+from itertools import groupby
 import numpy
+
+from igfem2d import *
+from meshgeneration import *
+import scipy
+from lgwt import *
+from readFile import *
+from findIntersection import *
+# from myplot import *
+import scipy.io
+
 
 allnodes = 0
 LIST = []
@@ -59,7 +70,53 @@ D['3'] = {
           'LU': {'Quadrant':'0', 'Direction':'H'}
           }
 
+class ListNode():
+    def __init__(self):
+        self.next = None
+        self.previous = None
+        self.element = None
+        
+class DoubleLinkedList():
+    def __init__(self):
+        self.n = 0
+        self.last = ListNode()
+        self.first = self.last
+        
+    def append(self,element):
+        self.last.element = element
+        self.last.next = ListNode()
+        tmp = self.last
+        self.last = self.last.next
+        self.last.previous = tmp
+        self.n += 1
+        
+    def front(self):
+        if self.n == 0:
+            return None
+        el = self.first.element
+        self.first = self.first.next
+        self.n -= 1
+        return el
 
+    def back(self):
+        if self.n == 0: 
+            return None
+        
+        el = self.last.previous.element
+        self.last = self.last.previous
+        self.last.next = ListNode()
+        self.n -= 1
+        return el
+    
+    def size(self):
+        return self.n
+    
+    def elements(self):
+        i = self.first
+        while i.element:
+            yield i.element
+            i = i.next
+            
 class Node():
     ROOT = 0
     BRANCH = 1
@@ -150,7 +207,32 @@ class Node():
                 diff_level = abs(len(self.children[n].index) - self.children[n].depth)
                 if diff_level != 0:
                     self.children[n].index = '0'*diff_level + self.children[n].index
-                    
+                
+                p1r,p2r,p3r,p4r = rects[n]
+                L1 = linear_search(self.inImage,p1r,p2r);
+                L2 = linear_search(self.inImage,p2r,p3r);
+                L3 = linear_search(self.inImage,p4r,p3r);
+                L4 = linear_search(self.inImage,p1r,p4r);
+        
+ 
+                if len(L1) == 1:
+                    L1 = L1[0]
+                    if in_child_k(rects[n],L1) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L1]
+                if len(L2) == 1:
+                    L2 = L2[0]
+                    if in_child_k(rects[n],L2) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L2]
+                if len(L3) == 1:
+                    L3 = L3[0]
+                    if in_child_k(rects[n],L3) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L3]
+                if len(L4) == 1:
+                    L4 = L4[0]
+                    if in_child_k(rects[n],L4) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L4]
+        
+            
                 self.children[n].subdivide()
                 
         
@@ -193,11 +275,31 @@ class Node():
                 if diff_level != 0:
                     self.children[n].index = '0'*diff_level + self.children[n].index 
         
-#        if self.children != [None,None,None,None]:# and root.parent != None:
-#           self.has_children = True
-#        else:
-#            self.has_children = False               
-
+                p1r,p2r,p3r,p4r = rects[n]
+                L1 = linear_search(self.inImage,p1r,p2r);
+                L2 = linear_search(self.inImage,p2r,p3r);
+                L3 = linear_search(self.inImage,p4r,p3r);
+                L4 = linear_search(self.inImage,p1r,p4r);
+        
+ 
+                if len(L1) == 1:
+                    L1 = L1[0]
+                    if in_child_k(rects[n],L1) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L1]
+                if len(L2) == 1:
+                    L2 = L2[0]
+                    if in_child_k(rects[n],L2) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L2]
+                if len(L3) == 1:
+                    L3 = L3[0]
+                    if in_child_k(rects[n],L3) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L3]
+                if len(L4) == 1:
+                    L4 = L4[0]
+                    if in_child_k(rects[n],L4) == True:
+                        self.children[n].enrichNodes = self.children[n].enrichNodes + [L4]
+        
+                
         if ( self.children[0] != None and
              self.children[1] != None and
              self.children[2] != None and
@@ -528,16 +630,13 @@ class CNode(Node):
     def getinstance(self,rect,inImage,outImage,imageSize):
         return CNode(self,rect,inImage,outImage,imageSize)
 
-    def get_child(node,index):
-        # returns child of node, given index of child
-        ll = len(index)
-        child = node
-        for i in range(0,ll):
-            child = child.children[int(index[i])]
-        return child
 
+
+    
     def division_criterionOnce(self, rect, inImage, outImage):
+        
         p1,p2,p3,p4 = self.rect
+        
         cMid12 = find_mid_point(p1,p2)
         cMid14 = find_mid_point(p1,p4)
         cMid24 = find_mid_point(p2,p4)
@@ -546,6 +645,8 @@ class CNode(Node):
     
         draw_line(self.outImage,cMid12,cMid34)
         draw_line(self.outImage,cMid14,cMid23)
+        
+                
         return True
     
     def division_criterion(self, rect, inImage, outImage):
@@ -627,7 +728,8 @@ class CNode(Node):
                         draw_line(self.outImage,cMid14,cMid23);               
                         return True
                     elif vecCoord1[0] != -1:
-                        self.enrichNodes = vecCoord1
+                        self.enrichNodes = vecCoord1#[L1, L4]
+                        
 #                        self.mat = 'Fluid'
 #                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
@@ -748,6 +850,13 @@ def set_interval(imSize,level):
         my_arr = new_arr
         
     return my_arr 
+
+def in_child_k(rects,L):
+    p1,p2,p3,p4 = rects
+    if p1.x <= L.x and L.x <= p2.x and p1.y <= L.y and L.y <= p4.y:
+        return True
+    
+    return False
   
 def it_exists(index,masterNode):      
     llen = len(index)
@@ -832,6 +941,7 @@ def ghost_nodes_enrichment_nodes(tree, root, masterNode):
             if (len(root.enrichNodes) > 0 and 
                 (west_has_children == True or east_has_children == True or
                  south_has_children == True or north_has_children == True)):
+                print root.index
                 root.divideOnce()      
 
         if root.children[0] != None:
@@ -878,7 +988,7 @@ def get_list_of_nodes(tree, root, masterNode,llist):
 #        else:
 #            nrchildren = nrchildren + 1
         if root.has_children == False:
-            llist.append([int(root.index)]) 
+            llist.append([root.index]) 
             
         if root.children[0] != None:
             get_list_of_nodes(tree,root.children[0],masterNode,llist)
@@ -934,6 +1044,7 @@ def three_neighbor_rule(tree, root, masterNode):
                     north_has_children = True
                     
             if west_has_children == True and east_has_children == True and south_has_children == True and north_has_children == True:
+                print '3 neigh-rule - ', root.index
                 root.divideOnce()      
 
         if root.children[0] != None:
@@ -1030,8 +1141,94 @@ def get_node_of_neighbor(root,my_ind,neigh_ind):
         r = r.children[int(neigh_ind[j])]
     return r
 
+def get_node_by_id(node,id):
+        # returns node, given index 
+        # index could be ['00101'], thus it'a list
+        
+        index = id[0]
+        ll = len(index)
+
+        p = node
+        for i in range(0,ll):
+            p = p.children[int(index[i])]
+            
+        return p  
     
-               
+def process_list_of_elements(llist,root):
+    n = len(llist)
+    pvec = numpy.zeros((0,2))
+    coordsList = []
+    #first construct the pvec of just the physical coordinates of the element corners
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,llist[i])
+        p1,p2,p3,p4 = root_i.rect
+        coordsList = coordsList + [[p1.x, p1.y]]
+        coordsList = coordsList + [[p2.x, p2.y]]
+        coordsList = coordsList + [[p3.x, p3.y]]
+        coordsList = coordsList + [[p4.x, p4.y]]
+        l = len(root_i.enrichNodes)
+        if l > 0:
+            for j in range(0,l):
+                enrN = root_i.enrichNodes[j]
+                coordsList = coordsList + [[enrN.x, enrN.y]]
+
+    # sort by y, and then by x
+    coordsList = sorted(coordsList,key=lambda x: (x[1],x[0]))
+    # remove duplicates from the list:
+    coordsList = [ key for key,_ in groupby(coordsList)]
+
+    pvec = numpy.vstack([pvec,coordsList])
+
+
+
+    # construct the corners list t:
+    t = []
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,llist[i])
+        p1,p2,p3,p4 = root_i.rect
+        
+        b1 = [p1.x, p1.y]
+        ind1 = numpy.where(numpy.all(pvec==b1,axis=1))
+        c1 = ind1[0][0]
+         
+        b2 = [p2.x, p2.y]
+        ind2 = numpy.where(numpy.all(pvec==b2,axis=1))
+        c2 = ind2[0][0]
+        
+        b3 = [p3.x, p3.y]
+        ind3 = numpy.where(numpy.all(pvec==b3,axis=1))
+        c3 = ind3[0][0]
+        
+        b4 = [p4.x, p4.y]
+        ind4 = numpy.where(numpy.all(pvec==b4,axis=1))
+        c4 = ind4[0][0]
+        
+        l = len(root_i.enrichNodes)
+        if l > 0:
+            if l == 1:
+                enrN1 = root_i.enrichNodes[0]
+                b5 = [enrN1.x, enrN1.y]
+                ind5 = numpy.where(numpy.all(pvec==b5,axis=1))
+                c5 = ind5[0][0]
+                t = t + [[c1,c2,c3,c4,c5]]
+                
+            if l == 2:
+                enrN1 = root_i.enrichNodes[0]
+                b5 = [enrN1.x, enrN1.y]
+                ind5 = numpy.where(numpy.all(pvec==b5,axis=1))
+                c5 = ind5[0][0]
+                
+                enrN2 = root_i.enrichNodes[1]
+                b6 = [enrN2.x, enrN2.y]
+                ind6 = numpy.where(numpy.all(pvec==b6,axis=1))
+                c6 = ind6[0][0]   
+                
+                t = t + [[c1,c2,c3,c4,c5,c6]]                             
+        else:
+            t = t + [[c1,c2,c3,c4]]
+            
+    return [pvec,t]
+    
 if __name__ == "__main__":
     print "Reading image in..."
 #    inputImage = sitk.ReadImage("images/channels.png");
@@ -1041,16 +1238,16 @@ if __name__ == "__main__":
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
-
+ 
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
-
+ 
     # setting the 4 corners coordinates
     p1 = Coordinate(0,0);
     p2 = Coordinate(imageSize[0]-1,0);
     p3 = Coordinate(imageSize[0]-1,imageSize[1]-1);
     p4 = Coordinate(0,imageSize[1]-1);
-
+ 
     rect = [p1,p2,p3,p4]
     rootNode = CNode(None,rect,inputImage,outputImage,imageSize)
     tree = CQuadTree(rootNode)
@@ -1059,7 +1256,7 @@ if __name__ == "__main__":
 #    tree = CQuadTree(masterNode)
 #    masterNode = rootNode
 #    tree.balance_tree(rootNode,masterNode)
-
+ 
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
     while totalNumberOfNodes != newTotalNumberOfNodes:
@@ -1068,49 +1265,127 @@ if __name__ == "__main__":
         masterNode = rootNode
         ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-     
+      
     masterNode = rootNode
-     
+      
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
-    
+     
     while totalNumberOfNodes != newTotalNumberOfNodes:
         print 'Rebalancing tree by multiple passes '
         masterNode = rootNode
         totalNumberOfNodes = newTotalNumberOfNodes
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-
-    
-#    node = CNode.get_child(masterNode,'0233')
-#    node.printRect()
-#    print 'has kids', node.has_children
-#    masterNode.children[0].children[2].children[3].children[3].printRect()
-
+ 
+     
     masterNode = rootNode
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
-     
+      
     while totalNumberOfNodes != newTotalNumberOfNodes:
         print '3 neighbor rule'
         totalNumberOfNodes = newTotalNumberOfNodes
         masterNode = rootNode
         three_neighbor_rule(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-    
-    print 'total number of nodes', newTotalNumberOfNodes
+     
+    print 'total number of element nodes', newTotalNumberOfNodes
 #     masterNode = rootNode
 #     stress_concentration_constraint(tree,rootNode,masterNode)
-    
+     
     masterNode = rootNode
 #     node = CNode.get_child(masterNode,'2')
 #     print number_of_generations(tree, node, masterNode), node.depth
     llist = []
-    tree_list_of_nodes = get_list_of_nodes(tree,rootNode,masterNode,llist)
-    print 'length of list of nodes: ',len(tree_list_of_nodes)
-#    print CNode.get_child(masterNode,'21213').mat
-#    
+    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+ 
+    [p_reg,t_reg] = process_list_of_elements(llist,masterNode)
+ 
+     
+    print p_reg, t_reg
+     
     print 'writing the image out'
-
+ 
     sitk.WriteImage(outputImage,"outCircles.png");
 #    sitk.WriteImage(outputImage,"outChannels.png");
+
+    ndim = 8
+    ndim = int(ndim) + 1
+    n= ndim
+    m = ndim
+    # location of the interface along the y dimension (assuming no interface in the x)
+    # material conductivities
+    k1 = 1
+    k2 = 10
+    # generate Legendre-Gauss nodes and weights:
+    ruleOrder = 4
+    [ui,wi] = lgwt(ruleOrder,-1,1)
+    
+    # get triangular mesh data
+    f = open("multipleinclusions.res", "r")
+    f2 = open("multipleinclusions.ele", "r")
+    [pTri,UTri] = read_p_U(f)
+    tTri = read_corners(f2)
+    f.close()
+    f2.close()
+    
+    hx = 1.0/(m-1)
+    hy = 1.0/(n-1)
+
+
+# ## MULTIPLE INCLUSIONS:
+#     p_reg = fake_reg_grid(m-1,m-1)
+#     t_reg = create_corners_list(m,m,p_reg,k1,k2,lambda x: 0.5)
+# 
+#     # semi-circle
+#     a = 1.0
+#     b = 0.0
+#     r = 1.0/3.0
+#     coords_semiC = find_intersection_semicircle(m-1,a,b,r,p_reg)
+# #     t_semiC = number_nodes(m-1,p_semiC,t_reg)
+# 
+#     # circle 1
+#     a = 1.0/4.0
+#     b = 1.0/4.0
+#     r = 1.0/6.0
+#     coords_C1 = find_intersection(m-1,a,b,r,p_reg)
+# #     t_C1 = number_nodes(m-1,p_C1,t_reg)
+# 
+#     # circle 2
+#     a = 1.0/2.0
+#     b = 3.0/4.0
+#     r = 1.0/6.0
+#     coords_C2 = find_intersection(m-1,a,b,r,p_reg)
+# #     t_C2 = number_nodes(m-1,p_C2,t_reg)
+#     
+#     coordinates = numpy.vstack([coords_semiC,coords_C1])
+#     coordinates = numpy.vstack([coordinates,coords_C2])
+#     coordinates = sorted(coordinates, key=lambda x: (x[1],x[0]))
+#     p_reg = numpy.vstack([p_reg,coordinates])
+#     t_reg =  number_nodes(m-1,p_reg,t_reg)
+
+#     # hard coding a Hanging node example
+#     p_reg = numpy.vstack([p_reg,[ 0.8125, 0.5 ]])
+#     p_reg = numpy.vstack([p_reg,[ 0.75, 0.5625 ]])
+#     p_reg = numpy.vstack([p_reg,[ 0.8125, 0.5625 ]])
+#     p_reg = numpy.vstack([p_reg,[ 0.875, 0.5625 ]])
+#     p_reg = numpy.vstack([p_reg,[ 0.8125, 0.625 ]])
+#  
+#     T = len(t_reg)
+#     for e in range(0,T):
+#         nodes = t_reg[e]
+#         if nodes[0] == 42 and nodes[1] == 43:
+#             t_reg =  t_reg[0:e] + t_reg[e+1:len(t_reg)]
+#             t_reg = t_reg + [[42, 111, 113, 112]]
+#             t_reg = t_reg + [[111, 43, 114, 113]]
+#             t_reg = t_reg + [[112, 113, 115, 51]]
+#             t_reg = t_reg + [[113, 114, 52, 115]]
+     
+    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg)
+
+    aa1 = numpy.array([UU])
+    ww1 = numpy.array(aa1[()])
+    UU = ww1[0].item()[:,:]
+
+    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri)

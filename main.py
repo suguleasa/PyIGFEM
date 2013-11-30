@@ -1157,26 +1157,37 @@ def get_node_by_id(node,id):
 def process_list_of_elements(llist,root):
     n = len(llist)
     pvec = numpy.zeros((0,2))
-    coordsList = []
+    coordsList1 = []
     #first construct the pvec of just the physical coordinates of the element corners
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         p1,p2,p3,p4 = root_i.rect
-        coordsList = coordsList + [[p1.x, p1.y]]
-        coordsList = coordsList + [[p2.x, p2.y]]
-        coordsList = coordsList + [[p3.x, p3.y]]
-        coordsList = coordsList + [[p4.x, p4.y]]
+        coordsList1 = coordsList1 + [[p1.x, p1.y]]
+        coordsList1 = coordsList1 + [[p2.x, p2.y]]
+        coordsList1 = coordsList1 + [[p3.x, p3.y]]
+        coordsList1 = coordsList1 + [[p4.x, p4.y]]
+
+    # sort by y, and then by x
+    coordsList1 = sorted(coordsList1,key=lambda x: (x[1],x[0]))
+    # remove duplicates from the list:
+    coordsList1 = [ key for key,_ in groupby(coordsList1)]
+
+    coordsList2 = []
+    #first construct the pvec of just the physical coordinates of the element corners
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,llist[i])
         l = len(root_i.enrichNodes)
         if l > 0:
             for j in range(0,l):
                 enrN = root_i.enrichNodes[j]
-                coordsList = coordsList + [[enrN.x, enrN.y]]
+                coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
     # sort by y, and then by x
-    coordsList = sorted(coordsList,key=lambda x: (x[1],x[0]))
+    coordsList2 = sorted(coordsList2,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list:
-    coordsList = [ key for key,_ in groupby(coordsList)]
+    coordsList2 = [ key for key,_ in groupby(coordsList2)]
 
+    coordsList = coordsList1 + coordsList2
     pvec = numpy.vstack([pvec,coordsList])
 
 
@@ -1303,8 +1314,17 @@ if __name__ == "__main__":
     [p_reg,t_reg] = process_list_of_elements(llist,masterNode)
  
      
+    
+    p_reg = p_reg / 1000.0
+    for i in range(0,len(p_reg)):
+        if p_reg[i,0] != 0.0:
+            p_reg[i,0] += 0.001
+        if p_reg[i,1] != 0.0:
+            p_reg[i,1] += 0.001
+             
     print p_reg, t_reg
-     
+
+
     print 'writing the image out'
  
     sitk.WriteImage(outputImage,"outCircles.png");

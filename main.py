@@ -141,7 +141,10 @@ class Node():
                 Node.MAX_DEPTH = self.depth
                 
         
-                
+         
+        self.tlist = [] # contains the numbering of the nodes in the element       
+        self.nsew = [0,0,0,0]
+        
         self.rect = rect 
         self.index = '-1'
         [p1,p2,p3,p4] = rect
@@ -942,7 +945,7 @@ def ghost_nodes_enrichment_nodes(tree, root, masterNode):
             if (len(root.enrichNodes) > 0 and 
                 (west_has_children == True or east_has_children == True or
                  south_has_children == True or north_has_children == True)):
-                print root.index
+#                print root.index
                 root.divideOnce()      
 
         if root.children[0] != None:
@@ -1048,6 +1051,7 @@ def three_neighbor_rule(tree, root, masterNode):
                 print '3 neigh-rule - ', root.index
                 root.divideOnce()      
 
+                        
         if root.children[0] != None:
             three_neighbor_rule(tree,root.children[0],masterNode)
         if root.children[1] != None:
@@ -1059,7 +1063,7 @@ def three_neighbor_rule(tree, root, masterNode):
 
 def stress_concentration_constraint(tree, root, masterNode):
 
-        print len(root.enrichNodes)
+#        print len(root.enrichNodes)
 
         if root.children[0] != None:
             stress_concentration_constraint(tree,root.children[0],masterNode)
@@ -1394,6 +1398,8 @@ def numbering(pvec,pvecCList, llist, masterNode):
         ind4 = numpy.where(numpy.all(pvecCList==b4,axis=1))
         c4 = ind4[0][0]
          
+        
+        
         l = len(root_i.enrichNodes)
         if l > 0:
             if l == 1:
@@ -1406,32 +1412,122 @@ def numbering(pvec,pvecCList, llist, masterNode):
 #                 t = t + [[c4,c3,c2,c1, c5]]
                   
             if l == 2:
+
                 enrN1 = root_i.enrichNodes[0]
-                  
                 b5 = [enrN1.x, enrN1.y]
-#                 print b5
                 ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
                 c5 = ind5[0][0]
                   
                 enrN2 = root_i.enrichNodes[1]
-                  
                 b6 = [enrN2.x, enrN2.y]
                 ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
                 c6 = ind6[0][0]   
                   
                 t = t + [[c1,c2,c3,c4,c5,c6]]
+                
 #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
             t = t + [[c1,c2,c3,c4]]
+            
 #             t = t + [[c4,c3,c2,c1]]
         
         
-    return t
+        
+    # convert from numbering system for Image Coordinate with (0,0) in the NW corner, to 
+    # Euclidean coordinate system with (0,0) in the SW corner
+    tvec = []
+    for j in range(0,len(t)):
+        el = t[j]
+        new_corners = []
+        for k in range(0,len(el)):
+            tind = el[k]
+            old_coords = pvecCList[tind]
+            
+            new_coords = old_coords/1000
+            if new_coords[1] != 0.0:
+                new_coords[1] += 0.001
+            if new_coords[0] != 0.0:
+                new_coords[0] += 0.001
+            new_coords[1] = 1 - new_coords[1]
+            
+    
+            new_indx = numpy.where(numpy.all(pvec==new_coords,axis=1))
+            indx = new_indx[0][0]
+            new_corners = new_corners + [indx]
+        
 
+                
+        if len(el) == 4:
+                tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0]]
+                
+        if len(el) == 5:
+                tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4]]
+        if len(el) == 6:
+            if new_corners[5] < new_corners[4]:
+                tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
+            else:
+                tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4], new_corners[5]]
+    
+        
+        tvec = tvec + [tk]
+                
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,llist[i])
+        root_i.tlist = tvec[i]
+        
+    return tvec
+
+def set_nsew(llist, masterNode):
+    
+    n = len(llist)
+    for i in range(0,n):
+        root = get_node_by_id(masterNode,llist[i])
+
+        p1,p2,p3,p4 = root.rect
+                        
+        west_neigh_index = str(find_neighbor_of(root.index,'L'))    
+        # checking to see if the west neighbor exists or is a ghost
+        if it_exists(west_neigh_index, masterNode):
+            west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
+            p1w,p2w,p3w,p4w = west_neighbor.rect
+            if west_neighbor.has_children == True and p1w.x < p1.x:
+                root.nsew[3] = 1
+#                west_has_children = True
+                
+        east_neigh_index = str(find_neighbor_of(root.index,'R'))    
+        # checking to see if the west neighbor exists or is a ghost
+        if it_exists(east_neigh_index, masterNode):
+            east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
+            p1e,p2e,p3e,p4e = east_neighbor.rect
+            if east_neighbor.has_children == True and p2.x < p2e.x:
+                root.nsew[2] = 1
+#                east_has_children = True
+
+        south_neigh_index = str(find_neighbor_of(root.index,'D'))  
+        # checking to see if the west neighbor exists or is a ghost
+        if it_exists(south_neigh_index, masterNode):
+            south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
+            p1s,p2s,p3s,p4s = south_neighbor.rect
+        
+            if south_neighbor.has_children == True and p4.y < p4s.y:
+                root.nsew[1] = 1
+        
+        north_neigh_index = str(find_neighbor_of(root.index,'U'))    
+        # checking to see if the west neighbor exists or is a ghost
+        if it_exists(north_neigh_index, masterNode):
+            north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
+            p1n,p2n,p3n,p4n = north_neighbor.rect
+            if north_neighbor.has_children == True and p1n.y < p1.y:
+                root.nsew[0] = 1
+
+
+                    
 if __name__ == "__main__":
     print "Reading image in..."
 #    inputImage = sitk.ReadImage("images/channels.png");
 #    outputImage = sitk.ReadImage("images/channels.png");
+#    inputImage = sitk.ReadImage("images/circlesOld.png");
+#    outputImage = sitk.ReadImage("images/circlesOld.png");
     inputImage = sitk.ReadImage("images/circles.png");
     outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
@@ -1500,10 +1596,12 @@ if __name__ == "__main__":
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
  
     [p_reg,p_regCList] = process_list_of_elements(llist,masterNode)
-    t_reg = numbering(p_reg,p_regCList,llist, masterNode)
-#     print t_reg
-    print p_reg, t_reg
     
+    t_reg = numbering(p_reg,p_regCList,llist, masterNode)
+    
+    set_nsew(llist,masterNode)
+#     print t_reg
+#    print p_reg, t_reg
      
 #     p_reg = p_reg / 1000.0
 #     for i in range(0,len(p_reg)):
@@ -1517,12 +1615,18 @@ if __name__ == "__main__":
 #     for e in range(0, len(p_reg)):
 #         if p_reg[e,0] == 0.25 and p_reg[e,1] == 0.625:
 #             print e
-#             
-    for e in range(0, len(t_reg)):
-        if t_reg[e][0] == 5:
-            print t_reg[e]
-    p = p_reg    
-    print p[5], p[6], p[15], p[14],p[81], p[82]
+
+#    p = p_regCList
+##    for e in range(0, len(t_reg)):
+##        if t_reg[e][0] == 6:
+##            print t_reg[e]
+##            niod = get_node_by_id(masterNode, ['322'])
+##            print niod.nsew
+##            
+            
+#            for k in range(0,len(t_reg[e])):
+#                print p[t_reg[e][k]]
+
 #     for i in range(0,len(p_reg)):
 #         p_reg[i,1] = 1 - p_reg[i,1] 
 #     print p_reg, len(p_reg), len(p_regCList)
@@ -1532,7 +1636,8 @@ if __name__ == "__main__":
         
     print 'writing the image out'
  
-    sitk.WriteImage(outputImage,"outCircles.png");
+    sitk.WriteImage(outputImage,"outCircles.png")
+    
 #    sitk.WriteImage(outputImage,"outChannels.png");
 
     ndim = 8
@@ -1607,10 +1712,10 @@ if __name__ == "__main__":
 #             t_reg = t_reg + [[112, 113, 115, 51]]
 #             t_reg = t_reg + [[113, 114, 52, 115]]
      
-    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg)
+    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist)
 
     aa1 = numpy.array([UU])
     ww1 = numpy.array(aa1[()])
     UU = ww1[0].item()[:,:]
 
-    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri)
+    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

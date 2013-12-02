@@ -8,6 +8,7 @@ import string
 from itertools import izip_longest
 from itertools import groupby
 import numpy
+import copy
 
 from igfem2d import *
 from meshgeneration import *
@@ -1157,6 +1158,7 @@ def get_node_by_id(node,id):
 def process_list_of_elements(llist,root):
     n = len(llist)
     pvec = numpy.zeros((0,2))
+    
     coordsList1 = []
     #first construct the pvec of just the physical coordinates of the element corners
     for i in range(0,n):
@@ -1167,10 +1169,24 @@ def process_list_of_elements(llist,root):
         coordsList1 = coordsList1 + [[p3.x, p3.y]]
         coordsList1 = coordsList1 + [[p4.x, p4.y]]
 
+    cList1 = copy.deepcopy(coordsList1)
+    
+    for i in range(0, len(coordsList1)):
+        coordsList1[i][0] /= 1000.0
+        coordsList1[i][1] /= 1000.0
+        if coordsList1[i][0] != 0.0:
+            coordsList1[i][0] += 0.001
+        if coordsList1[i][1] != 0.0:
+            coordsList1[i][1] += 0.001
+             
+        coordsList1[i][1] = 1 - coordsList1[i][1] 
+        
+        
     # sort by y, and then by x
     coordsList1 = sorted(coordsList1,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list:
     coordsList1 = [ key for key,_ in groupby(coordsList1)]
+
 
     coordsList2 = []
     #first construct the pvec of just the physical coordinates of the element corners
@@ -1182,64 +1198,236 @@ def process_list_of_elements(llist,root):
                 enrN = root_i.enrichNodes[j]
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
+    cList2 = copy.deepcopy(coordsList2)
+    
+    
+    for i in range(0, len(coordsList2)):
+        coordsList2[i][0] /= 1000.0
+        coordsList2[i][1] /= 1000.0
+        if coordsList2[i][0] != 0.0:
+            coordsList2[i][0] += 0.001
+        if coordsList2[i][1] != 0.0:
+            coordsList2[i][1] += 0.001
+             
+        coordsList2[i][1] = 1 - coordsList2[i][1] 
+
     # sort by y, and then by x
     coordsList2 = sorted(coordsList2,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list:
     coordsList2 = [ key for key,_ in groupby(coordsList2)]
-
+    
     coordsList = coordsList1 + coordsList2
     pvec = numpy.vstack([pvec,coordsList])
 
+ 
+    cList1 = sorted(cList1,key=lambda x: (x[1],x[0]))
+    cList1 = [ key for key,_ in groupby(cList1)]
+    cList2 = sorted(cList2,key=lambda x: (x[1],x[0]))
+    cList2 = [ key for key,_ in groupby(cList2)]
+    
+     
+    cList = cList1 + cList2
+    pvecCList = numpy.zeros((0,2))
+    pvecCList = numpy.vstack([pvecCList,cList])
 
+#     pvec = pvec / 1000.0
+#     for i in range(0,len(pvec)):
+#         if pvec[i,0] != 0.0:
+#             pvec[i,0] += 0.001
+#         if pvec[i,1] != 0.0:
+#             pvec[i,1] += 0.001
+#              
+#     for i in range(0,len(pvecv)):
+#         pvec[i,1] = 1 - pvec[i,1] 
 
+#     print pvecCList
+    
     # construct the corners list t:
+#     t = []
+# #     for i in range(0,n):
+# #         root_i = get_node_by_id(masterNode,llist[i])
+# #         p1,p2,p3,p4 = root_i.rect
+# #         
+# # #         p1.x = p1.x/1000.0
+# # #         p1.y = p1.y/1000.0
+# # #         if p1.x != 0.0:
+# # #             p1.x += 0.001
+# # #         if p1.y != 0.0:
+# # #             p1.y += 0.001
+# # #         p1.y = 1 - p1.y
+# #         
+# # #         p2.x = p2.x/1000.0
+# # #         p2.y = p2.y/1000.0
+# # #         if p2.x != 0.0:
+# # #             p2.x += 0.001
+# # #         if p2.y != 0.0:
+# # #             p2.y += 0.001
+# # #         p2.y = 1 - p2.y
+# #         
+# #         
+# # #         p3.x = p3.x/1000.0
+# # #         p3.y = p3.y/1000.0
+# # #         if p3.x != 0.0:
+# # #             p3.x += 0.001
+# # #         if p3.y != 0.0:
+# # #             p3.y += 0.001
+# # #         p3.y = 1 - p3.y
+# #         
+# #         
+# #         
+# # #         p4.x = p4.x/1000.0
+# # #         p4.y = p4.y/1000.0
+# # #         if p4.x != 0.0:
+# # #             p4.x += 0.001
+# # #         if p4.y != 0.0:
+# # #             p4.y += 0.001
+# # #         p4.y = 1 - p4.y
+# #         
+# #         
+# #         b1 = [p1.x, p1.y]
+# #         ind1 = numpy.where(numpy.all(pvecCList==b1,axis=1))
+# #         c1 = ind1[0][0]
+# #          
+# #         b2 = [p2.x, p2.y]
+# #         ind2 = numpy.where(numpy.all(pvecCList==b2,axis=1))
+# #         c2 = ind2[0][0]
+# #         
+# #         b3 = [p3.x, p3.y]
+# #         ind3 = numpy.where(numpy.all(pvecCList==b3,axis=1))
+# #         c3 = ind3[0][0]
+# #         
+# #         b4 = [p4.x, p4.y]
+# #         ind4 = numpy.where(numpy.all(pvecCList==b4,axis=1))
+# #         c4 = ind4[0][0]
+# #         
+# #         l = len(root_i.enrichNodes)
+# #         if l > 0:
+# #             if l == 1:
+# #                 enrN1 = root_i.enrichNodes[0]
+# #                 
+# # #                 enrN1.x = enrN1.x/1000.0
+# # #                 enrN1.y = enrN1.y/1000.0
+# # #                 if enrN1.x != 0.0:
+# # #                     enrN1.x += 0.001
+# # #                 if enrN1.y != 0.0:
+# # #                     enrN1.y += 0.001
+# # #                 enrN1.y = 1 - enrN1.y
+# #                 
+# #                 b5 = [enrN1.x, enrN1.y]
+# #                 ind5 = numpy.where(numpy.all(pvecCLisr==b5,axis=1))
+# #                 c5 = ind5[0][0]
+# # #                 t = t + [[c1,c2,c3,c4,c5]]
+# #                 t = t + [[c4,c3,c2,c1, c5]]
+# #                 
+# #             if l == 2:
+# #                 enrN1 = root_i.enrichNodes[0]
+# #                 
+# # #                 enrN1.x = enrN1.x/1000.0
+# # #                 enrN1.y = enrN1.y/1000.0
+# # #                 if enrN1.x != 0.0:
+# # #                     enrN1.x += 0.001
+# # #                 if enrN1.y != 0.0:
+# # #                     enrN1.y += 0.001
+# # #                 enrN1.y = 1 - enrN1.y
+# #                 
+# #                 b5 = [enrN1.x, enrN1.y]
+# #                 ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
+# #                 c5 = ind5[0][0]
+# #                 
+# #                 enrN2 = root_i.enrichNodes[1]
+# #                 
+# # #                 enrN2.x = enrN2.x/1000.0
+# # #                 enrN2.y = enrN2.y/1000.0
+# # #                 if enrN2.x != 0.0:
+# # #                     enrN2.x += 0.001
+# # #                 if enrN2.y != 0.0:
+# # #                     enrN2.y += 0.001
+# # #                 enrN2.y = 1 - enrN2.y
+# #                 
+# #                 b6 = [enrN2.x, enrN2.y]
+# #                 ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
+# #                 c6 = ind6[0][0]   
+# #                 
+# # #                 t = t + [[c1,c2,c3,c4,c5,c6]]
+# #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
+# #         else:
+# # #             t = t + [[c1,c2,c3,c4]]
+# #             t = t + [[c4,c3,c2,c1]]
+            
+
+        
+    return [pvec,pvecCList]
+    
+def numbering(pvec,pvecCList, llist, masterNode):
+    n = len(llist)
+    
+#     for i in range(0,len(pvec)):
+#         pvec[i,1] = 1 - pvec[i,1] 
+#         
+#         
+#     for i in range(0,len(p_reg)):
+#         if pvec[i,0] != 0.0:
+#             pvec[i,0] -= 0.001
+#         if pvec[i,1] != 0.0:
+#             pvec[i,1] -= 0.001
+#     pvec = pvec * 1000.0
+       
     t = []
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         p1,p2,p3,p4 = root_i.rect
         
+        
         b1 = [p1.x, p1.y]
-        ind1 = numpy.where(numpy.all(pvec==b1,axis=1))
+        ind1 = numpy.where(numpy.all(pvecCList==b1,axis=1))
         c1 = ind1[0][0]
-         
+
         b2 = [p2.x, p2.y]
-        ind2 = numpy.where(numpy.all(pvec==b2,axis=1))
+        ind2 = numpy.where(numpy.all(pvecCList==b2,axis=1))
         c2 = ind2[0][0]
-        
+         
         b3 = [p3.x, p3.y]
-        ind3 = numpy.where(numpy.all(pvec==b3,axis=1))
+        ind3 = numpy.where(numpy.all(pvecCList==b3,axis=1))
         c3 = ind3[0][0]
-        
+         
         b4 = [p4.x, p4.y]
-        ind4 = numpy.where(numpy.all(pvec==b4,axis=1))
+        ind4 = numpy.where(numpy.all(pvecCList==b4,axis=1))
         c4 = ind4[0][0]
-        
+         
         l = len(root_i.enrichNodes)
         if l > 0:
             if l == 1:
                 enrN1 = root_i.enrichNodes[0]
+                   
                 b5 = [enrN1.x, enrN1.y]
-                ind5 = numpy.where(numpy.all(pvec==b5,axis=1))
+                ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
                 c5 = ind5[0][0]
                 t = t + [[c1,c2,c3,c4,c5]]
-                
+#                 t = t + [[c4,c3,c2,c1, c5]]
+                  
             if l == 2:
                 enrN1 = root_i.enrichNodes[0]
+                  
                 b5 = [enrN1.x, enrN1.y]
-                ind5 = numpy.where(numpy.all(pvec==b5,axis=1))
+#                 print b5
+                ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
                 c5 = ind5[0][0]
-                
+                  
                 enrN2 = root_i.enrichNodes[1]
+                  
                 b6 = [enrN2.x, enrN2.y]
-                ind6 = numpy.where(numpy.all(pvec==b6,axis=1))
+                ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
                 c6 = ind6[0][0]   
-                
-                t = t + [[c1,c2,c3,c4,c5,c6]]                             
+                  
+                t = t + [[c1,c2,c3,c4,c5,c6]]
+#                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
             t = t + [[c1,c2,c3,c4]]
-            
-    return [pvec,t]
-    
+#             t = t + [[c4,c3,c2,c1]]
+        
+        
+    return t
+
 if __name__ == "__main__":
     print "Reading image in..."
 #    inputImage = sitk.ReadImage("images/channels.png");
@@ -1311,20 +1499,37 @@ if __name__ == "__main__":
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
  
-    [p_reg,t_reg] = process_list_of_elements(llist,masterNode)
- 
-     
-    
-    p_reg = p_reg / 1000.0
-    for i in range(0,len(p_reg)):
-        if p_reg[i,0] != 0.0:
-            p_reg[i,0] += 0.001
-        if p_reg[i,1] != 0.0:
-            p_reg[i,1] += 0.001
-             
+    [p_reg,p_regCList] = process_list_of_elements(llist,masterNode)
+    t_reg = numbering(p_reg,p_regCList,llist, masterNode)
+#     print t_reg
     print p_reg, t_reg
+    
+     
+#     p_reg = p_reg / 1000.0
+#     for i in range(0,len(p_reg)):
+#         if p_reg[i,0] != 0.0:
+#             p_reg[i,0] += 0.001
+#         if p_reg[i,1] != 0.0:
+#             p_reg[i,1] += 0.001
+                     
+        
+#  
+#     for e in range(0, len(p_reg)):
+#         if p_reg[e,0] == 0.25 and p_reg[e,1] == 0.625:
+#             print e
+#             
+    for e in range(0, len(t_reg)):
+        if t_reg[e][0] == 5:
+            print t_reg[e]
+    p = p_reg    
+    print p[5], p[6], p[15], p[14],p[81], p[82]
+#     for i in range(0,len(p_reg)):
+#         p_reg[i,1] = 1 - p_reg[i,1] 
+#     print p_reg, len(p_reg), len(p_regCList)
 
 
+
+        
     print 'writing the image out'
  
     sitk.WriteImage(outputImage,"outCircles.png");

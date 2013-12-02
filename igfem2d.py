@@ -16,6 +16,8 @@ from quad2d import *
 # import pylab
 import scipy.io
 
+from main import *
+
 
 #definition of rhombus corners
 #A = Point(0.5, 1.0/3.0)
@@ -376,7 +378,7 @@ def Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N,S,E,W):
     
     return [N1,N2,N3,N4]
 
-def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf):
+def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     print 'compute the L-2 norm ...'
 
     T = len(t)
@@ -398,6 +400,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf):
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         nodes = np.array(nodes)
     
+        root_i = get_node_by_id(masterNode,llist[e])
+
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]
 
@@ -455,24 +459,24 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf):
 
 
 
-
-            NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,0,0)
+            [N_hn,S_hn,E_hn,W_hn] = root_i.nsew
+            NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N_hn,S_hn,E_hn,W_hn)
             
-            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
-                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,1,0)
-                print 'norm - east edge'
-                
-            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
-                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,0,1)
-                print 'norm - west edge'
-                
-            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
-                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,1,0,0)
-                print 'norm - south edge'
-                
-            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
-                print 'norm - north edge'
-                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,1,0,0,0)
+#            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
+#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,1,0)
+#                print 'norm - east edge'
+#                
+#            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
+#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,0,1)
+#                print 'norm - west edge'
+#                
+#            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
+#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,1,0,0)
+#                print 'norm - south edge'
+#                
+#            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
+#                print 'norm - north edge'
+#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,1,0,0,0)
                 
             
             uh_elem = lambda x,y: ( U[t[e][0],0] * NbasisHN[0](x,y) +
@@ -4371,7 +4375,7 @@ def in_circle(center_x, center_y, radius, x, y):
     square_dist = (center_x - x) ** 2 + (center_y - y) ** 2
     return square_dist <= radius ** 2
 
-def myquad(m,n,k1,k2,ui,wi,p,t):
+def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
 #def myquad(m,n,k1,k2,loc,ui,wi,p,t,UConf,pConf,tConf):
     
     #definition of rhombus corners
@@ -4445,9 +4449,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t):
     F = sparse.lil_matrix((N,1))
 
     for e in range(0,T):
-
+        
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
     
+        root_i = get_node_by_id(masterNode,llist[e])
+
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
 
@@ -4563,34 +4569,35 @@ def myquad(m,n,k1,k2,ui,wi,p,t):
             #            print 'ERROR! -  inside igfem2d.py - assembling the stiffness matrix'                
 
             #N,S,E,W
-            [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,0,0)
-            Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,0,0)
+            [N_hn,S_hn,E_hn,W_hn] = root_i.nsew
+            
+            [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
+            Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
             det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
 
-
-            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
-                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,1,0)
-                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,1,0)
-                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-                print 'east edge'
-                
-            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
-                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,0,1)
-                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,0,1)
-                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-                print 'west edge'
-                
-            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
-                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,1,0,0)
-                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,1,0,0)
-                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-                print 'south edge'
-                
-            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
-                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],1,0,0,0)
-                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],1,0,0,0)
-                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-                print 'north edge'
+#            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,1,0)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,1,0)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'east edge'
+#                
+#            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,0,1)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,0,1)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'west edge'
+#                
+#            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,1,0,0)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,1,0,0)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'south edge'
+#                
+#            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],1,0,0,0)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],1,0,0,0)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'north edge'
                 
                     
                 
@@ -4917,7 +4924,19 @@ def myquad(m,n,k1,k2,ui,wi,p,t):
                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
                             F[nodes[i],0] = F[nodes[i],0] + Fe_NE[i]
 
-
+                    # the South-West corner is cut, 0-4-1, and 0-5-3
+                    if enrich1[1] == y0 and enrich2[0] == x0 and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
+                        print "SW corner"
+                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes)
+        
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+                                if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
+                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+                            
                     # the South edge
                     if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
                         ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
@@ -5000,18 +5019,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t):
                                     K[east_nodes[j],east_nodes[i]] = K[east_nodes[i],east_nodes[j]]
                             F[east_nodes[i],0] = F[east_nodes[i],0] + Fe_East[i]
     
-                    # the South-West corner is cut, 0-4-1, and 0-5-3
-                    if enrich1[1] == y0 and enrich2[0] == x0 and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
-                        print "SW corner"
-                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes)
-        
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+
     
             
                     # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 

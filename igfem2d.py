@@ -16,6 +16,8 @@ from quad2d import *
 # import pylab
 import scipy.io
 
+from libFcts import *
+
 from main import *
 
 import __builtin__
@@ -480,19 +482,137 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 #                print 'norm - north edge'
 #                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,1,0,0,0)
                 
-            
+            # locate the hanging nodes
+            north_node = 0
+            south_node = 0
+            east_node = 0
+            west_node = 0
+            if S_hn == 1:
+                south_hn = Coordinate( (x0 + x1) / 2.0, y0)
+                shn = [south_hn.x, south_hn.y]
+                s_ind = numpy.where(numpy.all(p==shn,axis=1))
+                south_node = s_ind[0][0]
+                
+            if N_hn == 1:
+                north_hn = Coordinate( (x0 + x1) / 2.0, y1)
+                nhn = [north_hn.x, north_hn.y]
+                n_ind = numpy.where(numpy.all(p==nhn,axis=1))
+                north_node = n_ind[0][0]           
+                     
+            if E_hn == 1:
+                east_hn = Coordinate( x1, (y0 + y1) / 2.0)
+                ehn = [east_hn.x, east_hn.y]
+                e_ind = numpy.where(numpy.all(p==ehn,axis=1))
+                east_node = e_ind[0][0]   
+                             
+            if W_hn == 1:
+                west_hn = Coordinate( x0, (y0 + y1) / 2.0)
+                whn = [west_hn.x, west_hn.y]
+                w_ind = numpy.where(numpy.all(p==whn,axis=1))
+                west_node = w_ind[0][0]            
+                
+
+            if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
+            Nbases_HN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N_hn,S_hn,E_hn,W_hn)
+             
+          
             uh_elem = lambda x,y: ( U[t[e][0],0] * NbasisHN[0](x,y) +
                                 U[t[e][1],0] * NbasisHN[1](x,y) +
                                 U[t[e][2],0] * NbasisHN[2](x,y) +
-                                U[t[e][3],0] * NbasisHN[3](x,y) #+ Nbasis5(x,y,NbasisL,NbasisR,x0,x1)
-                        )
+                                U[t[e][3],0] * NbasisHN[3](x,y) +
+                                
+                                U[north_node,0] * Nbases_HN[0](x,y) +  
+                                U[south_node,0] * Nbases_HN[1](x,y) +
+                                U[east_node,0] * Nbases_HN[2](x,y) +
+                                U[west_node,0] * Nbases_HN[3](x,y)
+                        ) 
+                        
             Usolution[nodes[0],0] = uh_elem(p[nodes[0],0],p[nodes[0],1])
             Usolution[nodes[1],0] = uh_elem(p[nodes[1],0],p[nodes[1],1])
             Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
             Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
+                            
+            # 1 - Hanging Node:
+            # South
+            if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3] ]]
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+            # East
+            if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3] ]]
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+            # North  
+            if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3] ]]
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+            # West 
+            if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3], west_node ]]
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                
+                
+            # 2 Hanging Nodes:
+            # South & East
+            if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3] ]]
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+            # South & North 
+            if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3] ]]
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+            # South & West
+            if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3], west_node ]]
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+            # North & East 
+            if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+            # East & West
+            if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3], west_node ]]
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+            # North & West
+            if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3], west_node ]]
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                 
+            # 3 Hanging Nodes:
+            # South, East & North
+            if N_hn == 1 and S_hn == 1 and E_hn == 1 and W_hn == 0:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+            # South, North & West 
+            if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3], west_node ]]
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+            # East, West & North  
+            if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3], west_node ]]
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+            # East, West & South
+            if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 1:
+                polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3], west_node ]]
+                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+ 
+            
 
-
-            polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
+                             
 
             # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
             # for transformation from the parametric element to phisycal element

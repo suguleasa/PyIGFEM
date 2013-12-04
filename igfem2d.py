@@ -18,6 +18,8 @@ import scipy.io
 
 from main import *
 
+import __builtin__
+sum = __builtin__.sum
 
 #definition of rhombus corners
 #A = Point(0.5, 1.0/3.0)
@@ -371,10 +373,10 @@ def Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N,S,E,W):
         N8 = lambda x,y: 0.0
 
 
-    N1 = lambda x,y: Nbasis[0](x,y) + 1.0/2.0 * (N5(x,y) + N8(x,y))
-    N2 = lambda x,y: Nbasis[1](x,y) + 1.0/2.0 * (N5(x,y) + N6(x,y))
-    N3 = lambda x,y: Nbasis[2](x,y) + 1.0/2.0 * (N6(x,y) + N7(x,y))
-    N4 = lambda x,y: Nbasis[3](x,y) + 1.0/2.0 * (N8(x,y) + N7(x,y))
+    N1 = lambda x,y: Nbasis[0](x,y) - 1.0/2.0 * (N5(x,y) + N8(x,y))
+    N2 = lambda x,y: Nbasis[1](x,y) - 1.0/2.0 * (N5(x,y) + N6(x,y))
+    N3 = lambda x,y: Nbasis[2](x,y) - 1.0/2.0 * (N6(x,y) + N7(x,y))
+    N4 = lambda x,y: Nbasis[3](x,y) - 1.0/2.0 * (N8(x,y) + N7(x,y))
     
     return [N1,N2,N3,N4]
 
@@ -396,7 +398,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     polygonList = []
 
     # COMPUTING THE L-2 NORM
-    for e in range(0,T):
+    for e in range(0,T/2):
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         nodes = np.array(nodes)
     
@@ -2289,8 +2291,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     
 
 #    print Usolution 
-#    print polygonList
-
+    print 'polygon list:'
+    print polygonList
+    print 'finished printing polygon list '
     print_vtk_file(p,Usolution,polygonList)
 
     rtx = np.arange(0,1,0.01)
@@ -2326,9 +2329,17 @@ def print_vtk_file(p,Usolution,plist):
     str1 = 'POINTS ' +  str(P) + ' FLOAT \n'
     target.write(str1)
 
+    print plist
+    print '-------------'
+    print p
+    print len( sum (plist, [] ) ) + len(plist)
+
     for i in range(0,P):
         stri = str(p[i,0]) + '  ' + str(p[i,1]) + '  ' + str(Usolution[i,0]) + ' \n'
+        print 'i = ', i, ' and ',stri
         target.write(stri)
+    
+
     
     NPolyg = len( sum (plist, [] ) ) + len(plist)
     str2 = '\nPOLYGONS  ' + str(len(plist)) + '   ' + str(NPolyg) + ' \n'

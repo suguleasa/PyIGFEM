@@ -8,8 +8,4 @@ TOL_LINEARS = 2.0
 TOL_QUADRATICS = -2.0 # cancel the cubic approximation by making a negative number
 TOL_CUBICS = -2.0 # cancel the cubic approximation by making a negative number
 
-class Coordinate(object):
-    def __init__(self,x=-1,y=-1):
-        self.x = x
-        self.y = y
 

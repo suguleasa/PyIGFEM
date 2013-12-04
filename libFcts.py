@@ -3,6 +3,10 @@ from globalVars import *
 from math import sqrt, floor
 from numpy import *
 
+class Coordinate(object):
+    def __init__(self,x=-1,y=-1):
+        self.x = x
+        self.y = y
 
 ## This function draws a line between two points in space: pinit and pend
 def draw_line(image,pinit,pend):

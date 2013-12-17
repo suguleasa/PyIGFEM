@@ -400,12 +400,19 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     polygonList = []
 
     # COMPUTING THE L-2 NORM
-    for e in range(0,T/2):
+#    for e in range(0,T):
+#    for e in range(34,51):
+    for e in [35,37,38,40,43,44,47,48,49,50]:
+#    for e in [38, 102, 122]:
+#    for e in [96,97,100,102,103,105]: 
+        
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         nodes = np.array(nodes)
     
-        root_i = get_node_by_id(masterNode,llist[e])
+        root = get_node_by_id(masterNode,llist[e])
 
+        print 'Element ', e, ' of ', T-1, ' and nodes: ', nodes
+        
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]
 
@@ -443,196 +450,423 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 #                                U[t[e][3],0] * Nbasis[3](x_fct_HN(ee,nn),y_fct_HN(ee,nn)) #* det_Jac(ee,nn)
 #                        )
 
-#
-#            px1 = p[nodes[0],0]
-#            py1 = p[nodes[0],1]
-#            Usolution[nodes[0],0] = uh_elem(px1,py1)
-#            #Usolution[nodes[0],0] = uh_elem(x_fct(px1,py1), y_fct(px1,py1) ) * det_Jac(x_fct(px1,py1), y_fct(px1,py1) )
-#            px2 = p[nodes[1],0]
-#            py2 = p[nodes[1],1]
-#            Usolution[nodes[1],0] = uh_elem(px2,py2)
-##            Usolution[nodes[1],0] = uh_elem(x_fct(px2,py2), y_fct(px2,py2) ) * det_Jac(x_fct(px2,py2), y_fct(px2,py2) ) 
-#            px3 = p[nodes[2],0]
-#            py3 = p[nodes[2],1]
-#            Usolution[nodes[2],0] = uh_elem(px3,py3)
-##            Usolution[nodes[2],0] = uh_elem(x_fct(px3,py3), y_fct(px3,py3) ) * det_Jac(x_fct(px3,py3), y_fct(px3,py3) )
-#            px4 = p[nodes[3],0]
-#            py4 = p[nodes[3],1]
-##            Usolution[nodes[3],0] = uh_elem(x_fct(px4,py4), y_fct(px4,py4) ) * det_Jac(x_fct(px4,py4), y_fct(px4,py4))
-#            Usolution[nodes[3],0] = uh_elem(px4,py4)
 
-
-
-            [N_hn,S_hn,E_hn,W_hn] = root_i.nsew
+            p1h,p2h,p3h,p4h = root.hn
+            
+            [N_hn,S_hn,E_hn,W_hn] = root.nsew
             NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N_hn,S_hn,E_hn,W_hn)
             
-#            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
-#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,1,0)
-#                print 'norm - east edge'
-#                
-#            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
-#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,0,0,1)
-#                print 'norm - west edge'
-#                
-#            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
-#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,0,1,0,0)
-#                print 'norm - south edge'
-#                
-#            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
-#                print 'norm - north edge'
-#                NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,1,0,0,0)
-                
-            # locate the hanging nodes
-            north_node = 0
-            south_node = 0
-            east_node = 0
-            west_node = 0
-            if S_hn == 1:
-                south_hn = Coordinate( (x0 + x1) / 2.0, y0)
-                shn = [south_hn.x, south_hn.y]
-                s_ind = numpy.where(numpy.all(p==shn,axis=1))
-                south_node = s_ind[0][0]
-                
-            if N_hn == 1:
-                north_hn = Coordinate( (x0 + x1) / 2.0, y1)
-                nhn = [north_hn.x, north_hn.y]
-                n_ind = numpy.where(numpy.all(p==nhn,axis=1))
-                north_node = n_ind[0][0]           
-                     
-            if E_hn == 1:
-                east_hn = Coordinate( x1, (y0 + y1) / 2.0)
-                ehn = [east_hn.x, east_hn.y]
-                e_ind = numpy.where(numpy.all(p==ehn,axis=1))
-                east_node = e_ind[0][0]   
-                             
-            if W_hn == 1:
-                west_hn = Coordinate( x0, (y0 + y1) / 2.0)
-                whn = [west_hn.x, west_hn.y]
-                w_ind = numpy.where(numpy.all(p==whn,axis=1))
-                west_node = w_ind[0][0]            
-                
-
-            if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
-            Nbases_HN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N_hn,S_hn,E_hn,W_hn)
-             
-          
-            uh_elem = lambda x,y: ( U[t[e][0],0] * NbasisHN[0](x,y) +
+            uiHN = ui
+            wiHN = wi
+            
+            p1,p2,p3,p4 = root.rect
+            
+            
+            if e!= 38:
+                # locate the hanging nodes
+                north_node = 0
+                south_node = 0
+                east_node = 0
+                west_node = 0
+                if S_hn == 1:
+                    south_hn = root.hn[1]#Coordinate( (x0 + x1) / 2.0, y0)
+                    shn = [south_hn.x, south_hn.y]
+                    s_ind = numpy.where(numpy.all(p==shn,axis=1))
+                    south_node = s_ind[0][0]
+                    Nbases_HN_South = lambda x,y: Nbasis57(x,y,p,nodes,x0,x1,y0,y1)[0]
+                    
+    #                [uiHN,wiHN] = lgwt(6,-1,1)
+                else:
+                    Nbases_HN_South = lambda x,y: 0.0
+                    
+                if N_hn == 1:
+                    north_hn = root.hn[0]#Coordinate( (x0 + x1) / 2.0, y1)
+                    nhn = [north_hn.x, north_hn.y]
+                    n_ind = numpy.where(numpy.all(p==nhn,axis=1))
+                    north_node = n_ind[0][0]           
+                    Nbases_HN_North = lambda x,y: Nbasis57(x,y,p,nodes,x0,x1,y0,y1)[1]
+                    
+    #                [uiHN,wiHN] = lgwt(6,-1,1)
+                else:
+                    Nbases_HN_North = lambda x,y: 0.0   
+                                      
+                if E_hn == 1:
+                    east_hn = root.hn[2]#Coordinate( x1, (y0 + y1) / 2.0)
+                    ehn = [east_hn.x, east_hn.y]
+                    e_ind = numpy.where(numpy.all(p==ehn,axis=1))
+                    east_node = e_ind[0][0]   
+                    Nbases_HN_East = lambda x,y: Nbasis68(x,y,p,nodes,x0,x1,y0,y1)[0]
+                    
+    #                [uiHN,wiHN] = lgwt(6,-1,1)
+                else:
+                    Nbases_HN_East = lambda x,y: 0.0
+                                                 
+                if W_hn == 1:
+                    west_hn = root.hn[3]#Coordinate( x0, (y0 + y1) / 2.0)
+                    whn = [west_hn.x, west_hn.y]
+                    w_ind = numpy.where(numpy.all(p==whn,axis=1))
+                    west_node = w_ind[0][0]            
+                    Nbases_HN_West = lambda x,y: Nbasis68(x,y,p,nodes,x0,x1,y0,y1)[1]
+                    
+    #                [uiHN,wiHN] = lgwt(6,-1,1)
+                else:
+                    Nbases_HN_West = lambda x,y: 0.0                
+    
+                if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
+              
+                uh_elem = lambda x,y: ( U[t[e][0],0] * NbasisHN[0](x,y) +
                                 U[t[e][1],0] * NbasisHN[1](x,y) +
                                 U[t[e][2],0] * NbasisHN[2](x,y) +
                                 U[t[e][3],0] * NbasisHN[3](x,y) +
                                 
-                                U[north_node,0] * Nbases_HN[0](x,y) +  
-                                U[south_node,0] * Nbases_HN[1](x,y) +
-                                U[east_node,0] * Nbases_HN[2](x,y) +
-                                U[west_node,0] * Nbases_HN[3](x,y)
+#            uh_elem = lambda x,y: ( U[t[e][0],0] * Nbasis[0](x,y) +
+#                                U[t[e][1],0] * Nbasis[1](x,y) +
+#                                U[t[e][2],0] * Nbasis[2](x,y) +
+#                                U[t[e][3],0] * Nbasis[3](x,y) +
+#                                
+                                U[north_node,0] * Nbases_HN_North(x,y) +  
+                                U[south_node,0] * Nbases_HN_South(x,y) +
+                                U[east_node,0] * Nbases_HN_East(x,y) +
+                                U[west_node,0] * Nbases_HN_West(x,y)
                         ) 
                         
-            Usolution[nodes[0],0] = uh_elem(p[nodes[0],0],p[nodes[0],1])
-            Usolution[nodes[1],0] = uh_elem(p[nodes[1],0],p[nodes[1],1])
-            Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
-            Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
+                Usolution[nodes[0],0] = uh_elem(p[nodes[0],0],p[nodes[0],1])
+                Usolution[nodes[1],0] = uh_elem(p[nodes[1],0],p[nodes[1],1])
+                Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
+                Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
+                                
+                # 1 - Hanging Node:
+                # South
+                if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3] ]]
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                # East
+                if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3] ]]
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                # North  
+                if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3] ]]
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                # West 
+                if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3], west_node ]]
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                    
+                # 2 Hanging Nodes:
+                # South & East
+                if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3] ]]
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                # South & North 
+                if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3] ]]
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                # South & West
+                if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3], west_node ]]
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                # North & East 
+                if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                # East & West
+                if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3], west_node ]]
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+    #            # North & West
+                if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3], west_node ]]
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                     
+                # 3 Hanging Nodes:
+                # South, East & North
+                if N_hn == 1 and S_hn == 1 and E_hn == 1 and W_hn == 0:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                # South, North & West 
+                if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3], west_node ]]
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+                # East, West & North  
+                if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3], west_node ]]
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                # East, West & South
+                if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 1:
+                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3], west_node ]]
+                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+     
+    
+                if e == 38 :
+                    print Nbasis57(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[0]
+                    print Nbasis57(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[1]
+                    print Nbasis68(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[0]
+                    print Nbasis68(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[1]
+                    
+                    PeB = np.zeros((4,4))
+                    PeB[:,0] = np.ones((4,1)).transpose()
+                    PeB[:,1] = p[nodes[0:4],0]
+                    PeB[:,2] = p[nodes[0:4],1]
+                    PeB[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+                
+                    PeB[2,2] = (y0+y1)/2.0
+                    PeB[3,2] = (y0+y1)/2.0
+                    PeB[2,3] = (y0+y1)/2.0 * x1
+                    PeB[3,3] = (y0+y1)/2.0 * x0
+                    
+                    CB = np.linalg.inv(PeB)
+                    NbasisB = basisFct(CB)
+                
+                    PeT = np.zeros((4,4))
+                    PeT[:,0] = np.ones((4,1)).transpose()
+                    PeT[:,1] = p[nodes[0:4],0]
+                    PeT[:,2] = p[nodes[0:4],1]
+                    PeT[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+                
+#                    PeT[0,2] = (y0+y1)/2.0
+#                    PeT[1,2] = (y0+y1)/2.0
+#                    PeT[0,3] = (y0+y1)/2.0 * x0
+#                    PeT[1,3] = (y0+y1)/2.0 * x1
                             
-            # 1 - Hanging Node:
-            # South
-            if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3] ]]
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-            # East
-            if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3] ]]
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-            # North  
-            if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3] ]]
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-            # West 
-            if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3], west_node ]]
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+                    CT = np.linalg.inv(PeT)
+                    NbasisT = basisFct(CT)
+                            
+                    if p[178,1] <= (y0+y1)/2.0:
+                        Nbasis6 = lambda x,y: NbasisB[2](x,y)
+                        Nbasis8 = lambda x,y: NbasisB[3](x,y)
+                    else:
+                        Nbasis6 = lambda x,y: NbasisT[1](x,y)
+                        Nbasis8 = lambda x,y: NbasisT[0](x,y)
+                        
+                    print Nbasis8(p[178,0],p[178,1])
+                    print NbasisB[0](p[178,0],p[178,1]), NbasisB[1](p[178,0],p[178,1]), NbasisB[2](p[178,0],p[178,1]),NbasisB[3](p[178,0],p[178,1])
+                    print '---', p[178,0],p[178,1]
+                    print PeB
+                    print CB
+                    N1 = lambda x,y: CB[0,0] + CB[1,0]*x + CB[2,0]*y + CB[3,0]*x*y
+                    N2 = lambda x,y: CB[0,1] + CB[1,1]*x + CB[2,1]*y + CB[3,1]*x*y
+                    N3 = lambda x,y: CB[0,2] + CB[1,2]*x + CB[2,2]*y + CB[3,2]*x*y
+                    N4 = lambda x,y: CB[0,3] + CB[1,3]*x + CB[2,3]*y + CB[3,3]*x*y
+                    a = p[178,0]
+                    b= p[178,1]
+                    print N1(a,b), N2(a,b), N3(a,b),N4(a,b)
+                    a = p[178,0] 
+                    b = 0.9375
+                    print N1(a,b), N2(a,b), N3(a,b),N4(a,b)
+                    #                    print 170, NbasisHN[0](p[170,0], p[170,1])
+#                    print 169, NbasisHN[0](p[169,0], p[169,1]) 
+#                    print 178, NbasisHN[0](p[178,0], p[178,1])
+##                    print 187, NbasisHN[0](p[187,0], p[187,1])
+##                    print 186, NbasisHN[0](p[186,0], p[186,1])
+##                    print 171, NbasisHN[0](p[171,0], p[171,1])
+#                    print '170 west:', Nbases_HN_West(p[170,0],p[170,1])
+#                    print '169 west:', Nbases_HN_West(p[169,0],p[169,1])
+                    print '178 west', Nbases_HN_West(p[178,0],p[178,1])
+                    
+#                    print U[169,0], U[170,0], U[171,0], U[187,0], U[186,0], U[178,0], U[157,0], U[158,0], U[168,0]
+
+#                if e == 122:
+#                    print 57, NbasisHN[0](p[57,0], p[57,1])
+#                    print 73, NbasisHN[0](p[73,0], p[73,1])
+#                    
+#                if e == 102:
+#                    print 22, NbasisHN[2](p[22,0], p[22,1])
+#                    print 21, NbasisHN[2](p[21,0], p[21,1])
+#                    print 12, NbasisHN[2](p[12,0], p[12,1])         
+
+                # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                # for transformation from the parametric element to phisycal element
+                # of the Gauss nodes ui
+                [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
+    
+                Jac = jacobian_mat( coords[:,0], coords[:,1] )
+                detJ = lambda eps,niu: determinant(Jac)(eps,niu)
+    
+    #            el_sum =  gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_fct_HN,y_fct_HN,uh_elem,det_Jac)
                 
-                
-            # 2 Hanging Nodes:
-            # South & East
-            if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3] ]]
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-            # South & North 
-            if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3] ]]
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-            # South & West
-            if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3], west_node ]]
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-            # North & East 
-            if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-            # East & West
-            if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3], west_node ]]
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-            # North & West
-            if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3], west_node ]]
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                 
-            # 3 Hanging Nodes:
-            # South, East & North
-            if N_hn == 1 and S_hn == 1 and E_hn == 1 and W_hn == 0:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-            # South, North & West 
-            if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3], west_node ]]
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-            # East, West & North  
-            if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3], west_node ]]
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-            # East, West & South
-            if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 1:
-                polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3], west_node ]]
-                Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
- 
+                el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+    
+                all_elems_sum = all_elems_sum + el_sum;
+    
+    
+    #             if y0 <= yloc and yloc <= y1:
+    #                 tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+    #                 sfct = uh_elem(tx,yloc)
+    #                 pylab.plot(tx,sfct)
             
+                    
+            else:
+                
+                    nodes = [169, 171, 187, 186, 170, 178]
 
-                             
+                 
+                  # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
+                    tri_nodes1 = [nodes[0],nodes[4],nodes[5]]
+                    tri_nodes2 = [nodes[5],nodes[2],nodes[3]]
+                    tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
+                    tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
+    
+                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                    polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
 
-            # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-            # for transformation from the parametric element to phisycal element
-            # of the Gauss nodes ui
-            [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
+                    Pe1 = np.zeros((3,3))
+                    Pe1[:,0] = np.ones((3,1)).transpose()
+                    Pe1[:,1] = p[tri_nodes1[0:3],0]
+                    Pe1[:,2] = p[tri_nodes1[0:3],1]
+                    C1 = np.linalg.inv(Pe1)
+                    Nbasis_tri1 = tribasisFct(C1)
+                    Nx_tri1 = triderivX(C1)
+                    Ny_tri1 = triderivY(C1)
 
-            Jac = jacobian_mat( coords[:,0], coords[:,1] )
-            detJ = lambda eps,niu: determinant(Jac)(eps,niu)
-
-#            el_sum =  gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_fct_HN,y_fct_HN,uh_elem,det_Jac)
-            el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
-
-            all_elems_sum = all_elems_sum + el_sum;
-
-
-#             if y0 <= yloc and yloc <= y1:
-#                 tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-#                 sfct = uh_elem(tx,yloc)
-#                 pylab.plot(tx,sfct)
+                    Pe2 = np.zeros((3,3))
+                    Pe2[:,0] = np.ones((3,1)).transpose()
+                    Pe2[:,1] = p[tri_nodes2[0:3],0]
+                    Pe2[:,2] = p[tri_nodes2[0:3],1]
+                    C2 = np.linalg.inv(Pe2)
+                    Nbasis_tri2 = tribasisFct(C2)
+                    Nx_tri2 = triderivX(C2)
+                    Ny_tri2 = triderivY(C2)
+    
+                    Pe3 = np.zeros((3,3))
+                    Pe3[:,0] = np.ones((3,1)).transpose()
+                    Pe3[:,1] = p[tri_nodes3[0:3],0]
+                    Pe3[:,2] = p[tri_nodes3[0:3],1]
+                    C3 = np.linalg.inv(Pe3)
+                    Nbasis_tri3 = tribasisFct(C3)
+                    Nx_tri3 = triderivX(C3)
+                    Ny_tri3 = triderivY(C3)
+    
+                    Pe4 = np.zeros((3,3))
+                    Pe4[:,0] = np.ones((3,1)).transpose()
+                    Pe4[:,1] = p[tri_nodes4[0:3],0]
+                    Pe4[:,2] = p[tri_nodes4[0:3],1]
+                    C4 = np.linalg.inv(Pe4)
+                    Nbasis_tri4 = tribasisFct(C4)
+                    Nx_tri4 = triderivX(C4)
+                    Ny_tri4 = triderivY(C4)
+    
+                    tri_coords1 = p[tri_nodes1]
+                    tri_coords2 = p[tri_nodes2]
+                    tri_coords3 = p[tri_nodes3]
+                    tri_coords4 = p[tri_nodes4]
+    
+                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                    [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
+    
+                    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],Nbasis_tri1[2]]
+                    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri2[0]]
+                    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[0],Nbasis_tri3[2]]
+                    Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],lambda x,y: 0]
+    
+                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                    J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
+                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
         
+    
+                    node_enr_4 = [nodes[4]]
+                    node_enr_5 = [nodes[5]]
+                    coords_enr_4 = p[node_enr_4]
+                    coords_enr_5 = p[node_enr_5]
+    
+                    x4 = coords_enr_4[0,0]
+                    y4 = coords_enr_4[0,1]
+    
+                    x5 = coords_enr_5[0,0]
+                    y5 = coords_enr_5[0,1]
+    
+                    w1 = y1 - y5
+                    w2 = y5 - y0
+                    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+                    if factor_W > EPS_FACTOR:
+                        factor_W = 1
+    
+                    s1 = x4 - x0
+                    s2 = x1 - x4
+                    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+                    if factor_S > EPS_FACTOR:
+                        factor_S = 1
+    
+                    uh_elem_1 = lambda x,y: (
+                                            U[nodes[0],0] * Nbasis[0](x,y) +
+                                            U[nodes[1],0] * Nbasis[1](x,y) + 
+                                            U[nodes[2],0] * Nbasis[2](x,y) +
+                                            U[nodes[3],0] * Nbasis[3](x,y) +
+                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S+
+                                            U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
+    
+                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+    
+                    uh_elem_2 = lambda x,y: (
+                                            U[nodes[0],0] * Nbasis[0](x,y) +
+                                            U[nodes[1],0] * Nbasis[1](x,y) + 
+                                            U[nodes[2],0] * Nbasis[2](x,y) +
+                                            U[nodes[3],0] * Nbasis[3](x,y) +
+                                            U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W )
+    
+                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+    
+                    uh_elem_3 = lambda x,y: (
+                                            U[nodes[0],0] * Nbasis[0](x,y) +
+                                            U[nodes[1],0] * Nbasis[1](x,y) + 
+                                            U[nodes[2],0] * Nbasis[2](x,y) +
+                                            U[nodes[3],0] * Nbasis[3](x,y) +
+                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S +
+                                            U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_W )
+    
+                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+    
+                    uh_elem_4 = lambda x,y: (
+                                            U[nodes[0],0] * Nbasis[0](x,y) +
+                                            U[nodes[1],0] * Nbasis[1](x,y) + 
+                                            U[nodes[2],0] * Nbasis[2](x,y) +
+                                            U[nodes[3],0] * Nbasis[3](x,y) +
+                                            U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S )
+    
+                    el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+    
+                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                
+                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                    Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
+                    Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
+                    Usolution[nodes[3],0] = uh_elem_2( p[nodes[3],0], p[nodes[3],1]  )
+                    Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
+                    Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
+   
+                
+#            if nodes[0] == 102 and nodes[1] == 104:
+#                print south_node, east_node, north_node
+#                print uh_elem(p[south_node,0],p[south_node,1])
+#                print uh_elem(p[east_node,0],p[east_node,1])
+#                print uh_elem(p[north_node,0],p[north_node,1])
+#                print uh_elem(p[102,0],p[102,1]), uh_elem(p[104,0],p[104,1]), uh_elem(p[121,0], p[121,1]), uh_elem(p[120,0],p[120,1])
+            
+ 
         else: # element has more than 4 nodes, meaning it is an element that needs enrichment at these additional nodes
 
             enrich1 = np.array(p[nodes[4]])
@@ -2409,13 +2643,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 #                         pylab.plot( txL, uh_elem_L(txL, yloc))
 #                         pylab.plot( txR, uh_elem_R(txR, yloc))
     
+    print Usolution[186], Usolution[187], Usolution[188], Usolution[169], Usolution[171]
 
-#    print Usolution 
-    print 'polygon list:'
-    print polygonList
-    print 'finished printing polygon list '
+#    print Usolution
+    print 'Writing VTK file...' 
     print_vtk_file(p,Usolution,polygonList)
-
+    print ' Done.'
     rtx = np.arange(0,1,0.01)
     #yidx = []
     ytriangle = []
@@ -2449,14 +2682,14 @@ def print_vtk_file(p,Usolution,plist):
     str1 = 'POINTS ' +  str(P) + ' FLOAT \n'
     target.write(str1)
 
-    print plist
-    print '-------------'
-    print p
-    print len( sum (plist, [] ) ) + len(plist)
+#    print plist
+#    print '-------------'
+#    print p
+#    print len( sum (plist, [] ) ) + len(plist)
 
     for i in range(0,P):
         stri = str(p[i,0]) + '  ' + str(p[i,1]) + '  ' + str(Usolution[i,0]) + ' \n'
-        print 'i = ', i, ' and ',stri
+#        print 'i = ', i, ' and ',stri
         target.write(stri)
     
 
@@ -2481,354 +2714,6 @@ def print_vtk_file(p,Usolution,plist):
         target.write(strz + ' \n')
 
     target.close()
-
-def North_edge(p,ui,wi,k1,k2,nodess):
-    K = numpy.zeros((5,5))
-    Fe = np.zeros((5,1))
-
-        
-    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
-    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper left corner cut)
-    nodes1 = [nodess[0],nodess[4],nodess[3]]
-    nodes2 = [nodess[0],nodess[1],nodess[4]]
-    nodes3 = [nodess[1],nodess[2],nodess[4]]
-
-    coords = p[nodes]
-    coords1 = p[nodes1]
-    coords2 = p[nodes2]
-    coords3 = p[nodes3]
-
-    x0 = coords[0,0]
-    x1 = coords[1,0]
-    y0 = coords[0,1]
-    y1 = coords[2,1]
-
-    #cornerA = f_circle(x0,y0)
-    #cornerB = f_circle(x1,y0)
-    #cornerC = f_circle(x1,y1)
-    #cornerD = f_circle(x0,y1)
-
-    #R = 1.0 / 3.0 
-
-    #if cornerD <= R * R:
-    #    K_cst = [k1,k1,k1,k2]
-    #else:
-    #    K_cst = [k2,k2,k2,k1]
-    
-#    # if NW - North
-#    if ( point_in_on_poly(x0,y1,domainInclusion) == True and
-#        (not(point_in_on_poly(x1,y0,domainInclusion)) == True and not(point_in_on_poly(x1,y1,domainInclusion))==True )):
-#        K_cst = [k2,k1,k1]
-#    else: 
-#        if ( not(point_in_on_poly(x0,y1,domainInclusion)) == True and
-#            (point_in_on_poly(x1,y0,domainInclusion) == True and point_in_on_poly(x1,y1,domainInclusion)==True) ):
-#            K_cst = [k2,k1,k1]
-#
-#    # if NE - North 
-#    if ( point_in_on_poly(x1,y1,domainInclusion)==True and
-#        ( not(point_in_on_poly(x0,y0,domainInclusion))==True and not(point_in_on_poly(x0,y1,domainInclusion))==True ) ):
-#        K_cst = [k1,k1,k2]
-#    else:
-#        if ( not(point_in_on_poly(x1,y1,domainInclusion))==True and
-#            ( point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x0,y1,domainInclusion)==True ) ):
-#            K_cst = [k2,k2,k1]
-
-    if point_in_on_poly(x1,y1,domainInclusion) and not(point_in_on_poly(x0,y1,domainInclusion)) and not(point_in_on_poly(x0,y0,domainInclusion)):
-        K_cst = [k1,k1,k2]
-    else:
-        if not(point_in_on_poly(x1,y1,domainInclusion)) and point_in_on_poly(x0,y1,domainInclusion) and point_in_on_poly(x0,y0,domainInclusion):
-         K_cst = [k2,k2,k1]
-
-    if point_in_on_poly(x0,y1,domainInclusion) and not(point_in_on_poly(x1,y0,domainInclusion)) and not(point_in_on_poly(x1,y1,domainInclusion)):
-        K_cst = [k2,k1,k1]
-    else:
-        if not(point_in_on_poly(x0,y1,domainInclusion)) and point_in_on_poly(x1,y0,domainInclusion) and point_in_on_poly(x1,y1,domainInclusion):
-            K_cst = [k1,k2,k2]
-        
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-    det_J1 = lambda e,n: determinant(J1)(e,n)
-    det_J2 = lambda e,n: determinant(J2)(e,n)
-    det_J3 = lambda e,n: determinant(J3)(e,n)
-
-    # parent element
-    Pe = numpy.zeros((4,4))
-    Pe[:,0] = numpy.ones((4,1)).transpose()
-    Pe[:,1] = p[nodes[0:4],0]
-    Pe[:,2] = p[nodes[0:4],1]
-    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-    C = numpy.linalg.inv(Pe)
-    Nbasis = basisFct(C)
-    Nx = derivX(C)
-    Ny = derivY(C)
-
-    # triangle I
-    Pe1 = numpy.zeros((3,3))
-    Pe1[:,0] = numpy.ones((3,1)).transpose()
-    Pe1[:,1] = p[nodes1,0]
-    Pe1[:,2] = p[nodes1,1]
-    C1 = numpy.linalg.inv(Pe1)
-    Nbasis1 = tribasisFct(C1)
-    Nx1 = triderivX(C1)
-    Ny1 = triderivY(C1)
-
-    # triangle II
-    Pe2 = numpy.zeros((3,3))
-    Pe2[:,0] = numpy.ones((3,1)).transpose()
-    Pe2[:,1] = p[nodes2[0:3],0]
-    Pe2[:,2] = p[nodes2[0:3],1]
-    C2 = numpy.linalg.inv(Pe2)
-    Nbasis2 = tribasisFct(C2)
-    Nx2 = triderivX(C2)
-    Ny2 = triderivY(C2)
-
-    # triangle III
-    Pe3 = numpy.zeros((3,3))
-    Pe3[:,0] = numpy.ones((3,1)).transpose()
-    Pe3[:,1] = p[nodes3[0:3],0]
-    Pe3[:,2] = p[nodes3[0:3],1]
-    C3 = numpy.linalg.inv(Pe3)
-    Nbasis3 = tribasisFct(C3)
-    Nx3 = triderivX(C3)
-    Ny3 = triderivY(C3)
-    
-    node_enr_4 = [nodess[4]]
-    coords_enr_4 = p[node_enr_4]
-
-    x4 = coords_enr_4[0,0]
-    y4 = coords_enr_4[0,1]
-
-    n1 = x4 - x0
-    n2 = x1 - x4
-    factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
-    if factor_N > EPS_FACTOR:
-        factor_N = 1
-
-    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_N * Nbasis1[1](x,y)]
-    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_N * Nbasis2[2](x,y)]
-    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_N * Nbasis3[2](x,y)]
-
-    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_N * Nx1[1](x,y)]
-    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_N * Nx2[2](x,y)]
-    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_N * Nx3[2](x,y)]
-    
-    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_N * Ny1[1](x,y)]
-    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_N * Ny2[2](x,y)]
-    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_N * Ny3[2](x,y)]
-
-    for i in range(0,5):
-        for j in range(0,5):
-            Kefunc1 = lambda e,n: K_cst[0] * (
-                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
-                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
-
-            Kefunc2 = lambda e,n: K_cst[1] * (
-                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
-                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
-
-            Kefunc3 = lambda e,n: K_cst[2] * (
-                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
-                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
-
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-
-            K[i,j] = integral1 + integral2 + integral3 
-
-        # construct the local matrix and local components of the load vector
-    for i in range(0,5):
-            # construct the local load vector
-            fv1 = lambda e,n: rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
-            fv2 = lambda e,n: rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
-            fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
-
-            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
-
-            #NEUMANN BCS are zero - code not inserted here
-
-    return [K,Fe]
-
-
-
-def West_edge(p,ui,wi,k1,k2,nodess):
-    K = numpy.zeros((5,5))
-    Fe = np.zeros((5,1))
-
-    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
-    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper left corner cut)
-    nodes1 = [nodess[0],nodess[1],nodess[4]]
-    nodes2 = [nodess[1],nodess[2],nodess[4]]
-    nodes3 = [nodess[4],nodess[2],nodess[3]]
-
-    coords = p[nodes]
-    coords1 = p[nodes1]
-    coords2 = p[nodes2]
-    coords3 = p[nodes3]
-
-    x0 = coords[0,0]
-    x1 = coords[1,0]
-    y0 = coords[0,1]
-    y1 = coords[2,1]
-
-    #cornerA = f_circle(x0,y0)
-    #cornerB = f_circle(x1,y0)
-    #cornerC = f_circle(x1,y1)
-    #cornerD = f_circle(x0,y1)
-
-    #R = 1.0 / 3.0 
-
-    #if cornerD <= R * R:
-    #    K_cst = [k1,k1,k1,k2]
-    #else:
-    #    K_cst = [k2,k2,k2,k1]
-    
-
-    #if NW - West
-    if ( point_in_on_poly(x0,y1,domainInclusion) == True and
-        (not(point_in_on_poly(x0,y0,domainInclusion))==True and not(point_in_on_poly(x1,y0,domainInclusion))==True) ):
-        K_cst = [k1,k1,k2]
-    else: 
-        if ( not(point_in_on_poly(x0,y1,domainInclusion)) == True and
-            (point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x1,y0,domainInclusion)==True) ):
-            K_cst = [k2,k2,k1]
-
-    # if SW - West
-    if ( point_in_on_poly(x0,y0,domainInclusion) == True and
-        (not(point_in_on_poly(x0,y1,domainInclusion)) ==True and not(point_in_on_poly(x1,y1,domainInclusion))==True )  ):
-        K_cst = [k2,k1,k1]
-    else:
-        if ( not(point_in_on_poly(x0,y0,domainInclusion)) == True and
-            ( point_in_on_poly(x0,y1,domainInclusion) ==True and point_in_on_poly(x1,y1,domainInclusion)==True )  ):
-             K_cst = [k1,k2,k2]
-
-        
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-    det_J1 = lambda e,n: determinant(J1)(e,n)
-    det_J2 = lambda e,n: determinant(J2)(e,n)
-    det_J3 = lambda e,n: determinant(J3)(e,n)
-
-    # parent element
-    Pe = numpy.zeros((4,4))
-    Pe[:,0] = numpy.ones((4,1)).transpose()
-    Pe[:,1] = p[nodes[0:4],0]
-    Pe[:,2] = p[nodes[0:4],1]
-    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-    C = numpy.linalg.inv(Pe)
-    Nbasis = basisFct(C)
-    Nx = derivX(C)
-    Ny = derivY(C)
-
-    # triangle I
-    Pe1 = numpy.zeros((3,3))
-    Pe1[:,0] = numpy.ones((3,1)).transpose()
-    Pe1[:,1] = p[nodes1,0]
-    Pe1[:,2] = p[nodes1,1]
-    C1 = numpy.linalg.inv(Pe1)
-    Nbasis1 = tribasisFct(C1)
-    Nx1 = triderivX(C1)
-    Ny1 = triderivY(C1)
-
-    # triangle II
-    Pe2 = numpy.zeros((3,3))
-    Pe2[:,0] = numpy.ones((3,1)).transpose()
-    Pe2[:,1] = p[nodes2[0:3],0]
-    Pe2[:,2] = p[nodes2[0:3],1]
-    C2 = numpy.linalg.inv(Pe2)
-    Nbasis2 = tribasisFct(C2)
-    Nx2 = triderivX(C2)
-    Ny2 = triderivY(C2)
-
-    # triangle III
-    Pe3 = numpy.zeros((3,3))
-    Pe3[:,0] = numpy.ones((3,1)).transpose()
-    Pe3[:,1] = p[nodes3[0:3],0]
-    Pe3[:,2] = p[nodes3[0:3],1]
-    C3 = numpy.linalg.inv(Pe3)
-    Nbasis3 = tribasisFct(C3)
-    Nx3 = triderivX(C3)
-    Ny3 = triderivY(C3)
-    
-    node_enr_4 = [nodess[4]]
-    coords_enr_4 = p[node_enr_4]
-
-    x4 = coords_enr_4[0,0]
-    y4 = coords_enr_4[0,1]
-
-    w1 = y1 - y4
-    w2 = y4 - y0
-    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
-    if factor_W > EPS_FACTOR:
-        factor_W = 1
-
-
-    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_W * Nbasis1[2](x,y)]
-    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_W * Nbasis2[2](x,y)]
-    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_W * Nbasis3[0](x,y)]
-
-    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_W * Nx1[2](x,y)]
-    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_W * Nx2[2](x,y)]
-    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_W * Nx3[0](x,y)]
-    
-    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_W * Ny1[2](x,y)]
-    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_W * Ny2[2](x,y)]
-    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_W * Ny3[0](x,y)]
-
-    for i in range(0,5):
-        for j in range(0,5):
-            Kefunc1 = lambda e,n: K_cst[0] * (
-                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
-                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
-
-            Kefunc2 = lambda e,n: K_cst[1] * (
-                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
-                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
-
-            Kefunc3 = lambda e,n: K_cst[2] * (
-                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
-                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
-
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-
-            K[i,j] = integral1 + integral2 + integral3 
-
-        # construct the local matrix and local components of the load vector
-    for i in range(0,5):
-            # construct the local load vector
-            fv1 = lambda e,n: rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
-            fv2 = lambda e,n: rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
-            fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
-
-            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
-
-            #NEUMANN BCS are zero - code not inserted here
-
-    return [K,Fe]
 
 def NW_corner(p,ui,wi,k1,k2,nodess):
     K = numpy.zeros((6,6))
@@ -3035,7 +2920,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess):
     return [K,Fe]
 
 
-def SW_corner(p,ui,wi,k1,k2,nodess):
+def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -3070,18 +2955,18 @@ def SW_corner(p,ui,wi,k1,k2,nodess):
 #    else:
 #        K_cst = [k1,k2,k2,k2]
 
-    cornerA_s = f_circle_s(x0,y0)
-    cornerA_c1 = f_circle1(x0,y0)
-    cornerA_c2 = f_circle2(x0,y0)
+#    cornerA_s = f_circle_s(x0,y0)
+#    cornerA_c1 = f_circle1(x0,y0)
+#    cornerA_c2 = f_circle2(x0,y0)
 
-    Rs = 1.0/3.0
-    R1 = 1.0/6.0
-    R2 = 1.0/6.0
-
-    if (cornerA_s <= Rs * Rs) or (cornerA_c1 <= R1 * R1) or (cornerA_c2 <= R2 * R2):
-        K_cst = [k2,k1,k1,k1]
-    else:
-        K_cst = [k1,k2,k2,k2]
+#    Rs = 1.0/3.0
+#    R1 = 1.0/6.0
+#    R2 = 1.0/6.0
+#
+#    if (cornerA_s <= Rs * Rs) or (cornerA_c1 <= R1 * R1) or (cornerA_c2 <= R2 * R2):
+#        K_cst = [k2,k1,k1,k1]
+#    else:
+#        K_cst = [k1,k2,k2,k2]
 
     #if point_in_on_poly(x0,y0,domainInclusion) == True:
     #    K_cst = [k2,k1,k1,k1]
@@ -3089,6 +2974,22 @@ def SW_corner(p,ui,wi,k1,k2,nodess):
     #    K_cst = [k1,k2,k2,k2]
         
 
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if SE-South
+    if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal4 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)==True and is_in_same_bin(pxVal2,pxVal3)) ):
+        K_cst = [k2,k1,k1,k1]
+    else:
+        K_cst = [k1,k2,k2,k2]
+        
+             
+             
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
     [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -3446,321 +3347,6 @@ def NE_corner(p,ui,wi,k1,k2,nodess):
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def East_edge(p,ui,wi,k1,k2,nodess):
-    K = numpy.zeros((5,5))
-    Fe = np.zeros((5,1))
-
-    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
-    nodes1 = [nodess[0],nodess[1],nodess[4]]
-    nodes2 = [nodess[0],nodess[4],nodess[3]]
-    nodes3 = [nodess[4],nodess[2],nodess[3]]
-
-    coords = p[nodes]
-    coords1 = p[nodes1]
-    coords2 = p[nodes2]
-    coords3 = p[nodes3]
-
-    x0 = coords[0,0]
-    x1 = coords[1,0]
-    y0 = coords[0,1]
-    y1 = coords[2,1]
-
-    # if SE - East
-    if ( (point_in_on_poly(x1,y0,domainInclusion) == True) and
-        ( not(point_in_on_poly(x0,y1,domainInclusion))==True and not(point_in_on_poly(x1,y1,domainInclusion))==True) ):
-        K_cst = [k2,k1,k1]
-    else:
-        if ( (point_in_on_poly(x0,y1,domainInclusion) == True and point_in_on_poly(x1,y1,domainInclusion)==True) and
-            not(point_in_on_poly(x1,y0,domainInclusion))==True ):
-            K_cst = [k1,k2,k2]
-
-    # if NE - East
-    if ( point_in_on_poly(x1,y1,domainInclusion)==True and
-        ( not(point_in_on_poly(x0,y0,domainInclusion))==True and not(point_in_on_poly(x1,y0,domainInclusion))==True) ):
-        K_cst = [k1,k1,k2]
-    else:
-        if ( (point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x1,y0,domainInclusion)==True) and
-            not(point_in_on_poly(x1,y1,domainInclusion))==True ):
-            K_cst = [k2,k2,k1]
-
-    #print 'MANY VARIABLES',nodes,nodess[4]
-    #print 'coordsinats', coords,p[nodess[4]]
-    #print    point_in_on_poly(x0,y1,domainInclusion),point_in_on_poly(x1,y1,domainInclusion)
-    #print point_in_on_poly(x1,y0,domainInclusion)
-
-
-
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-
-    det_J1 = lambda e,n: determinant(J1)(e,n)
-    det_J2 = lambda e,n: determinant(J2)(e,n)
-    det_J3 = lambda e,n: determinant(J3)(e,n)
-
-    # parent element
-    Pe = numpy.zeros((4,4))
-    Pe[:,0] = numpy.ones((4,1)).transpose()
-    Pe[:,1] = p[nodes[0:4],0]
-    Pe[:,2] = p[nodes[0:4],1]
-    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-    C = numpy.linalg.inv(Pe)
-    Nbasis = basisFct(C)
-    Nx = derivX(C)
-    Ny = derivY(C)
-
-    # triangle I
-    Pe1 = numpy.zeros((3,3))
-    Pe1[:,0] = numpy.ones((3,1)).transpose()
-    Pe1[:,1] = p[nodes1,0]
-    Pe1[:,2] = p[nodes1,1]
-    C1 = numpy.linalg.inv(Pe1)
-    Nbasis1 = tribasisFct(C1)
-    Nx1 = triderivX(C1)
-    Ny1 = triderivY(C1)
-
-    # triangle II
-    Pe2 = numpy.zeros((3,3))
-    Pe2[:,0] = numpy.ones((3,1)).transpose()
-    Pe2[:,1] = p[nodes2[0:3],0]
-    Pe2[:,2] = p[nodes2[0:3],1]
-    C2 = numpy.linalg.inv(Pe2)
-    Nbasis2 = tribasisFct(C2)
-    Nx2 = triderivX(C2)
-    Ny2 = triderivY(C2)
-
-    # triangle III
-    Pe3 = numpy.zeros((3,3))
-    Pe3[:,0] = numpy.ones((3,1)).transpose()
-    Pe3[:,1] = p[nodes3[0:3],0]
-    Pe3[:,2] = p[nodes3[0:3],1]
-    C3 = numpy.linalg.inv(Pe3)
-    Nbasis3 = tribasisFct(C3)
-    Nx3 = triderivX(C3)
-    Ny3 = triderivY(C3)
-
-    node_enr_4 = [nodess[4]]
-    coords_enr_4 = p[node_enr_4]
-
-    x4 = coords_enr_4[0,0]
-    y4 = coords_enr_4[0,1]
-
-    e1 = y1 - y4
-    e2 = y4 - y0
-    factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
-    if factor_E > EPS_FACTOR:
-        factor_E = 1
-
-    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_E * Nbasis1[2](x,y)]
-    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_E * Nbasis2[1](x,y)]
-    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_E * Nbasis3[0](x,y)]
-
-    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_E * Nx1[1](x,y)]
-    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_E * Nx2[0](x,y)]
-    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_E * Nx3[0](x,y)]
-    
-    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_E * Ny1[2](x,y)]
-    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_E * Ny2[1](x,y)]
-    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_E * Ny3[0](x,y)]
-
-    for i in range(0,5):
-        for j in range(0,5):
-            Kefunc1 = lambda e,n: K_cst[0] * (
-                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
-                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
-
-            Kefunc2 = lambda e,n: K_cst[1] * (
-                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
-                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
-
-            Kefunc3 = lambda e,n: K_cst[2] * (
-                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
-                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
-
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-
-            K[i,j] = integral1 + integral2 + integral3 
-
-    # construct the local matrix and local components of the load vector
-    for i in range(0,5):
-        # construct the local load vector
-        fv1 = lambda e,n:  rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
-        fv2 = lambda e,n:  rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
-        fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
-
-        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
-
-        #NEUMANN BCS are zero - code not inserted here
-
-    return [K,Fe]
-    
-
-def South_edge(p,ui,wi,k1,k2,nodess):
-    K = numpy.zeros((5,5))
-    Fe = np.zeros((5,1))
-
-    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
-    nodes1 = [nodess[0],nodess[4],nodess[3]]
-    nodes2 = [nodess[4],nodess[2],nodess[3]]
-    nodes3 = [nodess[4],nodess[1],nodess[2]]
-
-    coords = p[nodes]
-    coords1 = p[nodes1]
-    coords2 = p[nodes2]
-    coords3 = p[nodes3]
-
-    x0 = coords[0,0]
-    x1 = coords[1,0]
-    y0 = coords[0,1]
-    y1 = coords[2,1]
-
-    # if SE-South
-    if ( (point_in_on_poly(x1,y0,domainInclusion) == True) and
-        (not(point_in_on_poly(x0,y0,domainInclusion)) == True and not(point_in_on_poly(x0,y1,domainInclusion))==True) ):
-        K_cst = [k1,k1,k2]
-    else:
-        if ( (point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x0,y1,domainInclusion) == True) and
-            ( not(point_in_on_poly(x1,y0,domainInclusion)==True)) ):
-            K_cst = [k2,k2,k1]
-
-    # if SW-South
-    if ( (point_in_on_poly(x0,y0,domainInclusion)==True) and 
-        (not(point_in_on_poly(x1,y1,domainInclusion))==True and not(point_in_on_poly(x1,y0,domainInclusion)) ==True) ):
-        K_cst = [k2,k1,k1]
-    else:
-        if ( (point_in_on_poly(x1,y1,domainInclusion)==True and point_in_on_poly(x1,y0,domainInclusion)==True) and
-            ( not(point_in_on_poly(x0,y0,domainInclusion)) == True) ):
-            K_cst = [k1,k2,k2]
-
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-
-    det_J1 = lambda e,n: determinant(J1)(e,n)
-    det_J2 = lambda e,n: determinant(J2)(e,n)
-    det_J3 = lambda e,n: determinant(J3)(e,n)
-
-    # parent element
-    Pe = numpy.zeros((4,4))
-    Pe[:,0] = numpy.ones((4,1)).transpose()
-    Pe[:,1] = p[nodes[0:4],0]
-    Pe[:,2] = p[nodes[0:4],1]
-    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-    C = numpy.linalg.inv(Pe)
-    Nbasis = basisFct(C)
-    Nx = derivX(C)
-    Ny = derivY(C)
-
-    # triangle I
-    Pe1 = numpy.zeros((3,3))
-    Pe1[:,0] = numpy.ones((3,1)).transpose()
-    Pe1[:,1] = p[nodes1,0]
-    Pe1[:,2] = p[nodes1,1]
-    C1 = numpy.linalg.inv(Pe1)
-    Nbasis1 = tribasisFct(C1)
-    Nx1 = triderivX(C1)
-    Ny1 = triderivY(C1)
-
-    # triangle II
-    Pe2 = numpy.zeros((3,3))
-    Pe2[:,0] = numpy.ones((3,1)).transpose()
-    Pe2[:,1] = p[nodes2[0:3],0]
-    Pe2[:,2] = p[nodes2[0:3],1]
-    C2 = numpy.linalg.inv(Pe2)
-    Nbasis2 = tribasisFct(C2)
-    Nx2 = triderivX(C2)
-    Ny2 = triderivY(C2)
-
-    # triangle III
-    Pe3 = numpy.zeros((3,3))
-    Pe3[:,0] = numpy.ones((3,1)).transpose()
-    Pe3[:,1] = p[nodes3[0:3],0]
-    Pe3[:,2] = p[nodes3[0:3],1]
-    C3 = numpy.linalg.inv(Pe3)
-    Nbasis3 = tribasisFct(C3)
-    Nx3 = triderivX(C3)
-    Ny3 = triderivY(C3)
-
-    node_enr_4 = [nodess[4]]
-    coords_enr_4 = p[node_enr_4]
-
-    x4 = coords_enr_4[0,0]
-    y4 = coords_enr_4[0,1]
-
-    s1 = x4 - x0
-    s2 = x1 - x4
-    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
-    if factor_S > EPS_FACTOR:
-        factor_S = 1
-
-    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis1[1](x,y)]
-    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis2[0](x,y)]
-    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis3[0](x,y)]
-
-    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_S * Nx1[1](x,y)]
-    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_S * Nx2[0](x,y)]
-    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_S * Nx3[0](x,y)]
-    
-    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny1[1](x,y)]
-    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny2[0](x,y)]
-    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny3[0](x,y)]
-
-    for i in range(0,5):
-        for j in range(0,5):
-            Kefunc1 = lambda e,n: K_cst[0] * (
-                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
-                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
-                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
-
-            Kefunc2 = lambda e,n: K_cst[1] * (
-                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
-                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
-                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
-
-            Kefunc3 = lambda e,n: K_cst[2] * (
-                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
-                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
-                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
-
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-
-            K[i,j] = integral1 + integral2 + integral3 
-
-    # construct the local matrix and local components of the load vector
-    for i in range(0,5):
-        # construct the local load vector
-        fv1 = lambda e,n:  rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
-        fv2 = lambda e,n:  rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
-        fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
-
-        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
-
-        #NEUMANN BCS are zero - code not inserted here
-
-    return [K,Fe]
-
-
 def SE_corner(p,ui,wi,k1,k2,nodess):
 #def SE_corner(p,ui,wi,k1,k2,nodess,UConf,pConf,tConf):
     K = numpy.zeros((6,6))
@@ -3962,6 +3548,781 @@ def SE_corner(p,ui,wi,k1,k2,nodess):
 
         Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) + simpson_rule(fv4)
         #print simpson_rule(fv1)+simpson_rule(fv2)+simpson_rule(fv3) + simpson_rule(fv4)
+
+            #NEUMANN BCS are zero - code not inserted here
+
+    return [K,Fe]
+
+
+def East_edge(p,ui,wi,k1,k2,nodess,root,image):
+    K = numpy.zeros((5,5))
+    Fe = np.zeros((5,1))
+
+    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
+    nodes1 = [nodess[0],nodess[1],nodess[4]]
+    nodes2 = [nodess[0],nodess[4],nodess[3]]
+    nodes3 = [nodess[4],nodess[2],nodess[3]]
+
+    coords = p[nodes]
+    coords1 = p[nodes1]
+    coords2 = p[nodes2]
+    coords3 = p[nodes3]
+
+    x0 = coords[0,0]
+    x1 = coords[1,0]
+    y0 = coords[0,1]
+    y1 = coords[2,1]
+
+#    # if SE - East
+#    if ( (point_in_on_poly(x1,y0,domainInclusion) == True) and
+#        ( not(point_in_on_poly(x0,y1,domainInclusion))==True and not(point_in_on_poly(x1,y1,domainInclusion))==True) ):
+#        K_cst = [k2,k1,k1]
+#    else:
+#        if ( (point_in_on_poly(x0,y1,domainInclusion) == True and point_in_on_poly(x1,y1,domainInclusion)==True) and
+#            not(point_in_on_poly(x1,y0,domainInclusion))==True ):
+#            K_cst = [k1,k2,k2]
+#
+#    # if NE - East
+#    if ( point_in_on_poly(x1,y1,domainInclusion)==True and
+#        ( not(point_in_on_poly(x0,y0,domainInclusion))==True and not(point_in_on_poly(x1,y0,domainInclusion))==True) ):
+#        K_cst = [k1,k1,k2]
+#    else:
+#        if ( (point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x1,y0,domainInclusion)==True) and
+#            not(point_in_on_poly(x1,y1,domainInclusion))==True ):
+#            K_cst = [k2,k2,k1]
+
+    #print 'MANY VARIABLES',nodes,nodess[4]
+    #print 'coordsinats', coords,p[nodess[4]]
+    #print    point_in_on_poly(x0,y1,domainInclusion),point_in_on_poly(x1,y1,domainInclusion)
+    #print point_in_on_poly(x1,y0,domainInclusion)
+
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if SE - East
+    if ( is_in_same_bin(pxVal3,pxVal2) == False and pxVal3 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)==True ) ):
+        K_cst = [k2,k1,k1]
+    else: 
+        if (  is_in_same_bin(pxVal3,pxVal2) == False and pxVal3 <= binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)==True )):
+            K_cst = [k1,k2,k2]
+
+    # if NE - East
+    if ( is_in_same_bin(pxVal3,pxVal2) == False and pxVal2 > binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) ):
+        K_cst = [k1,k1,k2]
+    else:
+        if( is_in_same_bin(pxVal3,pxVal2) == False and pxVal2 <= binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) ):
+             K_cst = [k2,k2,k1]
+
+    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+
+    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+
+    det_J1 = lambda e,n: determinant(J1)(e,n)
+    det_J2 = lambda e,n: determinant(J2)(e,n)
+    det_J3 = lambda e,n: determinant(J3)(e,n)
+
+    # parent element
+    Pe = numpy.zeros((4,4))
+    Pe[:,0] = numpy.ones((4,1)).transpose()
+    Pe[:,1] = p[nodes[0:4],0]
+    Pe[:,2] = p[nodes[0:4],1]
+    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+    C = numpy.linalg.inv(Pe)
+    Nbasis = basisFct(C)
+    Nx = derivX(C)
+    Ny = derivY(C)
+
+    # triangle I
+    Pe1 = numpy.zeros((3,3))
+    Pe1[:,0] = numpy.ones((3,1)).transpose()
+    Pe1[:,1] = p[nodes1,0]
+    Pe1[:,2] = p[nodes1,1]
+    C1 = numpy.linalg.inv(Pe1)
+    Nbasis1 = tribasisFct(C1)
+    Nx1 = triderivX(C1)
+    Ny1 = triderivY(C1)
+
+    # triangle II
+    Pe2 = numpy.zeros((3,3))
+    Pe2[:,0] = numpy.ones((3,1)).transpose()
+    Pe2[:,1] = p[nodes2[0:3],0]
+    Pe2[:,2] = p[nodes2[0:3],1]
+    C2 = numpy.linalg.inv(Pe2)
+    Nbasis2 = tribasisFct(C2)
+    Nx2 = triderivX(C2)
+    Ny2 = triderivY(C2)
+
+    # triangle III
+    Pe3 = numpy.zeros((3,3))
+    Pe3[:,0] = numpy.ones((3,1)).transpose()
+    Pe3[:,1] = p[nodes3[0:3],0]
+    Pe3[:,2] = p[nodes3[0:3],1]
+    C3 = numpy.linalg.inv(Pe3)
+    Nbasis3 = tribasisFct(C3)
+    Nx3 = triderivX(C3)
+    Ny3 = triderivY(C3)
+
+    node_enr_4 = [nodess[4]]
+    coords_enr_4 = p[node_enr_4]
+
+    x4 = coords_enr_4[0,0]
+    y4 = coords_enr_4[0,1]
+
+    e1 = y1 - y4
+    e2 = y4 - y0
+    factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
+    if factor_E > EPS_FACTOR:
+        factor_E = 1
+
+    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_E * Nbasis1[2](x,y)]
+    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_E * Nbasis2[1](x,y)]
+    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_E * Nbasis3[0](x,y)]
+
+    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_E * Nx1[1](x,y)]
+    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_E * Nx2[0](x,y)]
+    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_E * Nx3[0](x,y)]
+    
+    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_E * Ny1[2](x,y)]
+    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_E * Ny2[1](x,y)]
+    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_E * Ny3[0](x,y)]
+
+    for i in range(0,5):
+        for j in range(0,5):
+            Kefunc1 = lambda e,n: K_cst[0] * (
+                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
+                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
+
+            Kefunc2 = lambda e,n: K_cst[1] * (
+                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
+                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
+
+            Kefunc3 = lambda e,n: K_cst[2] * (
+                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
+                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
+
+            integral1 = simpson_rule(Kefunc1)
+            integral2 = simpson_rule(Kefunc2)
+            integral3 = simpson_rule(Kefunc3)
+
+            K[i,j] = integral1 + integral2 + integral3 
+
+    # construct the local matrix and local components of the load vector
+    for i in range(0,5):
+        # construct the local load vector
+        fv1 = lambda e,n:  rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
+        fv2 = lambda e,n:  rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
+        fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
+
+        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+
+        #NEUMANN BCS are zero - code not inserted here
+
+    return [K,Fe]
+    
+
+def South_edge(p,ui,wi,k1,k2,nodess,root,image):
+    K = numpy.zeros((5,5))
+    Fe = np.zeros((5,1))
+
+    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
+    nodes1 = [nodess[0],nodess[4],nodess[3]]
+    nodes2 = [nodess[4],nodess[2],nodess[3]]
+    nodes3 = [nodess[4],nodess[1],nodess[2]]
+
+    coords = p[nodes]
+    coords1 = p[nodes1]
+    coords2 = p[nodes2]
+    coords3 = p[nodes3]
+
+    x0 = coords[0,0]
+    x1 = coords[1,0]
+    y0 = coords[0,1]
+    y1 = coords[2,1]
+
+#    # if SE-South
+#    if ( (point_in_on_poly(x1,y0,domainInclusion) == True) and
+#        (not(point_in_on_poly(x0,y0,domainInclusion)) == True and not(point_in_on_poly(x0,y1,domainInclusion))==True) ):
+#        K_cst = [k1,k1,k2]
+#    else:
+#        if ( (point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x0,y1,domainInclusion) == True) and
+#            ( not(point_in_on_poly(x1,y0,domainInclusion)==True)) ):
+#            K_cst = [k2,k2,k1]
+#
+#    # if SW-South
+#    if ( (point_in_on_poly(x0,y0,domainInclusion)==True) and 
+#        (not(point_in_on_poly(x1,y1,domainInclusion))==True and not(point_in_on_poly(x1,y0,domainInclusion)) ==True) ):
+#        K_cst = [k2,k1,k1]
+#    else:
+#        if ( (point_in_on_poly(x1,y1,domainInclusion)==True and point_in_on_poly(x1,y0,domainInclusion)==True) and
+#            ( not(point_in_on_poly(x0,y0,domainInclusion)) == True) ):
+#            K_cst = [k1,k2,k2]
+
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if SE-South
+    if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal4)==True ) ):
+        K_cst = [k1,k1,k2]
+    else: 
+        if (  is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 <= binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal4)==True )):
+            K_cst = [k2,k2,k1]
+
+    # if SW-South
+    if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal2 > binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal2)==True ) ):
+        K_cst = [k2,k1,k1]
+    else:
+        if( is_in_same_bin(pxVal3,pxVal4) == False and pxVal2 <= binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal2)==True ) ):
+             K_cst = [k1,k2,k2]
+
+
+    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+
+    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+
+    det_J1 = lambda e,n: determinant(J1)(e,n)
+    det_J2 = lambda e,n: determinant(J2)(e,n)
+    det_J3 = lambda e,n: determinant(J3)(e,n)
+
+    # parent element
+    Pe = numpy.zeros((4,4))
+    Pe[:,0] = numpy.ones((4,1)).transpose()
+    Pe[:,1] = p[nodes[0:4],0]
+    Pe[:,2] = p[nodes[0:4],1]
+    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+    C = numpy.linalg.inv(Pe)
+    Nbasis = basisFct(C)
+    Nx = derivX(C)
+    Ny = derivY(C)
+
+    # triangle I
+    Pe1 = numpy.zeros((3,3))
+    Pe1[:,0] = numpy.ones((3,1)).transpose()
+    Pe1[:,1] = p[nodes1,0]
+    Pe1[:,2] = p[nodes1,1]
+    C1 = numpy.linalg.inv(Pe1)
+    Nbasis1 = tribasisFct(C1)
+    Nx1 = triderivX(C1)
+    Ny1 = triderivY(C1)
+
+    # triangle II
+    Pe2 = numpy.zeros((3,3))
+    Pe2[:,0] = numpy.ones((3,1)).transpose()
+    Pe2[:,1] = p[nodes2[0:3],0]
+    Pe2[:,2] = p[nodes2[0:3],1]
+    C2 = numpy.linalg.inv(Pe2)
+    Nbasis2 = tribasisFct(C2)
+    Nx2 = triderivX(C2)
+    Ny2 = triderivY(C2)
+
+    # triangle III
+    Pe3 = numpy.zeros((3,3))
+    Pe3[:,0] = numpy.ones((3,1)).transpose()
+    Pe3[:,1] = p[nodes3[0:3],0]
+    Pe3[:,2] = p[nodes3[0:3],1]
+    C3 = numpy.linalg.inv(Pe3)
+    Nbasis3 = tribasisFct(C3)
+    Nx3 = triderivX(C3)
+    Ny3 = triderivY(C3)
+
+    node_enr_4 = [nodess[4]]
+    coords_enr_4 = p[node_enr_4]
+
+    x4 = coords_enr_4[0,0]
+    y4 = coords_enr_4[0,1]
+
+    s1 = x4 - x0
+    s2 = x1 - x4
+    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+    if factor_S > EPS_FACTOR:
+        factor_S = 1
+
+    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis1[1](x,y)]
+    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis2[0](x,y)]
+    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis3[0](x,y)]
+
+    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_S * Nx1[1](x,y)]
+    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_S * Nx2[0](x,y)]
+    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_S * Nx3[0](x,y)]
+    
+    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny1[1](x,y)]
+    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny2[0](x,y)]
+    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny3[0](x,y)]
+
+    for i in range(0,5):
+        for j in range(0,5):
+            Kefunc1 = lambda e,n: K_cst[0] * (
+                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
+                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
+
+            Kefunc2 = lambda e,n: K_cst[1] * (
+                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
+                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
+
+            Kefunc3 = lambda e,n: K_cst[2] * (
+                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
+                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
+
+            integral1 = simpson_rule(Kefunc1)
+            integral2 = simpson_rule(Kefunc2)
+            integral3 = simpson_rule(Kefunc3)
+
+            K[i,j] = integral1 + integral2 + integral3 
+
+    # construct the local matrix and local components of the load vector
+    for i in range(0,5):
+        # construct the local load vector
+        fv1 = lambda e,n:  rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
+        fv2 = lambda e,n:  rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
+        fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
+
+        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+
+        #NEUMANN BCS are zero - code not inserted here
+
+    return [K,Fe]
+
+def North_edge(p,ui,wi,k1,k2,nodess,root,image):
+    K = numpy.zeros((5,5))
+    Fe = np.zeros((5,1))
+
+        
+    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
+    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper left corner cut)
+    nodes1 = [nodess[0],nodess[4],nodess[3]]
+    nodes2 = [nodess[0],nodess[1],nodess[4]]
+    nodes3 = [nodess[1],nodess[2],nodess[4]]
+
+    coords = p[nodes]
+    coords1 = p[nodes1]
+    coords2 = p[nodes2]
+    coords3 = p[nodes3]
+
+    x0 = coords[0,0]
+    x1 = coords[1,0]
+    y0 = coords[0,1]
+    y1 = coords[2,1]
+
+    #cornerA = f_circle(x0,y0)
+    #cornerB = f_circle(x1,y0)
+    #cornerC = f_circle(x1,y1)
+    #cornerD = f_circle(x0,y1)
+
+    #R = 1.0 / 3.0 
+
+    #if cornerD <= R * R:
+    #    K_cst = [k1,k1,k1,k2]
+    #else:
+    #    K_cst = [k2,k2,k2,k1]
+    
+#    # if NW - North
+#    if ( point_in_on_poly(x0,y1,domainInclusion) == True and
+#        (not(point_in_on_poly(x1,y0,domainInclusion)) == True and not(point_in_on_poly(x1,y1,domainInclusion))==True )):
+#        K_cst = [k2,k1,k1]
+#    else: 
+#        if ( not(point_in_on_poly(x0,y1,domainInclusion)) == True and
+#            (point_in_on_poly(x1,y0,domainInclusion) == True and point_in_on_poly(x1,y1,domainInclusion)==True) ):
+#            K_cst = [k2,k1,k1]
+#
+#    # if NE - North 
+#    if ( point_in_on_poly(x1,y1,domainInclusion)==True and
+#        ( not(point_in_on_poly(x0,y0,domainInclusion))==True and not(point_in_on_poly(x0,y1,domainInclusion))==True ) ):
+#        K_cst = [k1,k1,k2]
+#    else:
+#        if ( not(point_in_on_poly(x1,y1,domainInclusion))==True and
+#            ( point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x0,y1,domainInclusion)==True ) ):
+#            K_cst = [k2,k2,k1]
+
+#    if point_in_on_poly(x1,y1,domainInclusion) and not(point_in_on_poly(x0,y1,domainInclusion)) and not(point_in_on_poly(x0,y0,domainInclusion)):
+#        K_cst = [k1,k1,k2]
+#    else:
+#        if not(point_in_on_poly(x1,y1,domainInclusion)) and point_in_on_poly(x0,y1,domainInclusion) and point_in_on_poly(x0,y0,domainInclusion):
+#         K_cst = [k2,k2,k1]
+#
+#    if point_in_on_poly(x0,y1,domainInclusion) and not(point_in_on_poly(x1,y0,domainInclusion)) and not(point_in_on_poly(x1,y1,domainInclusion)):
+#        K_cst = [k2,k1,k1]
+#    else:
+#        if not(point_in_on_poly(x0,y1,domainInclusion)) and point_in_on_poly(x1,y0,domainInclusion) and point_in_on_poly(x1,y1,domainInclusion):
+#            K_cst = [k1,k2,k2]
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if NW - North
+    if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal1 > binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal2)==True ) ):
+        K_cst = [k2,k1,k1]
+    else: 
+        if (  is_in_same_bin(pxVal1,pxVal2) == False and pxVal1 <= binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal2)==True )):
+            K_cst = [k1,k2,k2]
+
+    # if NE - North 
+    if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal2 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal4)==True ) ):
+        K_cst = [k1,k1,k2]
+    else:
+        if( is_in_same_bin(pxVal1,pxVal2) == False and pxVal2 <= binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal4)==True ) ):
+             K_cst = [k2,k2,k1]
+             
+    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+
+    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+    det_J1 = lambda e,n: determinant(J1)(e,n)
+    det_J2 = lambda e,n: determinant(J2)(e,n)
+    det_J3 = lambda e,n: determinant(J3)(e,n)
+
+    # parent element
+    Pe = numpy.zeros((4,4))
+    Pe[:,0] = numpy.ones((4,1)).transpose()
+    Pe[:,1] = p[nodes[0:4],0]
+    Pe[:,2] = p[nodes[0:4],1]
+    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+    C = numpy.linalg.inv(Pe)
+    Nbasis = basisFct(C)
+    Nx = derivX(C)
+    Ny = derivY(C)
+
+    # triangle I
+    Pe1 = numpy.zeros((3,3))
+    Pe1[:,0] = numpy.ones((3,1)).transpose()
+    Pe1[:,1] = p[nodes1,0]
+    Pe1[:,2] = p[nodes1,1]
+    C1 = numpy.linalg.inv(Pe1)
+    Nbasis1 = tribasisFct(C1)
+    Nx1 = triderivX(C1)
+    Ny1 = triderivY(C1)
+
+    # triangle II
+    Pe2 = numpy.zeros((3,3))
+    Pe2[:,0] = numpy.ones((3,1)).transpose()
+    Pe2[:,1] = p[nodes2[0:3],0]
+    Pe2[:,2] = p[nodes2[0:3],1]
+    C2 = numpy.linalg.inv(Pe2)
+    Nbasis2 = tribasisFct(C2)
+    Nx2 = triderivX(C2)
+    Ny2 = triderivY(C2)
+
+    # triangle III
+    Pe3 = numpy.zeros((3,3))
+    Pe3[:,0] = numpy.ones((3,1)).transpose()
+    Pe3[:,1] = p[nodes3[0:3],0]
+    Pe3[:,2] = p[nodes3[0:3],1]
+    C3 = numpy.linalg.inv(Pe3)
+    Nbasis3 = tribasisFct(C3)
+    Nx3 = triderivX(C3)
+    Ny3 = triderivY(C3)
+    
+    node_enr_4 = [nodess[4]]
+    coords_enr_4 = p[node_enr_4]
+
+    x4 = coords_enr_4[0,0]
+    y4 = coords_enr_4[0,1]
+
+    n1 = x4 - x0
+    n2 = x1 - x4
+    factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
+    if factor_N > EPS_FACTOR:
+        factor_N = 1
+
+    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_N * Nbasis1[1](x,y)]
+    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_N * Nbasis2[2](x,y)]
+    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_N * Nbasis3[2](x,y)]
+
+    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_N * Nx1[1](x,y)]
+    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_N * Nx2[2](x,y)]
+    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_N * Nx3[2](x,y)]
+    
+    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_N * Ny1[1](x,y)]
+    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_N * Ny2[2](x,y)]
+    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_N * Ny3[2](x,y)]
+
+    for i in range(0,5):
+        for j in range(0,5):
+            Kefunc1 = lambda e,n: K_cst[0] * (
+                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
+                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
+
+            Kefunc2 = lambda e,n: K_cst[1] * (
+                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
+                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
+
+            Kefunc3 = lambda e,n: K_cst[2] * (
+                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
+                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
+
+            integral1 = simpson_rule(Kefunc1)
+            integral2 = simpson_rule(Kefunc2)
+            integral3 = simpson_rule(Kefunc3)
+
+            K[i,j] = integral1 + integral2 + integral3 
+
+        # construct the local matrix and local components of the load vector
+    for i in range(0,5):
+            # construct the local load vector
+            fv1 = lambda e,n: rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
+            fv2 = lambda e,n: rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
+            fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
+
+            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+
+            #NEUMANN BCS are zero - code not inserted here
+
+    return [K,Fe]
+
+
+
+def West_edge(p,ui,wi,k1,k2,nodess,root,image):
+    K = numpy.zeros((5,5))
+    Fe = np.zeros((5,1))
+
+    nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
+    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper left corner cut)
+    nodes1 = [nodess[0],nodess[1],nodess[4]]
+    nodes2 = [nodess[1],nodess[2],nodess[4]]
+    nodes3 = [nodess[4],nodess[2],nodess[3]]
+
+    coords = p[nodes]
+    coords1 = p[nodes1]
+    coords2 = p[nodes2]
+    coords3 = p[nodes3]
+
+    x0 = coords[0,0]
+    x1 = coords[1,0]
+    y0 = coords[0,1]
+    y1 = coords[2,1]
+
+    #cornerA = f_circle(x0,y0)
+    #cornerB = f_circle(x1,y0)
+    #cornerC = f_circle(x1,y1)
+    #cornerD = f_circle(x0,y1)
+
+    #R = 1.0 / 3.0 
+
+    #if cornerD <= R * R:
+    #    K_cst = [k1,k1,k1,k2]
+    #else:
+    #    K_cst = [k2,k2,k2,k1]
+    
+
+#    #if NW - West
+#    if ( point_in_on_poly(x0,y1,domainInclusion) == True and
+#        (not(point_in_on_poly(x0,y0,domainInclusion))==True and not(point_in_on_poly(x1,y0,domainInclusion))==True) ):
+#        K_cst = [k1,k1,k2]
+#    else: 
+#        if ( not(point_in_on_poly(x0,y1,domainInclusion)) == True and
+#            (point_in_on_poly(x0,y0,domainInclusion)==True and point_in_on_poly(x1,y0,domainInclusion)==True) ):
+#            K_cst = [k2,k2,k1]
+#
+#    # if SW - West
+#    if ( point_in_on_poly(x0,y0,domainInclusion) == True and
+#        (not(point_in_on_poly(x0,y1,domainInclusion)) ==True and not(point_in_on_poly(x1,y1,domainInclusion))==True )  ):
+#        K_cst = [k2,k1,k1]
+#    else:
+#        if ( not(point_in_on_poly(x0,y0,domainInclusion)) == True and
+#            ( point_in_on_poly(x0,y1,domainInclusion) ==True and point_in_on_poly(x1,y1,domainInclusion)==True )  ):
+#             K_cst = [k1,k2,k2]
+    
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if NW - West
+    if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 > binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) ):
+        K_cst = [k1,k1,k2]
+    else: 
+        if (  is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 <= binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal4)==True )):
+            K_cst = [k2,k2,k1]
+
+    # if SW - West
+    if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal4 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)==True ) ):
+        K_cst = [k2,k1,k1]
+    else:
+        if( is_in_same_bin(pxVal1,pxVal4) == False and pxVal4 <= binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)==True ) ):
+             K_cst = [k1,k2,k2]
+             
+             
+#    cornerA_s = f_circle_s(x0,y0)
+#    cornerB_s = f_circle_s(x1,y0)
+#    cornerD_s = f_circle_s(x0,y1)
+#    cornerD_c1 = f_circle1(x0,y1)
+#    cornerD_c2 = f_circle2(x0,y1)
+#    Rs = 1.0/3.0
+#    R1 = 1.0/6.0
+#    R2 = 1.0/6.0
+#
+#    if (cornerD_s <= Rs * Rs) or (cornerD_c1 <= R1 * R1) or (cornerD_c2 <= R2 * R2) :
+#        K_cst = [k1,k1,k1,k2]
+#    else:
+#        K_cst = [k2,k2,k2,k1]
+        
+    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+
+    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+    det_J1 = lambda e,n: determinant(J1)(e,n)
+    det_J2 = lambda e,n: determinant(J2)(e,n)
+    det_J3 = lambda e,n: determinant(J3)(e,n)
+
+    # parent element
+    Pe = numpy.zeros((4,4))
+    Pe[:,0] = numpy.ones((4,1)).transpose()
+    Pe[:,1] = p[nodes[0:4],0]
+    Pe[:,2] = p[nodes[0:4],1]
+    Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+    C = numpy.linalg.inv(Pe)
+    Nbasis = basisFct(C)
+    Nx = derivX(C)
+    Ny = derivY(C)
+
+    # triangle I
+    Pe1 = numpy.zeros((3,3))
+    Pe1[:,0] = numpy.ones((3,1)).transpose()
+    Pe1[:,1] = p[nodes1,0]
+    Pe1[:,2] = p[nodes1,1]
+    C1 = numpy.linalg.inv(Pe1)
+    Nbasis1 = tribasisFct(C1)
+    Nx1 = triderivX(C1)
+    Ny1 = triderivY(C1)
+
+    # triangle II
+    Pe2 = numpy.zeros((3,3))
+    Pe2[:,0] = numpy.ones((3,1)).transpose()
+    Pe2[:,1] = p[nodes2[0:3],0]
+    Pe2[:,2] = p[nodes2[0:3],1]
+    C2 = numpy.linalg.inv(Pe2)
+    Nbasis2 = tribasisFct(C2)
+    Nx2 = triderivX(C2)
+    Ny2 = triderivY(C2)
+
+    # triangle III
+    Pe3 = numpy.zeros((3,3))
+    Pe3[:,0] = numpy.ones((3,1)).transpose()
+    Pe3[:,1] = p[nodes3[0:3],0]
+    Pe3[:,2] = p[nodes3[0:3],1]
+    C3 = numpy.linalg.inv(Pe3)
+    Nbasis3 = tribasisFct(C3)
+    Nx3 = triderivX(C3)
+    Ny3 = triderivY(C3)
+    
+    node_enr_4 = [nodess[4]]
+    coords_enr_4 = p[node_enr_4]
+
+    x4 = coords_enr_4[0,0]
+    y4 = coords_enr_4[0,1]
+
+    w1 = y1 - y4
+    w2 = y4 - y0
+    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+    if factor_W > EPS_FACTOR:
+        factor_W = 1
+
+
+    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_W * Nbasis1[2](x,y)]
+    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_W * Nbasis2[2](x,y)]
+    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_W * Nbasis3[0](x,y)]
+
+    Nx_1 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_W * Nx1[2](x,y)]
+    Nx_2 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_W * Nx2[2](x,y)]
+    Nx_3 = [Nx[0],Nx[1],Nx[2],Nx[3], lambda x,y: factor_W * Nx3[0](x,y)]
+    
+    Ny_1 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_W * Ny1[2](x,y)]
+    Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_W * Ny2[2](x,y)]
+    Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_W * Ny3[0](x,y)]
+
+    for i in range(0,5):
+        for j in range(0,5):
+            Kefunc1 = lambda e,n: K_cst[0] * (
+                                Nx_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Nx_1[j]( x_fct_1(e,n), y_fct_1(e,n)) + 
+                                Ny_1[i]( x_fct_1(e,n), y_fct_1(e,n)) *
+                                Ny_1[j]( x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
+
+            Kefunc2 = lambda e,n: K_cst[1] * (
+                                Nx_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Nx_2[j]( x_fct_2(e,n), y_fct_2(e,n)) +
+                                Ny_2[i]( x_fct_2(e,n), y_fct_2(e,n)) *
+                                Ny_2[j]( x_fct_2(e,n), y_fct_2(e,n)) ) * det_J2(e,n)
+
+            Kefunc3 = lambda e,n: K_cst[2] * (
+                                Nx_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Nx_3[j]( x_fct_3(e,n), y_fct_3(e,n)) +
+                                Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
+                                Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
+
+            integral1 = simpson_rule(Kefunc1)
+            integral2 = simpson_rule(Kefunc2)
+            integral3 = simpson_rule(Kefunc3)
+
+            K[i,j] = integral1 + integral2 + integral3 
+
+        # construct the local matrix and local components of the load vector
+    for i in range(0,5):
+            # construct the local load vector
+            fv1 = lambda e,n: rhs(e,n) * Nbasis_1[i](x_fct_1(e,n),y_fct_1(e,n)) * det_J1(e,n)
+            fv2 = lambda e,n: rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
+            fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
+
+            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
 
             #NEUMANN BCS are zero - code not inserted here
 
@@ -4506,7 +4867,7 @@ def in_circle(center_x, center_y, radius, x, y):
     square_dist = (center_x - x) ** 2 + (center_y - y) ** 2
     return square_dist <= radius ** 2
 
-def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
+def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #def myquad(m,n,k1,k2,loc,ui,wi,p,t,UConf,pConf,tConf):
     
     #definition of rhombus corners
@@ -4530,11 +4891,37 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
     #lines = [line.strip() for line in open(filename)]
 
     # numbering boundary nodes
-    lbcs = [0] + range(m,m*n,m)
-    rbcs = [m-1] + range(2*m-1,m*n,m)
-    tbcs = range(1,m-1)
-    bbcs = range(lbcs[-1]+1,rbcs[-1]) 
+#    lbcs = [0] + range(m,m*n,m)
+#    rbcs = [m-1] + range(2*m-1,m*n,m)
+#    tbcs = range(1,m-1)
+#    bbcs = range(lbcs[-1]+1,rbcs[-1]) 
+    
+    tbcs = []
+    bbcs = []
+    lbcs = []
+    rbcs = []
+    for i in range(0, len(p)):
+         # bottom boundary
+        if p[i,1] == 0.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
+            bbcs = bbcs + [i]
+        else:
+            # top boundary            
+            if p[i,1] == 1.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
+                tbcs = tbcs + [i]
+            else:
+                # left boundary
+                if p[i,0] == 0.0:
+                   lbcs = lbcs + [i]
+                else:
+                    # right boundary
+                    if p[i,0] == 1.0:
+                        rbcs = rbcs + [i]
+                            
 
+    print 'tbcs', tbcs
+    print 'lbcs', lbcs
+    print 'rbcs', rbcs
+    print 'bbcs', bbcs
     # temperatures for Dirichlet BCs
     leftDirich = 1
     rightDirich = 1
@@ -4556,7 +4943,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
     g1_bottom = 0
 
     # vector with boundary nodes: bottom, left, right, top
-    b = range(0,m) + range(m,m*n,m) + range(2*m-1,m*n,m) + range(m*n-m+2-1,m*n-1) 
+#    b = range(0,m) + range(m,m*n,m) + range(2*m-1,m*n,m) + range(m*n-m+2-1,m*n-1) 
 
     N = len(p)  #+ 5 # number of nodes
     T = len(t) #+ 3 # number of elements
@@ -4583,7 +4970,14 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
     
-        root_i = get_node_by_id(masterNode,llist[e])
+        root = get_node_by_id(masterNode,llist[e])
+        p1,p2,p3,p4 = root.rect
+    
+        pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+        pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+        pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+        pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
 
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
@@ -4606,30 +5000,30 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
         y1 = coords[2,1]
 
 
-        # multiple inclusions
-        cornerA = f_circle(x0,y0)
-        cornerB = f_circle(x1,y0)
-        cornerC = f_circle(x1,y1)
-        cornerD = f_circle(x0,y1)
-        R = 1.0/3.0
-
-        cornerA_s = f_circle_s(x0,y0)
-        cornerB_s = f_circle_s(x1,y0)
-        cornerC_s = f_circle_s(x1,y1)
-        cornerD_s = f_circle_s(x0,y1)
-        Rs = 1.0/3.0
-
-        cornerA_c1 = f_circle1(x0,y0)
-        cornerB_c1 = f_circle1(x1,y0)
-        cornerC_c1 = f_circle1(x1,y1)
-        cornerD_c1 = f_circle1(x0,y1)
-        R1 = 1.0/6.0
-
-        cornerA_c2 = f_circle2(x0,y0)
-        cornerB_c2 = f_circle2(x1,y0)
-        cornerC_c2 = f_circle2(x1,y1)
-        cornerD_c2 = f_circle2(x0,y1)
-        R2 = 1.0/6.0
+#        # multiple inclusions
+#        cornerA = f_circle(x0,y0)
+#        cornerB = f_circle(x1,y0)
+#        cornerC = f_circle(x1,y1)
+#        cornerD = f_circle(x0,y1)
+#        R = 1.0/3.0
+#
+#        cornerA_s = f_circle_s(x0,y0)
+#        cornerB_s = f_circle_s(x1,y0)
+#        cornerC_s = f_circle_s(x1,y1)
+#        cornerD_s = f_circle_s(x0,y1)
+#        Rs = 1.0/3.0
+#
+#        cornerA_c1 = f_circle1(x0,y0)
+#        cornerB_c1 = f_circle1(x1,y0)
+#        cornerC_c1 = f_circle1(x1,y1)
+#        cornerD_c1 = f_circle1(x0,y1)
+#        R1 = 1.0/6.0
+#
+#        cornerA_c2 = f_circle2(x0,y0)
+#        cornerB_c2 = f_circle2(x1,y0)
+#        cornerC_c2 = f_circle2(x1,y1)
+#        cornerD_c2 = f_circle2(x0,y1)
+#        R2 = 1.0/6.0
 
         #cornerA = point_in_poly(x0,y0,rhombus)
         #cornerB = point_in_poly(x1,y0,rhombus)
@@ -4682,14 +5076,30 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
 #                else:
 #                    print 'ERROR!'
 #                    K_cst = k1
-
-    # multiple inclusions:
-            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 
-                (cornerA_c1>R1*R1 and cornerB_c1>R1*R1 and cornerC_c1>R1*R1 and cornerD_c1>R1*R1) and 
-                (cornerA_c2>R2*R2 and cornerB_c2>R2*R2 and cornerC_c2>R2*R2 and cornerD_c2>R2*R2) ):
+            p1,p2,p3,p4 = root.rect
+            
+            pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+            pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+            pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+            pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+            
+            #if SE - East
+            if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
+                 is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 <= binBnd[1] ):
                 K_cst = k1
-            else:
-                K_cst = k2
+            else: 
+                if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
+                 is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 > binBnd[1] ):
+                    K_cst = k2
+        
+
+#            # multiple inclusions:
+#            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 
+#                (cornerA_c1>R1*R1 and cornerB_c1>R1*R1 and cornerC_c1>R1*R1 and cornerD_c1>R1*R1) and 
+#                (cornerA_c2>R2*R2 and cornerB_c2>R2*R2 and cornerC_c2>R2*R2 and cornerD_c2>R2*R2) ):
+#                K_cst = k1
+#            else:
+#                K_cst = k2
 
             #if cornerA == True and cornerB == True and cornerC == True and cornerD == True:
             #    K_cst = k2
@@ -4700,7 +5110,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
             #            print 'ERROR! -  inside igfem2d.py - assembling the stiffness matrix'                
 
             #N,S,E,W
-            [N_hn,S_hn,E_hn,W_hn] = root_i.nsew
+            [N_hn,S_hn,E_hn,W_hn] = root.nsew
             
             [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
             Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
@@ -4755,17 +5165,29 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
 #                fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
 #                Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
 
-            
-            #print e,Ke#.todense() 
-            # add the local stiffness matrix and local load vector to the global K and F
-            for i in range(0,4):
-                for j in range(0,4):
-                    if nodes[i] >= nodes[j]:
-                        K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                        K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+            if e == 38:
+                nodes = [169, 171, 187, 186, 170, 178]
+                [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
+
+                # add the local stiffness matrix and local load vector to the global K and F
+                for i in range(0,6):
+                    for j in range(0,6):
+                        if nodes[i] >= nodes[j]:
+                            K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
+                            K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                    F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+            else:                    
+                #print e,Ke#.todense() 
+                # add the local stiffness matrix and local load vector to the global K and F
+                for i in range(0,4):
+                    for j in range(0,4):
+                        if nodes[i] >= nodes[j]:
+                            K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+                            K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                    F[nodes[i],0] = F[nodes[i],0] + Fe[i]
 
     
+           
         else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
         
             enrich1 = np.array(p[nodes[4]])
@@ -4785,7 +5207,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                     print 'False positive: Odd diagonal '
                     elCorner = True
                     midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
-                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
+                    
+                    pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
+                    if pxValMid > binBnd[1]:
+#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
                         K_cst = k2
                     else:
                         K_cst = k1
@@ -4820,7 +5245,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                     print ' False positive: Even diagonal '
                     elCorner = True
                     midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
-                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
+                                        
+                    pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
+                    if pxValMid > binBnd[1]:
+#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
                         K_cst = k2
                     else:
                         K_cst = k1
@@ -4927,25 +5355,40 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                         nodes_trid1 = [nodes[0], nodes[1], nodes[2]]
                         nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
             
-                        if point_in_on_poly(x0,y1,polygonDef) and not(point_in_on_poly(x1,y0,polygonDef)):
+#                        if point_in_on_poly(x0,y1,polygonDef) and not(point_in_on_poly(x1,y0,polygonDef)):
+#                            K_cst_trid2 = k2 
+#                            K_cst_trid1 = k1
+#                        else:
+#                            K_cst_trid2 = k1
+#                            K_cst_trid1 = k2
+                        if pxVal1 > binBnd[1] and pxVal3 <= binBnd[1]:
                             K_cst_trid2 = k2 
                             K_cst_trid1 = k1
                         else:
                             K_cst_trid2 = k1
                             K_cst_trid1 = k2
-
+                        
                     # odd diagonal
                     else:
                         nodes_trid1 = [nodes[0], nodes[1], nodes[3]]
                         nodes_trid2 = [nodes[1], nodes[2], nodes[3]]
 
-                        if point_in_on_poly(x1,y1,polygonDef) and not(point_in_on_poly(x0,y0,polygonDef)):
+#                        if point_in_on_poly(x1,y1,polygonDef) and not(point_in_on_poly(x0,y0,polygonDef)):
+#                            K_cst_trid2 = k2 
+#                            K_cst_trid1 = k1
+#                        else:
+#                            K_cst_trid2 = k1
+#                            K_cst_trid1 = k2
+
+    
+                        if pxVal2 > binBnd[1] and pxVal4 <= binBnd[1]:
                             K_cst_trid2 = k2 
                             K_cst_trid1 = k1
                         else:
                             K_cst_trid2 = k1
                             K_cst_trid1 = k2
 
+                             
                     coords_trid1 = p[nodes_trid1]
                     coords_trid2 = p[nodes_trid2]
 
@@ -5058,7 +5501,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                     # the South-West corner is cut, 0-4-1, and 0-5-3
                     if enrich1[1] == y0 and enrich2[0] == x0 and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
                         print "SW corner"
-                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes)
+                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image)
         
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -5078,7 +5521,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                         else:
                             south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes)
+                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -5097,7 +5540,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
                         else:
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
-                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes)
+                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -5118,7 +5561,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                         else:
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes)
+                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -5140,7 +5583,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
                         else:
                             east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes)
+                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -5240,7 +5683,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist):
     # from all the nodes remove those corresponding to the left and right boundary
     FreeNodes = list( (set( unique_nodes) - set(lbcs)) - set(rbcs))
     
-
+#    print 'FreeNodes = ', FreeNodes
 
     Kb = K[:,:]
     Fb = F[:]

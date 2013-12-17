@@ -8,7 +8,7 @@ import string
 from itertools import izip_longest
 from itertools import groupby
 import numpy
-import copy
+from copy import deepcopy 
 
 from igfem2d import *
 from meshgeneration import *
@@ -144,6 +144,7 @@ class Node():
          
         self.tlist = [] # contains the numbering of the nodes in the element       
         self.nsew = [0,0,0,0]
+        self.hn = [Coordinate(-1,-1),Coordinate(-1,-1),Coordinate(-1,-1),Coordinate(-1,-1)]
         
         self.rect = rect 
         self.index = '-1'
@@ -1164,7 +1165,7 @@ def process_list_of_elements(llist,root):
     pvec = numpy.zeros((0,2))
     
     coordsList1 = []
-    #first construct the pvec of just the physical coordinates of the element corners
+    #first, construct the pvec of just the physical coordinates of the element corners
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         p1,p2,p3,p4 = root_i.rect
@@ -1173,11 +1174,11 @@ def process_list_of_elements(llist,root):
         coordsList1 = coordsList1 + [[p3.x, p3.y]]
         coordsList1 = coordsList1 + [[p4.x, p4.y]]
 
-    cList1 = copy.deepcopy(coordsList1)
+    cList1 = deepcopy(coordsList1)
     
     for i in range(0, len(coordsList1)):
-        coordsList1[i][0] /= 1000.0
-        coordsList1[i][1] /= 1000.0
+        coordsList1[i][0] = coordsList1[i][0] / 1000.0
+        coordsList1[i][1] = coordsList1[i][1] / 1000.0
         if coordsList1[i][0] != 0.0:
             coordsList1[i][0] += 0.001
         if coordsList1[i][1] != 0.0:
@@ -1191,9 +1192,10 @@ def process_list_of_elements(llist,root):
     # remove duplicates from the list:
     coordsList1 = [ key for key,_ in groupby(coordsList1)]
 
-
+    lenClist1 = len(coordsList1)
+    
     coordsList2 = []
-    #first construct the pvec of just the physical coordinates of the element corners
+    #second, construct the pvec of the enrichment nodes
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         l = len(root_i.enrichNodes)
@@ -1202,12 +1204,12 @@ def process_list_of_elements(llist,root):
                 enrN = root_i.enrichNodes[j]
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
-    cList2 = copy.deepcopy(coordsList2)
+    cList2 = deepcopy(coordsList2)
     
     
     for i in range(0, len(coordsList2)):
-        coordsList2[i][0] /= 1000.0
-        coordsList2[i][1] /= 1000.0
+        coordsList2[i][0] = coordsList2[i][0] / 1000.0
+        coordsList2[i][1] = coordsList2[i][1] / 1000.0
         if coordsList2[i][0] != 0.0:
             coordsList2[i][0] += 0.001
         if coordsList2[i][1] != 0.0:
@@ -1360,7 +1362,7 @@ def process_list_of_elements(llist,root):
             
 
         
-    return [pvec,pvecCList]
+    return [pvec,pvecCList,lenClist1]
     
 def numbering(pvec,pvecCList, llist, masterNode):
     n = len(llist)
@@ -1443,7 +1445,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
             tind = el[k]
             old_coords = pvecCList[tind]
             
-            new_coords = old_coords/1000
+            new_coords = old_coords/1000.0
             if new_coords[1] != 0.0:
                 new_coords[1] += 0.001
             if new_coords[0] != 0.0:
@@ -1477,7 +1479,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
         
     return tvec
 
-def set_nsew(llist, masterNode):
+def set_nsew(llist, masterNode, full_vec):
     
     n = len(llist)
     for i in range(0,n):
@@ -1492,7 +1494,18 @@ def set_nsew(llist, masterNode):
             p1w,p2w,p3w,p4w = west_neighbor.rect
             if west_neighbor.has_children == True and p1w.x < p1.x:
                 root.nsew[3] = 1
-#                west_has_children = True
+                p1wchild1,p2wchild1,p3wchild1,p4wchild1 = west_neighbor.children[1].rect
+                x1 = p3wchild1.x / 1000.0
+                y1 = p3wchild1.y / 1000.0
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
+                y1 = 1 -  y1    
+                x1 = find_nearest(full_vec,x1)
+                y1 = find_nearest(full_vec,y1)  
+                root.hn[3] = Coordinate(x1, y1)
+                west_has_children = True
                 
         east_neigh_index = str(find_neighbor_of(root.index,'R'))    
         # checking to see if the west neighbor exists or is a ghost
@@ -1501,6 +1514,17 @@ def set_nsew(llist, masterNode):
             p1e,p2e,p3e,p4e = east_neighbor.rect
             if east_neighbor.has_children == True and p2.x < p2e.x:
                 root.nsew[2] = 1
+                p1echild0, p2echild0, p3echild0, p4echild0 = east_neighbor.children[0].rect
+                x4 = p4echild0.x / 1000.0
+                y4 = p4echild0.y / 1000.0
+                if x4 != 0.0:
+                    x4 += 0.001
+                if y4 != 0.0:
+                    y4 += 0.001            
+                y4 = 1 - y4     
+                x4 = find_nearest(full_vec,x4)
+                y4 = find_nearest(full_vec,y4)
+                root.hn[2] = Coordinate(x4, y4)
 #                east_has_children = True
 
         south_neigh_index = str(find_neighbor_of(root.index,'D'))  
@@ -1508,10 +1532,20 @@ def set_nsew(llist, masterNode):
         if it_exists(south_neigh_index, masterNode):
             south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
             p1s,p2s,p3s,p4s = south_neighbor.rect
-        
             if south_neighbor.has_children == True and p4.y < p4s.y:
                 root.nsew[1] = 1
-        
+                p1schild0, p2schild0, p3schild0, p4schild0 = south_neighbor.children[0].rect
+                x2 = p2schild0.x / 1000.0
+                y2 = p2schild0.y / 1000.0
+                if x2 != 0.0:
+                    x2 += 0.001
+                if y2 != 0.0:
+                    y2 += 0.001            
+                y2 = 1 - y2
+                x2 = find_nearest(full_vec,x2)
+                y2 = find_nearest(full_vec,y2)
+                root.hn[1] = Coordinate(x2, y2)
+#        
         north_neigh_index = str(find_neighbor_of(root.index,'U'))    
         # checking to see if the west neighbor exists or is a ghost
         if it_exists(north_neigh_index, masterNode):
@@ -1519,8 +1553,42 @@ def set_nsew(llist, masterNode):
             p1n,p2n,p3n,p4n = north_neighbor.rect
             if north_neighbor.has_children == True and p1n.y < p1.y:
                 root.nsew[0] = 1
+                p1nchild2, p2nchild2, p3nchild2, p4nchild2 = north_neighbor.children[2].rect
+                x3 = p3nchild2.x / 1000.0
+                y3 = p3nchild2.y / 1000.0
+                if x3 != 0.0:
+                    x3 += 0.001
+                if y3 != 0.0:
+                    y3 += 0.001            
+                y3 = 1 - y3
+                x3 = find_nearest(full_vec,x3)
+                y3 = find_nearest(full_vec,y3)
+                root.hn[0] = Coordinate(x3, y3 )
 
+def correct_pvec(p,full_vec,lenClist1):
+# correct p_vec of coordinates because of lost pixels in integer division
+# now pixel at location 62 is correctly set to be 0.0625 and not 0.63
+    
+    
+    
+    # go over the coordinates of the regular grid in the p vector  
+    for i in range(0, lenClist1):
+        for j in [0,1]:
+            val = find_nearest(full_vec,p[i,j])
+            # go over the coordinates of the intersection nodes in the pvecor
+            for k in range(lenClist1,len(p)):
+                # if any of the coordinates of the intersection nodes corresponds
+                # to a coordinate value on the grid, correct it
+                if p[k,0] == p[i,j] :
+                    p[k,0] = val
+                if p[k,1] == p[i,j]:
+                    p[k,1] = val
+            p[i,j] = val
+    return p
 
+def find_nearest(array,value):
+    idx = (numpy.abs(array-value)).argmin()
+    return array[idx]
                     
 if __name__ == "__main__":
     print "Reading image in..."
@@ -1595,55 +1663,33 @@ if __name__ == "__main__":
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
  
-    [p_reg,p_regCList] = process_list_of_elements(llist,masterNode)
+    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
     
     t_reg = numbering(p_reg,p_regCList,llist, masterNode)
+    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
+
+    set_nsew(llist,masterNode,full_vec)
+
+#    root_i = get_node_by_id(masterNode,['1003'])
+#    pp1,pp2,pp3,pp4 = root_i.rect
+#    print pp1.x, pp2.x, pp1.y, pp3.y, pp4.y, pp3.x
     
-    set_nsew(llist,masterNode)
-#     print t_reg
-#    print p_reg, t_reg
-     
-#     p_reg = p_reg / 1000.0
-#     for i in range(0,len(p_reg)):
-#         if p_reg[i,0] != 0.0:
-#             p_reg[i,0] += 0.001
-#         if p_reg[i,1] != 0.0:
-#             p_reg[i,1] += 0.001
-                     
-        
-#  
-#     for e in range(0, len(p_reg)):
-#         if p_reg[e,0] == 0.25 and p_reg[e,1] == 0.625:
-#             print e
-
-#    p = p_regCList
-##    for e in range(0, len(t_reg)):
-##        if t_reg[e][0] == 6:
-##            print t_reg[e]
-##            niod = get_node_by_id(masterNode, ['322'])
-##            print niod.nsew
-##            
-            
-#            for k in range(0,len(t_reg[e])):
-#                print p[t_reg[e][k]]
-
-#     for i in range(0,len(p_reg)):
-#         p_reg[i,1] = 1 - p_reg[i,1] 
-#     print p_reg, len(p_reg), len(p_regCList)
-
-
-
-        
+    p_reg = correct_pvec( p_reg, full_vec,lenClist1)
+    
+#    print root_i.hn[2].x, root_i.hn[2].y
+#    print p_reg
+#    print t_reg
+    
     print 'writing the image out'
  
     sitk.WriteImage(outputImage,"outCircles.png")
     
 #    sitk.WriteImage(outputImage,"outChannels.png");
 
-    ndim = 8
-    ndim = int(ndim) + 1
-    n= ndim
-    m = ndim
+#    ndim = 8
+#    ndim = int(ndim) + 1
+#    n= ndim
+#    m = ndim
     # location of the interface along the y dimension (assuming no interface in the x)
     # material conductivities
     k1 = 1
@@ -1660,8 +1706,8 @@ if __name__ == "__main__":
     f.close()
     f2.close()
     
-    hx = 1.0/(m-1)
-    hy = 1.0/(n-1)
+#    hx = 1.0/(m-1)
+#    hy = 1.0/(n-1)
 
 
 # ## MULTIPLE INCLUSIONS:
@@ -1712,7 +1758,7 @@ if __name__ == "__main__":
 #             t_reg = t_reg + [[112, 113, 115, 51]]
 #             t_reg = t_reg + [[113, 114, 52, 115]]
      
-    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist)
+    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
 
     aa1 = numpy.array([UU])
     ww1 = numpy.array(aa1[()])

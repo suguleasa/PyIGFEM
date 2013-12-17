@@ -462,14 +462,14 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
             p1,p2,p3,p4 = root.rect
             
             
-            if e!= 38:
+            if e!= 38000:
                 # locate the hanging nodes
                 north_node = 0
                 south_node = 0
                 east_node = 0
                 west_node = 0
                 if S_hn == 1:
-                    south_hn = root.hn[1]#Coordinate( (x0 + x1) / 2.0, y0)
+                    south_hn = root.hn[1]
                     shn = [south_hn.x, south_hn.y]
                     s_ind = numpy.where(numpy.all(p==shn,axis=1))
                     south_node = s_ind[0][0]
@@ -480,7 +480,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     Nbases_HN_South = lambda x,y: 0.0
                     
                 if N_hn == 1:
-                    north_hn = root.hn[0]#Coordinate( (x0 + x1) / 2.0, y1)
+                    north_hn = root.hn[0]
                     nhn = [north_hn.x, north_hn.y]
                     n_ind = numpy.where(numpy.all(p==nhn,axis=1))
                     north_node = n_ind[0][0]           
@@ -491,7 +491,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     Nbases_HN_North = lambda x,y: 0.0   
                                       
                 if E_hn == 1:
-                    east_hn = root.hn[2]#Coordinate( x1, (y0 + y1) / 2.0)
+                    east_hn = root.hn[2]
                     ehn = [east_hn.x, east_hn.y]
                     e_ind = numpy.where(numpy.all(p==ehn,axis=1))
                     east_node = e_ind[0][0]   
@@ -502,7 +502,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     Nbases_HN_East = lambda x,y: 0.0
                                                  
                 if W_hn == 1:
-                    west_hn = root.hn[3]#Coordinate( x0, (y0 + y1) / 2.0)
+                    west_hn = root.hn[3]
                     whn = [west_hn.x, west_hn.y]
                     w_ind = numpy.where(numpy.all(p==whn,axis=1))
                     west_node = w_ind[0][0]            
@@ -520,11 +520,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                                 U[t[e][2],0] * NbasisHN[2](x,y) +
                                 U[t[e][3],0] * NbasisHN[3](x,y) +
                                 
-#            uh_elem = lambda x,y: ( U[t[e][0],0] * Nbasis[0](x,y) +
+#                uh_elem = lambda x,y: ( U[t[e][0],0] * Nbasis[0](x,y) +
 #                                U[t[e][1],0] * Nbasis[1](x,y) +
 #                                U[t[e][2],0] * Nbasis[2](x,y) +
 #                                U[t[e][3],0] * Nbasis[3](x,y) +
-#                                
+                                
                                 U[north_node,0] * Nbases_HN_North(x,y) +  
                                 U[south_node,0] * Nbases_HN_South(x,y) +
                                 U[east_node,0] * Nbases_HN_East(x,y) +
@@ -613,82 +613,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
      
     
-                if e == 38 :
-                    print Nbasis57(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[0]
-                    print Nbasis57(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[1]
-                    print Nbasis68(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[0]
-                    print Nbasis68(p[178,0],p[178,1],p,nodes,x0,x1,y0,y1)[1]
-                    
-                    PeB = np.zeros((4,4))
-                    PeB[:,0] = np.ones((4,1)).transpose()
-                    PeB[:,1] = p[nodes[0:4],0]
-                    PeB[:,2] = p[nodes[0:4],1]
-                    PeB[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-                
-                    PeB[2,2] = (y0+y1)/2.0
-                    PeB[3,2] = (y0+y1)/2.0
-                    PeB[2,3] = (y0+y1)/2.0 * x1
-                    PeB[3,3] = (y0+y1)/2.0 * x0
-                    
-                    CB = np.linalg.inv(PeB)
-                    NbasisB = basisFct(CB)
-                
-                    PeT = np.zeros((4,4))
-                    PeT[:,0] = np.ones((4,1)).transpose()
-                    PeT[:,1] = p[nodes[0:4],0]
-                    PeT[:,2] = p[nodes[0:4],1]
-                    PeT[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-                
-#                    PeT[0,2] = (y0+y1)/2.0
-#                    PeT[1,2] = (y0+y1)/2.0
-#                    PeT[0,3] = (y0+y1)/2.0 * x0
-#                    PeT[1,3] = (y0+y1)/2.0 * x1
-                            
-                    CT = np.linalg.inv(PeT)
-                    NbasisT = basisFct(CT)
-                            
-                    if p[178,1] <= (y0+y1)/2.0:
-                        Nbasis6 = lambda x,y: NbasisB[2](x,y)
-                        Nbasis8 = lambda x,y: NbasisB[3](x,y)
-                    else:
-                        Nbasis6 = lambda x,y: NbasisT[1](x,y)
-                        Nbasis8 = lambda x,y: NbasisT[0](x,y)
-                        
-                    print Nbasis8(p[178,0],p[178,1])
-                    print NbasisB[0](p[178,0],p[178,1]), NbasisB[1](p[178,0],p[178,1]), NbasisB[2](p[178,0],p[178,1]),NbasisB[3](p[178,0],p[178,1])
-                    print '---', p[178,0],p[178,1]
-                    print PeB
-                    print CB
-                    N1 = lambda x,y: CB[0,0] + CB[1,0]*x + CB[2,0]*y + CB[3,0]*x*y
-                    N2 = lambda x,y: CB[0,1] + CB[1,1]*x + CB[2,1]*y + CB[3,1]*x*y
-                    N3 = lambda x,y: CB[0,2] + CB[1,2]*x + CB[2,2]*y + CB[3,2]*x*y
-                    N4 = lambda x,y: CB[0,3] + CB[1,3]*x + CB[2,3]*y + CB[3,3]*x*y
-                    a = p[178,0]
-                    b= p[178,1]
-                    print N1(a,b), N2(a,b), N3(a,b),N4(a,b)
-                    a = p[178,0] 
-                    b = 0.9375
-                    print N1(a,b), N2(a,b), N3(a,b),N4(a,b)
-                    #                    print 170, NbasisHN[0](p[170,0], p[170,1])
-#                    print 169, NbasisHN[0](p[169,0], p[169,1]) 
-#                    print 178, NbasisHN[0](p[178,0], p[178,1])
-##                    print 187, NbasisHN[0](p[187,0], p[187,1])
-##                    print 186, NbasisHN[0](p[186,0], p[186,1])
-##                    print 171, NbasisHN[0](p[171,0], p[171,1])
-#                    print '170 west:', Nbases_HN_West(p[170,0],p[170,1])
-#                    print '169 west:', Nbases_HN_West(p[169,0],p[169,1])
-                    print '178 west', Nbases_HN_West(p[178,0],p[178,1])
-                    
-#                    print U[169,0], U[170,0], U[171,0], U[187,0], U[186,0], U[178,0], U[157,0], U[158,0], U[168,0]
-
-#                if e == 122:
-#                    print 57, NbasisHN[0](p[57,0], p[57,1])
-#                    print 73, NbasisHN[0](p[73,0], p[73,1])
-#                    
-#                if e == 102:
-#                    print 22, NbasisHN[2](p[22,0], p[22,1])
-#                    print 21, NbasisHN[2](p[21,0], p[21,1])
-#                    print 12, NbasisHN[2](p[12,0], p[12,1])         
+                  
 
                 # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
                 # for transformation from the parametric element to phisycal element
@@ -713,6 +638,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     
             else:
                 
+                    # hard coded element 38
                     nodes = [169, 171, 187, 186, 170, 178]
 
                  
@@ -5165,7 +5091,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
 #                Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
 
-            if e == 38:
+            if e == 38000:
                 nodes = [169, 171, 187, 186, 170, 178]
                 [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
 

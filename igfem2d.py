@@ -400,9 +400,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     polygonList = []
 
     # COMPUTING THE L-2 NORM
-#    for e in range(0,T):
+    for e in range(0,T):
 #    for e in range(34,51):
-    for e in [35,37,38,40,43,44,47,48,49,50]:
+#     for e in [35,37,38,40,43,44,47,48,49,50]:
 #    for e in [38, 102, 122]:
 #    for e in [96,97,100,102,103,105]: 
         
@@ -411,7 +411,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     
         root = get_node_by_id(masterNode,llist[e])
 
-        print 'Element ', e, ' of ', T-1, ' and nodes: ', nodes
         
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]
@@ -433,201 +432,205 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
         y0 = coords[0,1]
         y1 = coords[2,1]
 
-        if len(nodes) == 4 :
+        if len(nodes) == 4 and root.ishomog == 1:
             
             
             x_coords = coords[:,0]
             y_coords = coords[:,1]
 
-#            [x_fct_HN,y_fct_HN] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,0,0)
-#            Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,0,0)
-#            det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-#
-#            uh_elem = lambda ee,nn: ( 
-#                                U[t[e][0],0] * Nbasis[0](x_fct_HN(ee,nn),y_fct_HN(ee,nn)) +
-#                                U[t[e][1],0] * Nbasis[1](x_fct_HN(ee,nn),y_fct_HN(ee,nn)) +
-#                                U[t[e][2],0] * Nbasis[2](x_fct_HN(ee,nn),y_fct_HN(ee,nn)) +
-#                                U[t[e][3],0] * Nbasis[3](x_fct_HN(ee,nn),y_fct_HN(ee,nn)) #* det_Jac(ee,nn)
-#                        )
+#             [x_fct,y_fct] = xy_fct(coords[0:4,0],coords[0:4,1])
+#             Jac = jacobian_mat( coords[0:4,0], coords[0:4,1])
+#             det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
 
+            uh_elem = lambda x,y: ( U[t[e][0],0] * Nbasis[0](x,y) +
+                    U[t[e][1],0] * Nbasis[1](x,y) +
+                    U[t[e][2],0] * Nbasis[2](x,y) +
+                    U[t[e][3],0] * Nbasis[3](x,y) 
+                    )
 
-            p1h,p2h,p3h,p4h = root.hn
-            
-            [N_hn,S_hn,E_hn,W_hn] = root.nsew
-            NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N_hn,S_hn,E_hn,W_hn)
-            
-            uiHN = ui
-            wiHN = wi
-            
-            p1,p2,p3,p4 = root.rect
-            
-            
-            if e!= 38000:
-                # locate the hanging nodes
-                north_node = 0
-                south_node = 0
-                east_node = 0
-                west_node = 0
-                if S_hn == 1:
-                    south_hn = root.hn[1]
-                    shn = [south_hn.x, south_hn.y]
-                    s_ind = numpy.where(numpy.all(p==shn,axis=1))
-                    south_node = s_ind[0][0]
-                    Nbases_HN_South = lambda x,y: Nbasis57(x,y,p,nodes,x0,x1,y0,y1)[0]
-                    
-    #                [uiHN,wiHN] = lgwt(6,-1,1)
-                else:
-                    Nbases_HN_South = lambda x,y: 0.0
-                    
-                if N_hn == 1:
-                    north_hn = root.hn[0]
-                    nhn = [north_hn.x, north_hn.y]
-                    n_ind = numpy.where(numpy.all(p==nhn,axis=1))
-                    north_node = n_ind[0][0]           
-                    Nbases_HN_North = lambda x,y: Nbasis57(x,y,p,nodes,x0,x1,y0,y1)[1]
-                    
-    #                [uiHN,wiHN] = lgwt(6,-1,1)
-                else:
-                    Nbases_HN_North = lambda x,y: 0.0   
-                                      
-                if E_hn == 1:
-                    east_hn = root.hn[2]
-                    ehn = [east_hn.x, east_hn.y]
-                    e_ind = numpy.where(numpy.all(p==ehn,axis=1))
-                    east_node = e_ind[0][0]   
-                    Nbases_HN_East = lambda x,y: Nbasis68(x,y,p,nodes,x0,x1,y0,y1)[0]
-                    
-    #                [uiHN,wiHN] = lgwt(6,-1,1)
-                else:
-                    Nbases_HN_East = lambda x,y: 0.0
-                                                 
-                if W_hn == 1:
-                    west_hn = root.hn[3]
-                    whn = [west_hn.x, west_hn.y]
-                    w_ind = numpy.where(numpy.all(p==whn,axis=1))
-                    west_node = w_ind[0][0]            
-                    Nbases_HN_West = lambda x,y: Nbasis68(x,y,p,nodes,x0,x1,y0,y1)[1]
-                    
-    #                [uiHN,wiHN] = lgwt(6,-1,1)
-                else:
-                    Nbases_HN_West = lambda x,y: 0.0                
-    
-                if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
-              
-                uh_elem = lambda x,y: ( U[t[e][0],0] * NbasisHN[0](x,y) +
-                                U[t[e][1],0] * NbasisHN[1](x,y) +
-                                U[t[e][2],0] * NbasisHN[2](x,y) +
-                                U[t[e][3],0] * NbasisHN[3](x,y) +
-                                
-#                uh_elem = lambda x,y: ( U[t[e][0],0] * Nbasis[0](x,y) +
-#                                U[t[e][1],0] * Nbasis[1](x,y) +
-#                                U[t[e][2],0] * Nbasis[2](x,y) +
-#                                U[t[e][3],0] * Nbasis[3](x,y) +
-                                
-                                U[north_node,0] * Nbases_HN_North(x,y) +  
-                                U[south_node,0] * Nbases_HN_South(x,y) +
-                                U[east_node,0] * Nbases_HN_East(x,y) +
-                                U[west_node,0] * Nbases_HN_West(x,y)
-                        ) 
-                        
-                Usolution[nodes[0],0] = uh_elem(p[nodes[0],0],p[nodes[0],1])
-                Usolution[nodes[1],0] = uh_elem(p[nodes[1],0],p[nodes[1],1])
-                Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
-                Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
-                                
-                # 1 - Hanging Node:
-                # South
-                if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3] ]]
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                # East
-                if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3] ]]
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                # North  
-                if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3] ]]
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                # West 
-                if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3], west_node ]]
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                    
-                # 2 Hanging Nodes:
-                # South & East
-                if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3] ]]
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                # South & North 
-                if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3] ]]
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                # South & West
-                if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3], west_node ]]
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                # North & East 
-                if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                # East & West
-                if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3], west_node ]]
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-    #            # North & West
-                if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3], west_node ]]
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                     
-                # 3 Hanging Nodes:
-                # South, East & North
-                if N_hn == 1 and S_hn == 1 and E_hn == 1 and W_hn == 0:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                # South, North & West 
-                if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3], west_node ]]
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-                # East, West & North  
-                if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3], west_node ]]
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                    Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                # East, West & South
-                if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 1:
-                    polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3], west_node ]]
-                    Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
-                    Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
-                    Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
-     
-    
+            Usolution[nodes[0],0] = uh_elem(p[nodes[0],0],p[nodes[0],1])
+            Usolution[nodes[1],0] = uh_elem(p[nodes[1],0],p[nodes[1],1])
+            Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
+            Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
+            polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
+
+#             p1h,p2h,p3h,p4h = root.hn
+#             
+#             [N_hn,S_hn,E_hn,W_hn] = root.nsew
+#             NbasisHN = Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N_hn,S_hn,E_hn,W_hn)
+#             
+#             uiHN = ui
+#             wiHN = wi
+#             
+#             p1,p2,p3,p4 = root.rect
+#             
+#             
+#             if e!= 38:
+#                 # locate the hanging nodes
+#                 north_node = 0
+#                 south_node = 0
+#                 east_node = 0
+#                 west_node = 0
+#                 if S_hn == 1:
+#                     south_hn = root.hn[1]
+#                     shn = [south_hn.x, south_hn.y]
+#                     s_ind = numpy.where(numpy.all(p==shn,axis=1))
+#                     south_node = s_ind[0][0]
+#                     Nbases_HN_South = lambda x,y: Nbasis57(x,y,p,nodes,x0,x1,y0,y1)[0]
+#                     
+#     #                [uiHN,wiHN] = lgwt(6,-1,1)
+#                 else:
+#                     Nbases_HN_South = lambda x,y: 0.0
+#                     
+#                 if N_hn == 1:
+#                     north_hn = root.hn[0]
+#                     nhn = [north_hn.x, north_hn.y]
+#                     n_ind = numpy.where(numpy.all(p==nhn,axis=1))
+#                     north_node = n_ind[0][0]           
+#                     Nbases_HN_North = lambda x,y: Nbasis57(x,y,p,nodes,x0,x1,y0,y1)[1]
+#                     
+#     #                [uiHN,wiHN] = lgwt(6,-1,1)
+#                 else:
+#                     Nbases_HN_North = lambda x,y: 0.0   
+#                                       
+#                 if E_hn == 1:
+#                     east_hn = root.hn[2]
+#                     ehn = [east_hn.x, east_hn.y]
+#                     e_ind = numpy.where(numpy.all(p==ehn,axis=1))
+#                     east_node = e_ind[0][0]   
+#                     Nbases_HN_East = lambda x,y: Nbasis68(x,y,p,nodes,x0,x1,y0,y1)[0]
+#                     
+#     #                [uiHN,wiHN] = lgwt(6,-1,1)
+#                 else:
+#                     Nbases_HN_East = lambda x,y: 0.0
+#                                                  
+#                 if W_hn == 1:
+#                     west_hn = root.hn[3]
+#                     whn = [west_hn.x, west_hn.y]
+#                     w_ind = numpy.where(numpy.all(p==whn,axis=1))
+#                     west_node = w_ind[0][0]            
+#                     Nbases_HN_West = lambda x,y: Nbasis68(x,y,p,nodes,x0,x1,y0,y1)[1]
+#                     
+#     #                [uiHN,wiHN] = lgwt(6,-1,1)
+#                 else:
+#                     Nbases_HN_West = lambda x,y: 0.0                
+#     
+#                 if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
+#               
+#                 uh_elem = lambda x,y: ( U[t[e][0],0] * NbasisHN[0](x,y) +
+#                                 U[t[e][1],0] * NbasisHN[1](x,y) +
+#                                 U[t[e][2],0] * NbasisHN[2](x,y) +
+#                                 U[t[e][3],0] * NbasisHN[3](x,y) +
+#                                 
+# #                uh_elem = lambda x,y: ( U[t[e][0],0] * Nbasis[0](x,y) +
+# #                                U[t[e][1],0] * Nbasis[1](x,y) +
+# #                                U[t[e][2],0] * Nbasis[2](x,y) +
+# #                                U[t[e][3],0] * Nbasis[3](x,y) +
+#                                 
+#                                 U[north_node,0] * Nbases_HN_North(x,y) +  
+#                                 U[south_node,0] * Nbases_HN_South(x,y) +
+#                                 U[east_node,0] * Nbases_HN_East(x,y) +
+#                                 U[west_node,0] * Nbases_HN_West(x,y)
+#                         ) 
+#                         
+#                 Usolution[nodes[0],0] = uh_elem(p[nodes[0],0],p[nodes[0],1])
+#                 Usolution[nodes[1],0] = uh_elem(p[nodes[1],0],p[nodes[1],1])
+#                 Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
+#                 Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
+#                                 
+#                 # 1 - Hanging Node:
+#                 # South
+#                 if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3] ]]
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#                 # East
+#                 if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3] ]]
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                 # North  
+#                 if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3] ]]
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                 # West 
+#                 if N_hn == 0 and S_hn == 0 and E_hn == 0 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3], west_node ]]
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#                     
+#                 # 2 Hanging Nodes:
+#                 # South & East
+#                 if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3] ]]
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                 # South & North 
+#                 if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3] ]]
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                 # South & West
+#                 if N_hn == 0 and S_hn == 1 and E_hn == 0 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], nodes[3], west_node ]]
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#                 # North & East 
+#                 if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                 # East & West
+#                 if N_hn == 0 and S_hn == 0 and E_hn == 1 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], nodes[3], west_node ]]
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#     #            # North & West
+#                 if N_hn == 1 and S_hn == 0 and E_hn == 0 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], north_node, nodes[3], west_node ]]
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#                      
+#                 # 3 Hanging Nodes:
+#                 # South, East & North
+#                 if N_hn == 1 and S_hn == 1 and E_hn == 1 and W_hn == 0:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], north_node, nodes[3] ]]
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#                 # South, North & West 
+#                 if N_hn == 1 and S_hn == 1 and E_hn == 0 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], nodes[2], north_node, nodes[3], west_node ]]
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#                 # East, West & North  
+#                 if N_hn == 1 and S_hn == 0 and E_hn == 1 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], nodes[1], east_node, nodes[2], north_node, nodes[3], west_node ]]
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#                     Usolution[north_node,0] = uh_elem(p[north_node,0],p[north_node,1])
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                 # East, West & South
+#                 if N_hn == 0 and S_hn == 1 and E_hn == 1 and W_hn == 1:
+#                     polygonList = polygonList + [[nodes[0], south_node, nodes[1], east_node, nodes[2], nodes[3], west_node ]]
+#                     Usolution[west_node,0] = uh_elem(p[west_node,0],p[west_node,1])
+#                     Usolution[east_node,0] = uh_elem(p[east_node,0],p[east_node,1])
+#                     Usolution[south_node,0] = uh_elem(p[south_node,0],p[south_node,1])
+#      
+#     
                   
 
-                # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-                # for transformation from the parametric element to phisycal element
-                # of the Gauss nodes ui
-                [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
-    
-                Jac = jacobian_mat( coords[:,0], coords[:,1] )
-                detJ = lambda eps,niu: determinant(Jac)(eps,niu)
-    
+            # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+            # for transformation from the parametric element to phisycal element
+            # of the Gauss nodes ui
+            [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
+
+            Jac = jacobian_mat( coords[:,0], coords[:,1] )
+            detJ = lambda eps,niu: determinant(Jac)(eps,niu)
+
     #            el_sum =  gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_fct_HN,y_fct_HN,uh_elem,det_Jac)
                 
-                el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
-    
-                all_elems_sum = all_elems_sum + el_sum;
+                #el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+            el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+            all_elems_sum = all_elems_sum + el_sum;
     
     
     #             if y0 <= yloc and yloc <= y1:
@@ -636,155 +639,155 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     #                 pylab.plot(tx,sfct)
             
                     
-            else:
-                
-                    # hard coded element 38
-                    nodes = [169, 171, 187, 186, 170, 178]
-
-                 
-                  # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
-                    tri_nodes1 = [nodes[0],nodes[4],nodes[5]]
-                    tri_nodes2 = [nodes[5],nodes[2],nodes[3]]
-                    tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
-                    tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
-    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                    polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-    
-                    Pe4 = np.zeros((3,3))
-                    Pe4[:,0] = np.ones((3,1)).transpose()
-                    Pe4[:,1] = p[tri_nodes4[0:3],0]
-                    Pe4[:,2] = p[tri_nodes4[0:3],1]
-                    C4 = np.linalg.inv(Pe4)
-                    Nbasis_tri4 = tribasisFct(C4)
-                    Nx_tri4 = triderivX(C4)
-                    Ny_tri4 = triderivY(C4)
-    
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-                    tri_coords4 = p[tri_nodes4]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-                    [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
-    
-                    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],Nbasis_tri1[2]]
-                    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri2[0]]
-                    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[0],Nbasis_tri3[2]]
-                    Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],lambda x,y: 0]
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-        
-    
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-    
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
-    
-                    w1 = y1 - y5
-                    w2 = y5 - y0
-                    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
-                    if factor_W > EPS_FACTOR:
-                        factor_W = 1
-    
-                    s1 = x4 - x0
-                    s2 = x1 - x4
-                    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
-                    if factor_S > EPS_FACTOR:
-                        factor_S = 1
-    
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S+
-                                            U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-    
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W )
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-    
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S +
-                                            U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_W )
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    uh_elem_4 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S )
-    
-                    el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_2( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
-   
-                
+#             else:
+#                 
+#                     # hard coded element 38
+#                     nodes = [169, 171, 187, 186, 170, 178]
+# 
+#                  
+#                   # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
+#                     tri_nodes1 = [nodes[0],nodes[4],nodes[5]]
+#                     tri_nodes2 = [nodes[5],nodes[2],nodes[3]]
+#                     tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
+#                     tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
+#     
+#                     polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+#                     polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+#                     polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+#                     polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+# 
+#                     Pe1 = np.zeros((3,3))
+#                     Pe1[:,0] = np.ones((3,1)).transpose()
+#                     Pe1[:,1] = p[tri_nodes1[0:3],0]
+#                     Pe1[:,2] = p[tri_nodes1[0:3],1]
+#                     C1 = np.linalg.inv(Pe1)
+#                     Nbasis_tri1 = tribasisFct(C1)
+#                     Nx_tri1 = triderivX(C1)
+#                     Ny_tri1 = triderivY(C1)
+# 
+#                     Pe2 = np.zeros((3,3))
+#                     Pe2[:,0] = np.ones((3,1)).transpose()
+#                     Pe2[:,1] = p[tri_nodes2[0:3],0]
+#                     Pe2[:,2] = p[tri_nodes2[0:3],1]
+#                     C2 = np.linalg.inv(Pe2)
+#                     Nbasis_tri2 = tribasisFct(C2)
+#                     Nx_tri2 = triderivX(C2)
+#                     Ny_tri2 = triderivY(C2)
+#     
+#                     Pe3 = np.zeros((3,3))
+#                     Pe3[:,0] = np.ones((3,1)).transpose()
+#                     Pe3[:,1] = p[tri_nodes3[0:3],0]
+#                     Pe3[:,2] = p[tri_nodes3[0:3],1]
+#                     C3 = np.linalg.inv(Pe3)
+#                     Nbasis_tri3 = tribasisFct(C3)
+#                     Nx_tri3 = triderivX(C3)
+#                     Ny_tri3 = triderivY(C3)
+#     
+#                     Pe4 = np.zeros((3,3))
+#                     Pe4[:,0] = np.ones((3,1)).transpose()
+#                     Pe4[:,1] = p[tri_nodes4[0:3],0]
+#                     Pe4[:,2] = p[tri_nodes4[0:3],1]
+#                     C4 = np.linalg.inv(Pe4)
+#                     Nbasis_tri4 = tribasisFct(C4)
+#                     Nx_tri4 = triderivX(C4)
+#                     Ny_tri4 = triderivY(C4)
+#     
+#                     tri_coords1 = p[tri_nodes1]
+#                     tri_coords2 = p[tri_nodes2]
+#                     tri_coords3 = p[tri_nodes3]
+#                     tri_coords4 = p[tri_nodes4]
+#     
+#                     [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+#                     [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+#                     [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+#                     [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
+#     
+#                     Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],Nbasis_tri1[2]]
+#                     Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri2[0]]
+#                     Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[0],Nbasis_tri3[2]]
+#                     Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],lambda x,y: 0]
+#     
+#                     J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+#                     J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+#                     J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+#                     J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
+#                     detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+#                     detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+#                     detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+#                     detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+#         
+#     
+#                     node_enr_4 = [nodes[4]]
+#                     node_enr_5 = [nodes[5]]
+#                     coords_enr_4 = p[node_enr_4]
+#                     coords_enr_5 = p[node_enr_5]
+#     
+#                     x4 = coords_enr_4[0,0]
+#                     y4 = coords_enr_4[0,1]
+#     
+#                     x5 = coords_enr_5[0,0]
+#                     y5 = coords_enr_5[0,1]
+#     
+#                     w1 = y1 - y5
+#                     w2 = y5 - y0
+#                     factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+#                     if factor_W > EPS_FACTOR:
+#                         factor_W = 1
+#     
+#                     s1 = x4 - x0
+#                     s2 = x1 - x4
+#                     factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+#                     if factor_S > EPS_FACTOR:
+#                         factor_S = 1
+#     
+#                     uh_elem_1 = lambda x,y: (
+#                                             U[nodes[0],0] * Nbasis[0](x,y) +
+#                                             U[nodes[1],0] * Nbasis[1](x,y) + 
+#                                             U[nodes[2],0] * Nbasis[2](x,y) +
+#                                             U[nodes[3],0] * Nbasis[3](x,y) +
+#                                             U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S+
+#                                             U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
+#     
+#                     el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+#     
+#                     uh_elem_2 = lambda x,y: (
+#                                             U[nodes[0],0] * Nbasis[0](x,y) +
+#                                             U[nodes[1],0] * Nbasis[1](x,y) + 
+#                                             U[nodes[2],0] * Nbasis[2](x,y) +
+#                                             U[nodes[3],0] * Nbasis[3](x,y) +
+#                                             U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W )
+#     
+#                     el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+#     
+#                     uh_elem_3 = lambda x,y: (
+#                                             U[nodes[0],0] * Nbasis[0](x,y) +
+#                                             U[nodes[1],0] * Nbasis[1](x,y) + 
+#                                             U[nodes[2],0] * Nbasis[2](x,y) +
+#                                             U[nodes[3],0] * Nbasis[3](x,y) +
+#                                             U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S +
+#                                             U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_W )
+#     
+#                     el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+#     
+#                     uh_elem_4 = lambda x,y: (
+#                                             U[nodes[0],0] * Nbasis[0](x,y) +
+#                                             U[nodes[1],0] * Nbasis[1](x,y) + 
+#                                             U[nodes[2],0] * Nbasis[2](x,y) +
+#                                             U[nodes[3],0] * Nbasis[3](x,y) +
+#                                             U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S )
+#     
+#                     el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+#     
+#                     all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+#                 
+#                     Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+#                     Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
+#                     Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
+#                     Usolution[nodes[3],0] = uh_elem_2( p[nodes[3],0], p[nodes[3],1]  )
+#                     Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
+#                     Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
+#    
+#                 
 #            if nodes[0] == 102 and nodes[1] == 104:
 #                print south_node, east_node, north_node
 #                print uh_elem(p[south_node,0],p[south_node,1])
@@ -2569,7 +2572,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 #                         pylab.plot( txL, uh_elem_L(txL, yloc))
 #                         pylab.plot( txR, uh_elem_R(txR, yloc))
     
-    print Usolution[186], Usolution[187], Usolution[188], Usolution[169], Usolution[171]
 
 #    print Usolution
     print 'Writing VTK file...' 
@@ -4843,11 +4845,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     if p[i,0] == 1.0:
                         rbcs = rbcs + [i]
                             
+#     print 'tbcs', tbcs
+#     print 'lbcs', lbcs
+#     print 'rbcs', rbcs
+#     print 'bbcs', bbcs
 
-    print 'tbcs', tbcs
-    print 'lbcs', lbcs
-    print 'rbcs', rbcs
-    print 'bbcs', bbcs
     # temperatures for Dirichlet BCs
     leftDirich = 1
     rightDirich = 1
@@ -4892,6 +4894,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     K = sparse.lil_matrix((N,N))
     F = sparse.lil_matrix((N,1))
 
+    list_hanging_nodes = []
     for e in range(0,T):
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
@@ -4973,7 +4976,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         #cornerD = point_in_poly(x0,y1,domainInclusion)
 
 
-        if len(nodes) == 4:        # elements need no enrichment
+        if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
             
             Ke = np.zeros((4,4))
             Fe = np.zeros((4,1))
@@ -5038,10 +5041,49 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
             #N,S,E,W
             [N_hn,S_hn,E_hn,W_hn] = root.nsew
             
-            [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
-            Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
-            det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+            # Method 2 for computing HangingNodes
+            #===================================================================
+            # [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
+            # Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
+            # det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+            #===================================================================
+            
+            # Method 1 for computing Hanging Nodes: averaging
+            if N_hn == 1: # North
+                north_hn = root.hn[0]
+                nhn = [north_hn.x, north_hn.y]
+                n_ind = numpy.where(numpy.all(p==nhn,axis=1))
+                north_node = n_ind[0][0]           
+                list_hanging_nodes = list_hanging_nodes + [[ north_node, nodes[2], nodes[3] ]]
 
+            if S_hn == 1:
+                south_hn = root.hn[1]
+                shn = [south_hn.x, south_hn.y]
+                s_ind = numpy.where(numpy.all(p==shn,axis=1))
+                south_node = s_ind[0][0]
+                list_hanging_nodes = list_hanging_nodes + [[ south_node, nodes[0], nodes[1] ]]
+
+                    
+            if E_hn == 1:
+                east_hn = root.hn[2]
+                ehn = [east_hn.x, east_hn.y]
+                e_ind = numpy.where(numpy.all(p==ehn,axis=1))
+                east_node = e_ind[0][0]   
+                list_hanging_nodes = list_hanging_nodes + [[ east_node, nodes[1], nodes[2] ]]
+
+                                                 
+            if W_hn == 1:
+                west_hn = root.hn[3]
+                whn = [west_hn.x, west_hn.y]
+                w_ind = numpy.where(numpy.all(p==whn,axis=1))
+                west_node = w_ind[0][0]            
+                list_hanging_nodes = list_hanging_nodes + [[ west_node, nodes[0], nodes[3] ]]
+
+    
+            [x_fct,y_fct] = xy_fct(coords[0:4,0],coords[0:4,1])
+            Jac = jacobian_mat( coords[0:4,0], coords[0:4,1])
+            det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+            
 #            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
 #                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,1,0)
 #                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,1,0)
@@ -5067,50 +5109,53 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                print 'north edge'
                 
                     
-                
+# Method 2 for Hanging Nodes                
+#===============================================================================
+#             # construct the local matrix and local components of the load vector    
+#             for i in range(0,4):
+#                 for j in range(0,4):
+#                     if nodes[i] >=  nodes[j]:
+#                         Kefunc = lambda ee,nn: K_cst * ( Nx[i](x_fct(ee,nn),y_fct(ee,nn)) * Nx[j](x_fct(ee,nn),y_fct(ee,nn)) + Ny[i](x_fct(ee,nn),y_fct(ee,nn)) * Ny[j](x_fct(ee,nn),y_fct(ee,nn)) ) * det_Jac(ee,nn)
+#                         Ke[i,j] = quad2d(Kefunc,-1,1,-1,1,ui,wi)
+# 
+#                 # construct the local load vector
+#                 fv = lambda ee,nn: rhs(x_fct(ee,nn),y_fct(ee,nn)) * Nbasis[i](x_fct(ee,nn),y_fct(ee,nn)) * det_Jac(ee,nn)
+#                 Fe[i] = quad2d(fv,-1,1,-1,1,ui,wi)
+#===============================================================================
+
+            
+            # Method 1
             # construct the local matrix and local components of the load vector    
             for i in range(0,4):
                 for j in range(0,4):
                     if nodes[i] >=  nodes[j]:
-                        Kefunc = lambda ee,nn: K_cst * ( Nx[i](x_fct(ee,nn),y_fct(ee,nn)) * Nx[j](x_fct(ee,nn),y_fct(ee,nn)) + Ny[i](x_fct(ee,nn),y_fct(ee,nn)) * Ny[j](x_fct(ee,nn),y_fct(ee,nn)) ) * det_Jac(ee,nn)
-                        Ke[i,j] = quad2d(Kefunc,-1,1,-1,1,ui,wi)
+                        Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
+                        Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
 
                 # construct the local load vector
-                fv = lambda ee,nn: rhs(x_fct(ee,nn),y_fct(ee,nn)) * Nbasis[i](x_fct(ee,nn),y_fct(ee,nn)) * det_Jac(ee,nn)
-                Fe[i] = quad2d(fv,-1,1,-1,1,ui,wi)
+                fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
+                Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
 
-            
-#            # construct the local matrix and local components of the load vector    
-#            for i in range(0,4):
-#                for j in range(0,4):
-#                    if nodes[i] >=  nodes[j]:
-#                        Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
-#                        Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-#
-#                # construct the local load vector
-#                fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
-#                Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
-
-            if e == 38000:
-                nodes = [169, 171, 187, 186, 170, 178]
-                [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
-
-                # add the local stiffness matrix and local load vector to the global K and F
-                for i in range(0,6):
-                    for j in range(0,6):
-                        if nodes[i] >= nodes[j]:
-                            K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
-                            K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                    F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
-            else:                    
+#             if e == 3800:
+#                 nodes = [169, 171, 187, 186, 170, 178]
+#                 [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
+# 
+#                 # add the local stiffness matrix and local load vector to the global K and F
+#                 for i in range(0,6):
+#                     for j in range(0,6):
+#                         if nodes[i] >= nodes[j]:
+#                             K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
+#                             K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+#                     F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+#             else:                    
                 #print e,Ke#.todense() 
-                # add the local stiffness matrix and local load vector to the global K and F
-                for i in range(0,4):
-                    for j in range(0,4):
-                        if nodes[i] >= nodes[j]:
-                            K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                            K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                    F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+            # add the local stiffness matrix and local load vector to the global K and F
+            for i in range(0,4):
+                for j in range(0,4):
+                    if nodes[i] >= nodes[j]:
+                        K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+                        K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                F[nodes[i],0] = F[nodes[i],0] + Fe[i]
 
     
            
@@ -5631,7 +5676,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     #print np.array(U)
     # Getting the analytical solution and its vector form
     #uexact = lambda x,y: ufct(x,loc,k1,k2) 
-    
+    for i in range(0,len(list_hanging_nodes)):
+        listHN = list_hanging_nodes[i]
+        U[listHN[0],0] = ( U[listHN[1],0] + U[listHN[2],0] ) / 2.0
+        
     return  np.array(U)
      
 def in_same_domain(nd1,nd2,nd3):

@@ -3,7 +3,7 @@ import os
 import math
 import SimpleITK as sitk
 from libFcts import *
-from globalVars import *
+from globalVars import * 
 import string
 from itertools import izip_longest
 from itertools import groupby
@@ -141,7 +141,7 @@ class Node():
                 Node.MAX_DEPTH = self.depth
                 
         
-         
+        self.ishomog = 1
         self.tlist = [] # contains the numbering of the nodes in the element       
         self.nsew = [0,0,0,0]
         self.hn = [Coordinate(-1,-1),Coordinate(-1,-1),Coordinate(-1,-1),Coordinate(-1,-1)]
@@ -678,6 +678,8 @@ class CNode(Node):
 
             # if the four corners test fails
             if ( isHomogeneous == 0) and has_inclusions(self.inImage,p1,p2,p3,p4):
+                
+                
                 l1 = ends_in_same_bin(self.inImage,p1,p2);
                 l2 = ends_in_same_bin(self.inImage,p2,p3);
                 l3 = ends_in_same_bin(self.inImage,p4,p3);
@@ -706,21 +708,28 @@ class CNode(Node):
                 # NW
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L1, L4)
+                    self.ishomog = 0
+                    
                 # NE
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE):
                     draw_line(self.outImage, L1, L2)
+                    self.ishomog = 0
                 # SE
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L2, L3)
+                    self.ishomog = 0
                 # SW
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L3, L4)
+                    self.ishomog = 0
                 # vertical
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L1, L3)
+                    self.ishomog = 0
                 # horizontal
                 if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L4, L2)
+                    self.ishomog = 0
                     
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -734,7 +743,7 @@ class CNode(Node):
                         return True
                     elif vecCoord1[0] != -1:
                         self.enrichNodes = vecCoord1#[L1, L4]
-                        
+                    self.ishomog = 0   
 #                        self.mat = 'Fluid'
 #                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
@@ -750,7 +759,7 @@ class CNode(Node):
                     elif vecCoord2[0] != -1:
                         self.enrichNodes = vecCoord2
 #                        self.mat = 'Fluid'
-
+                    self.ishomog = 0
                         
                 # case 3: interface crossing through L2 and L3
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -764,7 +773,7 @@ class CNode(Node):
                     elif vecCoord3[0].x != -1:
                         self.enrichNodes = vecCoord3
 #                        self.mat = 'Fluid'
-                        
+                    self.ishomog = 0   
                         
                 # case 4: interface crossing through L4 and L3
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -778,6 +787,7 @@ class CNode(Node):
                     elif vecCoord4[0].x != -1:
                         self.enrichNodes = vecCoord4
 #                        self.mat = 'Fluid'
+                    self.ishomog = 0
 
                 # case 5: interface crossing through L1 and L3
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -791,7 +801,7 @@ class CNode(Node):
                     elif vecCoord5[0].x != -1:
                         self.enrichNodes = vecCoord5
 #                        self.mat = 'Fluid'
-                        
+                    self.ishomog = 0   
                 # case 6: interface crossing through L4 and L2
                 if (l1==True and l2==False and l3==True and l4==False) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 6"
@@ -803,7 +813,7 @@ class CNode(Node):
                         return True
                     elif vecCoord6[0].x != -1:
                         self.enrichNodes = vecCoord6
-                        
+                    self.ishomog = 0    
 #                        self.mat = 'Fluid'
                                             
                  # case 7: one line crossing through L1 and L4 and one line crossing through L2 and L3
@@ -1066,6 +1076,8 @@ def stress_concentration_constraint(tree, root, masterNode):
 
 #        print len(root.enrichNodes)
 
+#         print root.index, root.ishomog
+#         print root.enrichNodes
         if root.children[0] != None:
             stress_concentration_constraint(tree,root.children[0],masterNode)
         if root.children[1] != None:
@@ -1658,6 +1670,8 @@ if __name__ == "__main__":
 #     stress_concentration_constraint(tree,rootNode,masterNode)
      
     masterNode = rootNode
+    
+    stress_concentration_constraint(tree, rootNode, masterNode)
 #     node = CNode.get_child(masterNode,'2')
 #     print number_of_generations(tree, node, masterNode), node.depth
     llist = []

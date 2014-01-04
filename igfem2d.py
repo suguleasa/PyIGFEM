@@ -432,7 +432,33 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
         y0 = coords[0,1]
         y1 = coords[2,1]
 
-        if len(nodes) == 4 and root.ishomog == 1:
+        thru_corner = False
+
+
+        if len(nodes) == 5:
+            enrich1 = np.array(p[nodes[4]])
+    
+            corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+            corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+            corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+            corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+    
+            which_corner = -1
+            if corner0 == True and corner1 == False and corner2 == False and corner3 == False:
+                thru_corner = True
+                which_corner = 1
+            if corner0 == False and corner1 == True and corner2 == False and corner3 == False:
+                thru_corner = True
+                which_corner = 2
+            if corner0 == False and corner1 == False and corner2 == True and corner3 == False:
+                thru_corner = True
+                which_corner = 3
+            if corner0 == False and corner1 == False and corner2 == False and corner3 == True:
+                thru_corner = True
+                which_corner = 4 
+
+#         if len(nodes) == 4 and root.ishomog == 1:
+        if len(nodes) == 4 or thru_corner == True:
             
             
             x_coords = coords[:,0]
@@ -4907,7 +4933,14 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
         pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-
+#         if root.index == '210333':
+#             print '-----------------------------------'
+#             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+#             enrN1 = root.enrichNodes[0]
+#             enrN2 = root.enrichNodes[1]
+#             print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
+#             print '-----------------------------------'
+#             
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
 
@@ -4975,6 +5008,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         #cornerC = point_in_poly(x1,y1,domainInclusion) 
         #cornerD = point_in_poly(x0,y1,domainInclusion)
 
+        thru_corner = False
+
         if len(nodes) == 5:
                 enrich1 = np.array(p[nodes[4]])
 
@@ -4983,17 +5018,23 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
                 corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
 
-                thru_corner = False
-                
+                which_corner = -1
                 if corner0 == True and corner1 == False and corner2 == False and corner3 == False:
                     thru_corner = True
+                    which_corner = 1
                 if corner0 == False and corner1 == True and corner2 == False and corner3 == False:
                     thru_corner = True
+                    which_corner = 2
                 if corner0 == False and corner1 == False and corner2 == True and corner3 == False:
                     thru_corner = True
+                    which_corner = 3
                 if corner0 == False and corner1 == False and corner2 == False and corner3 == True:
-                    thru_corner = True   
+                    thru_corner = True
+                    which_corner = 4   
                      
+        if thru_corner == True:
+            print root.index, which_index
+            
 #         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
         if len(nodes) == 4 or thru_corner == True:        # elements need no enrichment
                         
@@ -5031,7 +5072,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
             pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
             pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
             
-            #if SE - East
             if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
                  is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 <= binBnd[1] ):
                 K_cst = k1
@@ -5040,6 +5080,30 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                  is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 > binBnd[1] ):
                     K_cst = k2
         
+            if thru_corner == True:
+                if which_corner == 1: 
+                    if pxVal1 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2
+                if which_corner == 2: 
+                    if pxVal2 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2
+                if which_corner == 3: 
+                    if pxVal3 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2
+                if which_corner == 4: 
+                    if pxVal4 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2                                                
+                
+
+                
 
 #            # multiple inclusions:
 #            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 

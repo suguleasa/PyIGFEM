@@ -1375,7 +1375,7 @@ def process_list_of_elements(llist,root):
 
         
     return [pvec,pvecCList,lenClist1]
-    
+ 
 def numbering(pvec,pvecCList, llist, masterNode):
     n = len(llist)
     
@@ -1422,7 +1422,13 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 b5 = [enrN1.x, enrN1.y]
                 ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
                 c5 = ind5[0][0]
-                t = t + [[c1,c2,c3,c4,c5]]
+                if  ( (abs(enrN1.x - p1.x) < 2 and abs(enrN1.y - p1.y) < 2) or
+                      ( abs(enrN1.x - p2.x) < 2 and abs(enrN1.y - p2.y) < 2 ) or
+                      ( abs(enrN1.x - p3.x) < 2 and abs(enrN1.y - p3.y) < 2 ) or
+                      ( abs(enrN1.x - p4.x) < 2 and abs(enrN1.y - p4.y)<2) ):
+                    t = t + [[c1,c2,c3,c4]]
+                else:
+                    t = t + [[c1,c2,c3,c4,c5]]
 #                 t = t + [[c4,c3,c2,c1, c5]]
                   
             if l == 2:
@@ -1437,7 +1443,10 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
                 c6 = ind6[0][0]   
                   
-                t = t + [[c1,c2,c3,c4,c5,c6]]
+                if abs(enrN1.x - enrN2.x)<2 and abs(enrN1.y - enrN2.y)<2:
+                    t = t + [[c1,c2,c3,c4]]
+                else:
+                    t = t + [[c1,c2,c3,c4,c5,c6]]
                 
 #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
@@ -1684,7 +1693,10 @@ if __name__ == "__main__":
 
     set_nsew(llist,masterNode,full_vec)
 
-#    root_i = get_node_by_id(masterNode,['1003'])
+    root_i = get_node_by_id(masterNode,['210333'])
+    print root_i.enrichNodes[0].x, root_i.ishomog, root_i.index
+#     print root_i.index == '210333'
+    
 #    pp1,pp2,pp3,pp4 = root_i.rect
 #    print pp1.x, pp2.x, pp1.y, pp3.y, pp4.y, pp3.x
     

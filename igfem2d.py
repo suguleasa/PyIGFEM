@@ -4975,9 +4975,28 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         #cornerC = point_in_poly(x1,y1,domainInclusion) 
         #cornerD = point_in_poly(x0,y1,domainInclusion)
 
+        if len(nodes) == 5:
+                enrich1 = np.array(p[nodes[4]])
 
-        if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
-            
+                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+                corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+
+                thru_corner = False
+                
+                if corner0 == True and corner1 == False and corner2 == False and corner3 == False:
+                    thru_corner = True
+                if corner0 == False and corner1 == True and corner2 == False and corner3 == False:
+                    thru_corner = True
+                if corner0 == False and corner1 == False and corner2 == True and corner3 == False:
+                    thru_corner = True
+                if corner0 == False and corner1 == False and corner2 == False and corner3 == True:
+                    thru_corner = True   
+                     
+#         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
+        if len(nodes) == 4 or thru_corner == True:        # elements need no enrichment
+                        
             Ke = np.zeros((4,4))
             Fe = np.zeros((4,1))
 

@@ -8,4 +8,4 @@ TOL_LINEARS = 2.0
 TOL_QUADRATICS = -2.0 # cancel the cubic approximation by making a negative number
 TOL_CUBICS = -2.0 # cancel the cubic approximation by making a negative number
 
-
+TOL_error = 3

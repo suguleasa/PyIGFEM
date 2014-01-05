@@ -272,6 +272,7 @@ def linear_search(image,bbegin,eend):
 
 				if not(ends_in_same_bin(image, next,old)):
 					list_nodes = list_nodes + [Coordinate(next.x,next.y)]
+                    
 				old = Coordinate(next.x,next.y)
 				next = Coordinate(next.x+1,next.y)		
 	

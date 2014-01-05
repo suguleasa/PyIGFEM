@@ -4933,14 +4933,14 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
         pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-#         if root.index == '210333':
-#             print '-----------------------------------'
-#             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-#             enrN1 = root.enrichNodes[0]
-#             enrN2 = root.enrichNodes[1]
-#             print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
-#             print '-----------------------------------'
-#             
+        if root.index == '323211':#'210333':
+            print '-----------------------------------'
+            print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+            enrN1 = root.enrichNodes[0]
+            enrN2 = root.enrichNodes[1]
+            print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
+            print '-----------------------------------'
+             
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
 

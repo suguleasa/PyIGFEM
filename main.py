@@ -1422,10 +1422,10 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 b5 = [enrN1.x, enrN1.y]
                 ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
                 c5 = ind5[0][0]
-                if  ( (abs(enrN1.x - p1.x) < 2 and abs(enrN1.y - p1.y) < 2) or
-                      ( abs(enrN1.x - p2.x) < 2 and abs(enrN1.y - p2.y) < 2 ) or
-                      ( abs(enrN1.x - p3.x) < 2 and abs(enrN1.y - p3.y) < 2 ) or
-                      ( abs(enrN1.x - p4.x) < 2 and abs(enrN1.y - p4.y)<2) ):
+                if  ( (abs(enrN1.x - p1.x) <= TOL_error and abs(enrN1.y - p1.y) <= TOL_error) or
+                      ( abs(enrN1.x - p2.x) <= TOL_error and abs(enrN1.y - p2.y) <= TOL_error ) or
+                      ( abs(enrN1.x - p3.x) <= TOL_error and abs(enrN1.y - p3.y) <= TOL_error ) or
+                      ( abs(enrN1.x - p4.x) <= TOL_error and abs(enrN1.y - p4.y) <= TOL_error) ):
                     t = t + [[c1,c2,c3,c4]]
                 else:
                     t = t + [[c1,c2,c3,c4,c5]]
@@ -1443,7 +1443,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
                 c6 = ind6[0][0]   
                   
-                if abs(enrN1.x - enrN2.x)<2 and abs(enrN1.y - enrN2.y)<2:
+                if abs(enrN1.x - enrN2.x)<=TOL_error and abs(enrN1.y - enrN2.y)<=TOL_error:
                     t = t + [[c1,c2,c3,c4]]
                 else:
                     t = t + [[c1,c2,c3,c4,c5,c6]]

@@ -1832,6 +1832,11 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                print not(on_corners(enrich2,p1.x,p1.y,p3.x,p3.y))
      
 
+            if enrich1[0] == enrich2[0] or enrich1[1] == enrich2[1]:
+                root.ishomog = 1
+            else:
+                root.ishomog = 0
+                
 #             if root.index == '323210':
 #                 print '--------323210----------------'
 #                 print [p1.x,p3.x], [p1.y,p3.y]

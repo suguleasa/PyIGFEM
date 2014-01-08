@@ -1446,11 +1446,29 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 if abs(enrN1.x - enrN2.x)<=TOL_error and abs(enrN1.y - enrN2.y)<=TOL_error:
                     t = t + [[c1,c2,c3,c4]]
                 else:
-                    if c5>c6:
-                        t = t + [[c1,c2,c3,c4,c5,c6]]
+#                     if c5>c6:
+#                         t = t + [[c1,c2,c3,c4,c5,c6]]
+#                     else:
+#                         t = t + [[c1,c2,c3,c4,c6,c5]]
+                    if pvecCList[c5][1] < pvecCList[c6][1]:
+                        mtl = [[c1,c2,c3,c4,c6,c5]]
                     else:
-                        t = t + [[c1,c2,c3,c4,c6,c5]]
-                
+                        if pvecCList[c5][1] == pvecCList[c6][1]:
+                            if pvecCList[c5][0] < pvecCList[c6][0]:
+                                mtl = [[c1,c2,c3,c4,c6,c5]]
+                            else:
+                                mtl =  [[c1,c2,c3,c4,c5,c6]]
+                        else:       
+                            mtl =  [[c1,c2,c3,c4,c5,c6]]
+                    
+                    t = t + mtl
+                            
+                    if c1 == 80 and c2 == 81:
+                        print 'inside numbering t:'
+                        print c5, c6
+                        print pvec[c5]
+                        print pvec[c6]
+                        print mtl
 #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
             t = t + [[c1,c2,c3,c4]]
@@ -1488,13 +1506,25 @@ def numbering(pvec,pvecCList, llist, masterNode):
         if len(el) == 5:
                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4]]
         if len(el) == 6:
-            if new_corners[5] < new_corners[4]:
-#                 print new_corners[5],new_corners[4]
-                tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
-            else:
+#             if new_corners[5] < new_corners[4]:
+#                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
+#             else:
+#                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4], new_corners[5]]
+            if pvec[new_corners[4]][1] < pvec[new_corners[5]][1]:
                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4], new_corners[5]]
-    
-        
+            else:
+                if pvec[new_corners[4]][1] == pvec[new_corners[5]][1]:
+                    if pvec[new_corners[4]][0] < pvec[new_corners[5]][0]:
+                        tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4], new_corners[5]]
+                    else:
+                        tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
+                else:
+                        tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
+                        
+#             print '----',pvec[new_corners[4]], pvec[new_corners[5]]
+#             print tk
+#             print pvec[1041], pvec[1042]
+                       
         tvec = tvec + [tk]
                 
     for i in range(0,n):
@@ -1593,26 +1623,26 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 # correct p_vec of coordinates because of lost pixels in integer division
 # now pixel at location 62 is correctly set to be 0.0625 and not 0.63
     
-    
+#     print 'start p-945',p[945]
+       
     # go over the coordinates of the regular grid in the p vector  
     for i in range(0, lenClist1):
         for j in [0,1]:
             val = find_nearest(full_vec,p[i,j])
-            p[i,j] = val
 
-            # go over the coordinates of the intersection nodes in the pvecor
+#             # go over the coordinates of the intersection nodes in the pvecor
 #             for k in range(lenClist1,len(p)):
 #                 # if any of the coordinates of the intersection nodes corresponds
 #                 # to a coordinate value on the grid, correct it
-# #                 if k == 1042:
-# #                     print 'pij=',p[i,j], [i,j]
-# #                     print 'val=',val, k
-# #                     print 'pk=',p[k]
-#                 if p[k,0] == old_pij: 
+#                 if p[k,0] == p[i,j]: 
 #                     p[k,0] = val
-#                 if p[k,1] == old_pij:
+#                 if p[k,1] == p[i,j]:
 #                     p[k,1] = val
+            p[i,j] = val
 
+
+
+#     print 'mid p-945', p[945]
     # go over the coordinates of the intersection nodes
     # and update them accordingly
 
@@ -1627,55 +1657,44 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 
         
         # look to see if the element has enrichment nodes
-        if len(tl)>4:
+        if len(tl) > 4:
             
 #             enrich1 = [root.enrichNodes[0].x, root.enrichNodes[0].y]
 #             enrich2 = [root.enrichNodes[1].x, root.enrichNodes[1].y]
 
             enrich1 = pvecPx[tp[4]]
             enrich2 = pvecPx[tp[5]]
+            
+#             if pvecPx[tp[4]][1] < pvecPx[tp[5]][1]:
+#                 enrich1 = pvecPx[tp[5]]
+#                 enrich2 = pvecPx[tp[4]]
+#             else:
+#                 if pvecPx[tp[4]][1] == pvecPx[tp[5]][1]:
+#                     if pvecPx[tp[4]][0] < pvecPx[tp[5]][0]:
+#                         
+#                         enrich1 = pvecPx[tp[4]]
+#                         enrich2 = pvecPx[tp[5]]
+#                     else:
+#                         enrich1 = pvecPx[tp[5]]
+#                         enrich2 = pvecPx[tp[4]]
+                        
             ind1 = tl[4]
             ind2 = tl[5]
 
-            
-            # enrichment node 1 is one of the corners of the element
-            if on_corners(enrich1,p1.x,p1.y,p3.x,p3.y):
-                x1 = enrich1[0] / 1000.0
-                y1 = enrich1[1] / 1000.0
-                if x1 != 0.0:
-                    x1 += 0.001
-                if y1 != 0.0:
-                    y1 += 0.001            
-                y1 = 1 - y1
-                valx1 = find_nearest(full_vec,x1)
-                valy1 = find_nearest(full_vec,y1)
+#             if tl[0] == 944 or tl[0]==660:
+#                 print tp
+#                 print pvecPx[tp[4]]
+#                 print pvecPx[tp[5]]
+#                 print 'en 1:', enrich1
+#                 print 'en2:', enrich2
 
-                # update the coordinates to the nearest "point on the grid"                
-                p[ind1,0] = valx1
-                p[ind1,1] = valy1
-             
-            # enrichment node 2 is one of the corners of the element   
-            if on_corners(enrich2,p1.x,p1.y,p3.x,p3.y):
-                x2 = enrich2[0] / 1000.0
-                y2 = enrich2[1] / 1000.0
-                if x2 != 0.0:
-                    x2 += 0.001
-                if y2 != 0.0:
-                    y2 += 0.001            
-                y2 = 1 - y2
-                valx2 = find_nearest(full_vec,x2)
-                valy2 = find_nearest(full_vec,y2)
-                
-                # update the coordinates to the nearest "point on the grid"
-                p[ind2,0] = valx2
-                p[ind2,1] = valy2
-                
-            # enrichment node 1 is on an edge
-#             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
-            if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
-            
-                x1 = p[tl[4],0]
-                y1 = p[tl[4],1]
+#             print '-------', tl
+#             print tp
+#             print enrich1
+#             print enrich2
+
+#             # enrichment node 1 is one of the corners of the element
+#             if on_corners(enrich1,p1.x,p1.y,p3.x,p3.y):
 #                 x1 = enrich1[0] / 1000.0
 #                 y1 = enrich1[1] / 1000.0
 #                 if x1 != 0.0:
@@ -1683,6 +1702,68 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                 if y1 != 0.0:
 #                     y1 += 0.001            
 #                 y1 = 1 - y1
+#                 valx1 = find_nearest(full_vec,x1)
+#                 valy1 = find_nearest(full_vec,y1)
+#   
+#                 # update the coordinates to the nearest "point on the grid"                
+#                 p[ind1,0] = valx1
+#                 p[ind1,1] = valy1
+#                
+# #                 if tl[0] == 659:
+# #                         print '--11111--------'
+# #                         print 'enrich1 = ', enrich1
+# #                         print 'enrich2 = ', enrich2
+# #                         print tl
+# #                         print x2,y2
+# #                         print pvecPx[tp[4]]
+# #                         print pvecPx[tp[5]]
+# #                         print valx1, valy1
+# #                         print 'ind1', ind2, p[ind1]
+# #                                         
+#                
+#             # enrichment node 2 is one of the corners of the element   
+#             if on_corners(enrich2,p1.x,p1.y,p3.x,p3.y):
+#                 x2 = enrich2[0] / 1000.0
+#                 y2 = enrich2[1] / 1000.0
+#                 if x2 != 0.0:
+#                     x2 += 0.001
+#                 if y2 != 0.0:
+#                     y2 += 0.001            
+#                 y2 = 1 - y2
+#                 valx2 = find_nearest(full_vec,x2)
+#                 valy2 = find_nearest(full_vec,y2)
+#                   
+#                 # update the coordinates to the nearest "point on the grid"
+#                 p[ind2,0] = valx2
+#                 p[ind2,1] = valy2
+# #                  
+# #                 if tl[0] == 659:
+# #                         print '--------------'
+# #                         print 'enrich1 = ', enrich1
+# #                         print 'enrich2 = ', enrich2
+# #                         print tl
+# #                         print x2,y2
+# #                         print pvecPx[tp[4]]
+# #                         print pvecPx[tp[5]]
+# #                         print valx2, valy2
+# #                         print 'ind2', ind2, p[ind2]
+                  
+            # enrichment node 1 is on an edge
+#             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
+            if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
+#                 if tl[0] == 944:
+#                     print 'enrich 1 on corners: ', ind1, ind2
+#                     print p[945]
+
+#                 x1 = p[tl[4],0]
+#                 y1 = p[tl[4],1]
+                x1 = enrich1[0] / 1000.0
+                y1 = enrich1[1] / 1000.0
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
+                y1 = 1 - y1
                  
                 if ((enrich1[0] == p1.x or enrich1[0] == p3.x) and 
                  (enrich1[1] != p1.y and enrich1[1] != p3.y)):
@@ -1693,7 +1774,17 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the X - coordinate to the nearest "point on the grid"
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
-                
+                                    
+#                     if tl[0] == 36:
+#                         print '--------------'
+#                         print 'enrich1 = ', enrich1
+#                         print 'enrich2 = ', enrich2
+#                         print tl
+#                         print x1,y1
+#                         print pvecPx[tp[4]]
+#                         print pvecPx[tp[5]]
+#                         print valx1, valy1
+                        
                 if ((enrich1[0] != p1.x and enrich1[0] != p3.x) and 
                  (enrich1[1] == p1.y or enrich1[1] == p3.y)):   
                      
@@ -1704,27 +1795,19 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
                 
-#             if tl[0] == 36:
-#                 print '--------------'
-#                 print 'enrich1 = ', enrich1
-#                 print 'enrich2 = ', enrich2
-#                 print tl
-#                 print pvecPx[tp[4]]
-#                 print pvecPx[tp[5]]
-                    
+#                 if tl[0] == 944:
+#                     print 'end p-945', p[945]
                 
             # enrichment node 2 is on an edge                
             if not(on_corners(enrich2,p1.x,p1.y,p3.x,p3.y)):
-                x1 = p[tl[5],0]
-                y1 = p[tl[5],1]
-
-#                 x1 = enrich2[0] / 1000.0
-#                 y1 = enrich2[1] / 1000.0
-#                 if x1 != 0.0:
-#                     x1 += 0.001
-#                 if y1 != 0.0:
-#                     y1 += 0.001            
-#                 y1 = 1 - y1
+                
+                x1 = enrich2[0] / 1000.0
+                y1 = enrich2[1] / 1000.0
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
+                y1 = 1 - y1
                 
                 if ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
                  (enrich2[1] != p1.y and enrich2[1] != p3.y)):
@@ -1744,9 +1827,16 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the Y - coordinate to the nearest "point on the grid"    
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1                  
-       
-#     print '1042', p[1042]    
-#     print '1041: ', p[1041]     
+
+    
+#             if p1.x == 420 and p2.x == 436 and p1.y == 389 and p3.y == 405:
+#                print on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)
+#                print on_corners(enrich2,p1.x,p1.y,p3.x,p3.y)
+#                print not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y))
+#                print not(on_corners(enrich2,p1.x,p1.y,p3.x,p3.y))
+     
+
+    
     return p
 
 def find_index(array,value):

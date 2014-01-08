@@ -401,6 +401,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 
     # COMPUTING THE L-2 NORM
     for e in range(0,T):
+#     for e in range(0,250):
+
 #    for e in range(34,51):
 #     for e in [35,37,38,40,43,44,47,48,49,50]:
 #    for e in [38, 102, 122]:
@@ -4950,6 +4952,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
     list_hanging_nodes = []
     for e in range(0,T):
+#     for e in range(0,250):
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
     
@@ -5546,7 +5549,13 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
                 else:
 
-                    
+#                     x0 = coords[0,0]
+#                     x1 = coords[1,0]
+#                     y0 = coords[0,1]
+#                     y1 = coords[2,1]
+#                     print x0,x1,y0,y1
+#                     print 'nodes:', nodes
+#                     print p[nodes,:]
                     # the North-West corner is cut, 0-4-3, 2-5-3
                     if (
                         ((enrich1[0] == x0 and enrich2[1] == y1) or
@@ -5566,6 +5575,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
                             F[nodes[i],0] = F[nodes[i],0] + Fe_NW[i]
 
+
                     # the South-East corner is cut, 0-4-1, 1-5-2
                     if ( 
                         ((enrich1[1] == y0 and enrich2[0] == x1) or
@@ -5574,6 +5584,18 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print 'SE corner'
+                        
+#                         print x1,y1, enrich1
+#                         print not(on_corners(enrich1,x0,y0,x1,y1))
+#                         print not(on_corners(enrich2,x0,y0,x1,y1))
+#                         print 'elem:', e, root.tlist
+#                         print 'coords ', [x0,x1],[y0,y1]
+#                         print 'pixels ',[p1.x,p3.x],[p1.y,p3.y]
+#                         print 'enrich1 ',enrich1
+# #                         print 'enrich2 ',enrich2
+#                         print root.enrichNodes[0].x, root.enrichNodes[0].y
+# #                         print root.enrichNodes[1].x, root.enrichNodes[1].y
+                        
                         [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes)
     
                         # add the local stiffness matrix and local load vector to the global K and F

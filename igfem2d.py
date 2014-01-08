@@ -460,7 +460,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                 which_corner = 4 
 
 #         if len(nodes) == 4 and root.ishomog == 1:
-        if len(nodes) == 4 or thru_corner == True:
+        if (len(nodes) == 4 or  root.ishomog == 1) or thru_corner == True:
             
             
             x_coords = coords[:,0]
@@ -4951,7 +4951,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     F = sparse.lil_matrix((N,1))
 
     list_hanging_nodes = []
-    for e in range(0,T):
+    for e in [803]:#range(0,T):
 #     for e in range(0,250):
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
@@ -4964,9 +4964,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
         pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-#         if root.index == '323211':#'210333':
+#         if root.index == '323210':#'210333':
 #             print '-----------------------------------'
-#             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+# #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
 #             enrN1 = root.enrichNodes[0]
 #             enrN2 = root.enrichNodes[1]
 #             print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
@@ -5071,11 +5071,17 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
             print root.index, which_index
             
 #         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
-        if len(nodes) == 4 or thru_corner == True:        # elements need no enrichment
+        if (len(nodes) == 4  or root.ishomog ==1)or thru_corner == True:        # elements need no enrichment
                         
             Ke = np.zeros((4,4))
             Fe = np.zeros((4,1))
-
+            
+            if root.index == '323210':#'210333':
+                print '-----------------------------------'
+    #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+                enrN1 = root.enrichNodes[0]
+                enrN2 = root.enrichNodes[1]
+                print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
             # slanted interface
             # set the coefficient of the conductivity
 #            if coords[0,0] <= interface_fcn(coords[0,1]) and coords[1,0]<= interface_fcn(coords[0,1]) and k1!=k2:
@@ -5102,10 +5108,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                    K_cst = k1
             p1,p2,p3,p4 = root.rect
             
-            pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-            pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-            pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-            pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+            pxVal1 = image.GetPixel(int(p1.x), int(p1.y))
+            pxVal2 = image.GetPixel(int(p2.x), int(p2.y))
+            pxVal3 = image.GetPixel(int(p3.x), int(p3.y))
+            pxVal4 = image.GetPixel(int(p4.x), int(p4.y))
+            pxValMed = image.GetPixel(int((p1.x+p3.x)/2.0), int((p1.y+p3.y)/2.0))
             
             if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
                  is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 <= binBnd[1] ):
@@ -5114,6 +5121,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
                  is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 > binBnd[1] ):
                     K_cst = k2
+                elif root.ishomog == 1:
+                    if pxValMed > binBnd[1]:
+                        K_cst = k2
+                    else:
+                        K_cst = k1
         
             if thru_corner == True:
                 if which_corner == 1: 

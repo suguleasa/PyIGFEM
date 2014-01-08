@@ -731,7 +731,8 @@ class CNode(Node):
                 if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L4, L2)
                     self.ishomog = 0
-                    
+                
+ 
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 1"
@@ -1463,12 +1464,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
                     
                     t = t + mtl
                             
-                    if c1 == 80 and c2 == 81:
-                        print 'inside numbering t:'
-                        print c5, c6
-                        print pvec[c5]
-                        print pvec[c6]
-                        print mtl
+                    
 #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
             t = t + [[c1,c2,c3,c4]]
@@ -1836,6 +1832,14 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                print not(on_corners(enrich2,p1.x,p1.y,p3.x,p3.y))
      
 
+#             if root.index == '323210':
+#                 print '--------323210----------------'
+#                 print [p1.x,p3.x], [p1.y,p3.y]
+#                 print 'tl', tl
+#                 print 'tp', tp
+#                 print enrich1, p[ind1]
+#                 print enrich2, p[ind2]
+#                 print root.index, root.ishomog
     
     return p
 

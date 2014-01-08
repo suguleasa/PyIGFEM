@@ -4951,7 +4951,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     F = sparse.lil_matrix((N,1))
 
     list_hanging_nodes = []
-    for e in [803]:#range(0,T):
+    for e in range(0,T):
 #     for e in range(0,250):
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
@@ -5071,17 +5071,18 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
             print root.index, which_index
             
 #         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
-        if (len(nodes) == 4  or root.ishomog ==1)or thru_corner == True:        # elements need no enrichment
+        if (len(nodes) == 4  or root.ishomog == 1) or thru_corner == True:        # elements need no enrichment
                         
             Ke = np.zeros((4,4))
             Fe = np.zeros((4,1))
             
-            if root.index == '323210':#'210333':
-                print '-----------------------------------'
-    #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-                enrN1 = root.enrichNodes[0]
-                enrN2 = root.enrichNodes[1]
-                print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
+#             if root.index == '323210':#'210333':
+#                 print '-----------------------------------'
+#     #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+#                 enrN1 = root.enrichNodes[0]
+#                 enrN2 = root.enrichNodes[1]
+#                 print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
+
             # slanted interface
             # set the coefficient of the conductivity
 #            if coords[0,0] <= interface_fcn(coords[0,1]) and coords[1,0]<= interface_fcn(coords[0,1]) and k1!=k2:

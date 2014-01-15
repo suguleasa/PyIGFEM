@@ -884,6 +884,15 @@ def it_exists(index,masterNode):
         child = child.children[int(index[i])]
     return True
  
+def node_exists(index,list):
+    # look up index in list, if it exists return true, else false 
+    for i in range(0,len(list)):
+        if llist[i] == [str(index)]:
+            return True
+        
+    return False
+         
+        
 def tree_balance(tree, root,masterNode):
    
         p1,p2,p3,p4 = root.rect
@@ -1076,20 +1085,322 @@ def three_neighbor_rule(tree, root, masterNode):
 
 def stress_concentration_constraint(tree, root, masterNode):
 
-#        print len(root.enrichNodes)
-
-#         print root.index, root.ishomog
-#         print root.enrichNodes
-        if root.children[0] != None:
-            stress_concentration_constraint(tree,root.children[0],masterNode)
-        if root.children[1] != None:
-            stress_concentration_constraint(tree,root.children[1],masterNode)
-        if root.children[2] != None:
-            stress_concentration_constraint(tree,root.children[2],masterNode)
-        if root.children[3] != None:
-            stress_concentration_constraint(tree,root.children[3],masterNode)
+    print 'graph'
+#         if root.children[0] != None:
+#             stress_concentration_constraint(tree,root.children[0],masterNode)
+#         if root.children[1] != None:
+#             stress_concentration_constraint(tree,root.children[1],masterNode)
+#         if root.children[2] != None:
+#             stress_concentration_constraint(tree,root.children[2],masterNode)
+#         if root.children[3] != None:
+#             stress_concentration_constraint(tree,root.children[3],masterNode)
   
+def set_graph(masterNode,llist):
+    # each node called ROOT has 8 neighbors: 
+    #  NW   NC   NE 
+    #  WC  ROOT  EC
+    #  SW   SC   SE
+    
+    mesh_graph = {}
+    simple_graph = {}
 
+    n = len(llist)
+    # for each element 
+    for i in range(0,n):
+        root = get_node_by_id(masterNode,llist[i])
+        
+        p1,p2,p3,p4 = root.rect
+        
+        # NORTH-WEST neighbor index:
+#         if p1.y > 0 and p1.x > 0:
+#             north_west_neigh_index = str(find_neighbor_of(root.index,'LU'))
+#             # checking to see if the north-west neighbor exists or is a ghost
+#             if node_exists(north_west_neigh_index,llist) == False: # node does not exist
+#                 
+#                 # check if one level above, the node exists:
+#                 if node_exists(str(north_west_neigh_index[:-1]),llist) == True:
+#                     north_west_neighbor = get_node_by_id(masterNode, [str(north_west_neigh_index)])
+#                     parent_north_west_neighbor = get_node_by_id(masterNode, [str(north_west_neigh_index[:-1])])
+#                     if parent_north_west_neighbor.has_children:
+#                         if north_west_neighbor.has_children:
+#                             north_west_neigh_index = [str(north_west_neighbor.children[3].index)]
+#                     else:
+#                         north_west_neigh_index = [str(parent_north_west_neighbor.index)]
+# #                 else:
+# #                     # check if two levels above the node exists:
+# #                     if node_exists(str(north_west_neigh_index[:-2]),llist) == True:
+#             else: # the node exists: done
+#                 north_west_neigh_index = [str(north_west_neigh_index)]
+#         else:
+#             north_west_neigh_index = ['-1']
+
+        # NORTH-WEST neighbor index:
+        if p1.y > 0 and p1.x > 0:
+            north_west_neigh_index = str(find_neighbor_of(root.index,'LU'))
+            # checking to see if the north-west neighbor exists or is a ghost
+            if node_exists(north_west_neigh_index,llist) == False: # node does not exist
+                
+                # check if one level above, the node exists:
+                if node_exists(str(north_west_neigh_index[:-1]),llist) == False:
+                    #check if two levels above, the node exists:
+                    if node_exists(str(north_west_neigh_index[:-2]),llist) == False:
+                        print 'ERROR: this case should NOT exist'
+                    else:
+                        north_west_neigh_index = [str(north_west_neigh_index[:-2])]
+                else:
+                    north_west_neigh_index = [str(north_west_neigh_index[:-1])]
+            else: # the node exists: done
+                north_west_neigh_index = [str(north_west_neigh_index)]
+        else:
+            north_west_neigh_index = ['-1']
+
+#         # SOUTH-EAST neighbor index:
+#         if p3.y < 999 and p3.x < 999:
+#             south_east_neigh_index = str(find_neighbor_of(root.index,'RD'))
+#             south_east_neighbor = get_node_by_id(masterNode, [str(south_east_neigh_index)])
+# 
+#             # checking to see if the south-east neighbor exists or is a ghost
+#             if node_exists(str(south_east_neigh_index),llist) == False and south_east_neighbor.has_children == False:
+#                 #check if one level above, the node exisits:
+#                 if node_exists(str(south_east_neigh_index[:-1]),llist) == False:
+#                     #check if two levels above the node existS:
+#                     if node_exists(str(south_east_neigh_index[:-2]),llist) == False:
+#                         print 'ERROR: this case should NOT exist'
+#                         print str(south_east_neigh_index)
+#                         print root.index
+#                     else:
+#                         south_east_neigh_index = [str(south_east_neigh_index[:-2])]
+#                 else:
+#                     south_east_neigh_index = [str(south_east_neigh_index[:-1])]
+#             else:
+#                 south_east_neigh_index = [str(south_east_neigh_index)]
+#         else:
+#             south_east_neigh_index = ['-1']
+# 
+#         print south_east_neigh_index, [str(south_east_neigh_index)]
+        
+        # SOUTH-WEST neighbor index:
+        if p3.y < 999 and p1.x > 0:
+            south_west_neigh_index = str(find_neighbor_of(root.index,'LD'))
+            # checking to see if the south-west neighbor exists or is a ghost
+            if node_exists(south_west_neigh_index,llist) == False:
+                #check if one level above the node exists:
+                if node_exists(str(south_west_neigh_index[:-1]),llist) == False:
+                    # check if two levels above the node exists:
+                    if node_exists(str(south_west_neigh_index[:-2]),llist) == False:
+                        print 'ERROR: this case should NOT exist'
+                    else:
+                        south_west_neigh_index = [str(south_west_neigh_index[:-2])]
+                else:
+                    south_west_neigh_index = [str(south_west_neigh_index[:-1])]
+            else:
+                south_west_neigh_index = [str(south_west_neigh_index)]
+        else:
+            south_west_neigh_index = ['-1']
+
+        # NORTH-EAST neighbor index:
+        if p1.y > 0 and p2.x < 999:
+            north_east_neigh_index = str(find_neighbor_of(root.index,'RU'))
+            # checking to see if the north-east neighbor exists or is a ghost
+            if node_exists(north_east_neigh_index,llist) == False:
+                
+                #check if one level above, the node exists:
+                if node_exists(str(north_east_neigh_index[:-1]),llist) == False:
+                    # check if two levels above, the node exists:
+                    if node_exists(str(north_east_neigh_index[:-2]),llist) == False:
+                        print 'ERROR: this case should NOT exist'
+                    else:
+                        north_east_neigh_index = [str(north_east_neigh_index[:-2])]
+                else:
+                    north_east_neigh_index = [str(north_east_neigh_index[:-1])]
+            else:
+                north_east_neigh_index = [str(north_east_neigh_index)]
+        else:
+            north_east_neigh_index = ['-1']    
+                    
+        # NORTH neighbor index:
+        if p1.y > 0:
+            north_neigh_index = str(find_neighbor_of(root.index,'U'))
+            north_neighbor = get_node_by_id(masterNode, [str(north_neigh_index)])
+            # checking to see if the north neighbor exists or is a ghost
+            if node_exists(north_neigh_index,llist) == False:
+                parent_north_neighbor = get_node_by_id(masterNode, [str(north_neigh_index[:-1])])
+                if parent_north_neighbor.has_children:
+                    if north_neighbor.has_children:
+                        north_neigh_index = [str(north_neighbor.children[2].index), str(north_neighbor.children[3].index)]
+                else:
+                    north_neigh_index = [str(parent_north_neighbor.index)]
+            else:
+                north_neigh_index = [str(north_neigh_index)]
+        else:
+            north_neigh_index = ['-1']
+            
+#         # NORTH-EAST neighbor index:
+#         if p1.y > 0 and p2.x < 999:
+#             north_east_neigh_index = str(find_neighbor_of(root.index,'RU'))
+#             north_east_neighbor = get_node_by_id(masterNode, [str(north_east_neigh_index)])
+#             # checking to see if the north-east neighbor exists or is a ghost
+#             if node_exists(north_east_neigh_index,llist) == False:
+#                 parent_north_east_neighbor = get_node_by_id(masterNode, [str(north_east_neigh_index[:-1])])
+#                 if parent_north_east_neighbor.has_children:
+#                     if north_east_neighbor.has_children:
+#                         north_east_neigh_index = [str(north_east_neighbor.children[2].index)]
+#                 else:
+#                     north_east_neigh_index = [str(parent_north_east_neighbor.index)]
+#             else:
+#                 north_east_neigh_index = [str(north_east_neigh_index)]
+#         else:
+#             north_east_neigh_index = ['-1']            
+
+
+        # WEST neighbor index:
+        if p1.x > 0:
+            west_neigh_index = str(find_neighbor_of(root.index,'L'))
+            west_neighbor = get_node_by_id(masterNode, [str(west_neigh_index)])
+            # checking to see if the west neighbor exists or is a ghost
+            if node_exists(west_neigh_index,llist) == False:
+                parent_west_neighbor = get_node_by_id(masterNode, [str(west_neigh_index[:-1])])
+                if parent_west_neighbor.has_children:
+                    if west_neighbor.has_children:
+                        west_neigh_index = [str(west_neighbor.children[0].index), str(west_neighbor.children[3].index)]
+                else:
+                   west_neigh_index = [str(parent_west_neighbor.index)]
+            else:
+                west_neigh_index = [str(west_neigh_index)]
+        else:
+            west_neigh_index = ['-1']
+            
+        # EAST neighbor index:
+        if p2.x < 999:
+            east_neigh_index = str(find_neighbor_of(root.index,'R'))
+            east_neighbor = get_node_by_id(masterNode, [str(east_neigh_index)])
+            # checking to see if the east neighbor exists or is a ghost
+            if node_exists(east_neigh_index,llist) ==  False:
+                parent_east_neighbor = get_node_by_id(masterNode, [str(east_neigh_index[:-1])])
+                if parent_east_neighbor.has_children:
+                    if east_neighbor.has_children:
+                        east_neigh_index = [str(east_neighbor.children[0].index), str(east_neighbor.children[2].index)]
+                else:
+                    east_neigh_index = [str(parent_east_neighbor.index)]
+            else:
+                east_neigh_index = [str(east_neigh_index)]
+        else:
+            east_neigh_index = ['-1'] 
+
+        
+#         # SOUTH-WEST neighbor index:
+#         if p3.y < 999 and p1.x > 0:
+#             south_west_neigh_index = str(find_neighbor_of(root.index,'LD'))
+#             south_west_neighbor = get_node_by_id(masterNode, [str(south_west_neigh_index)])
+#             # checking to see if the south-west neighbor exists or is a ghost
+#             if node_exists(south_west_neigh_index,llist) == False:
+#                 parent_south_west_neighbor = get_node_by_id(masterNode, [str(south_west_neigh_index[:-1])])                
+#                 if parent_south_west_neighbor.has_children: 
+#                     if south_west_neighbor.has_children:
+#                         south_west_neigh_index = [str(south_west_neighbor.children[1].index)]
+#                 else:
+#                     south_west_neigh_index = [str(parent_south_west_neighbor.index)]
+#             else:
+#                 south_west_neigh_index = [str(south_west_neigh_index)]
+#         else:
+#             south_west_neigh_index = ['-1']
+
+
+        # SOUTH neighbor index:
+        if p3.y < 999:
+            south_neigh_index = str(find_neighbor_of(root.index,'D'))
+            south_neighbor = get_node_by_id(masterNode,[str(south_neigh_index)])
+            # checking to see if the south neighbor exists or is a ghost
+            if node_exists(south_neigh_index,llist) == False:
+                parent_south_neighbor = get_node_by_id(masterNode,[str(south_neigh_index[:-1])])
+                if parent_south_neighbor.has_children:
+                    if south_neighbor.has_children:
+                        south_neigh_index = [str(south_neighbor.children[0].index), str(south_neighbor.children[1].index)]
+                else:
+                    south_neigh_index = [str(parent_south_neighbor.index)]
+            else:
+                south_neigh_index = [str(south_neigh_index)]
+        else:
+            south_neigh_index = ['-1']
+            
+ 
+        # SOUTH-EAST neighbor index:
+        if p3.y < 999 and p3.x < 999:
+             
+            south_east_neigh_index = str(find_neighbor_of(root.index,'RD'))
+             
+            south_east_neighbor = get_node_by_id(masterNode, [str(south_east_neigh_index)])
+             
+            # checking to see if the south-east neighbor exists or is a ghost
+            if node_exists(south_east_neigh_index,llist) == False:
+                 
+                parent_south_east_neighbor = get_node_by_id(masterNode, [str(south_east_neigh_index[:-1])])
+             
+                if parent_south_east_neighbor.has_children:
+                     
+                    if south_east_neighbor.has_children:
+                        south_east_neigh_index = [str(south_east_neighbor.children[0].index)]
+               
+                else:
+                    south_east_neigh_index = [str(parent_south_east_neighbor.index)]
+            else:
+                south_east_neigh_index = [str(south_east_neigh_index)]
+        else:
+            south_east_neigh_index = ['-1'] 
+#         
+        mesh_graph[str(root.index)] = {
+                          'I': root.ishomog,
+                          'NW': north_west_neigh_index,
+                          'N': north_neigh_index,
+                          'NE': north_east_neigh_index,
+                          'W': west_neigh_index,
+                          'E': east_neigh_index,
+                          'SW': south_west_neigh_index,
+                          'S': south_neigh_index,
+                          'SE': south_east_neigh_index
+                           }
+        graph_list = []
+        if north_west_neigh_index != ['-1']:
+            graph_list = graph_list + north_west_neigh_index
+        if north_neigh_index != ['-1']:
+            graph_list = graph_list + north_neigh_index
+        if north_east_neigh_index != ['-1']:
+            graph_list = graph_list +  north_east_neigh_index
+        if west_neigh_index != ['-1']:
+            graph_list = graph_list + west_neigh_index
+        if east_neigh_index != ['-1']:
+            graph_list = graph_list + east_neigh_index
+        if south_west_neigh_index != ['-1']:
+            graph_list = graph_list + south_west_neigh_index
+        if south_neigh_index != ['-1']:
+            graph_list = graph_list + south_neigh_index
+        if south_east_neigh_index != ['-1']:
+            graph_list = graph_list + south_east_neigh_index
+            
+             
+#         simple_graph[str(root.index)] = { graph_list}
+    print simple_graph
+    return mesh_graph
+ 
+def find_shortest_path(graph, start, end, path = []):
+        start = '00'
+        end = '11'
+        print [start, end]
+        path = path + [start]
+        if start == end:
+            return path
+        if not graph.has_key(start):
+            print 'no key', start
+            return None
+        shortest = None
+#         for node in graph[start]:
+#             if node not in path:
+#                 newpath = find_shortest_path(graph, node, end, path)
+#                 if newpath:
+#                     if not shortest or len(newpath) < len(shortest):
+#                         shortest = newpath
+        return shortest
+           
 def tomorton(x,y):
 #  http://www.thejach.com/view/id/207
   x = bin(x)[2:]
@@ -1661,6 +1972,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             enrich1 = pvecPx[tp[4]]
             enrich2 = pvecPx[tp[5]]
             
+            
 #             if pvecPx[tp[4]][1] < pvecPx[tp[5]][1]:
 #                 enrich1 = pvecPx[tp[5]]
 #                 enrich2 = pvecPx[tp[4]]
@@ -1847,6 +2159,25 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                 print root.index, root.ishomog
     
     return p
+def set_homog(masterNode,llist,pvecPx):
+    n = len(llist)
+    # for each element 
+    for i in range(0,n):
+        root = get_node_by_id(masterNode,llist[i])
+
+        tp = root.tpix
+    
+        if len(tp)>4:
+            enrich1 = pvecPx[tp[4]]
+            enrich2 = pvecPx[tp[5]]
+            if enrich1[0] == enrich2[0] or enrich1[1] == enrich2[1]:
+                root.ishomog = 1
+            else:
+                root.ishomog = 0
+        else:
+            root.ishomog = 1
+
+        print root.index, root.ishomog
 
 def find_index(array,value):
     idx = (numpy.abs(array-value)) == 0
@@ -1924,16 +2255,24 @@ if __name__ == "__main__":
 #     stress_concentration_constraint(tree,rootNode,masterNode)
      
     masterNode = rootNode
-    
+
     stress_concentration_constraint(tree, rootNode, masterNode)
-#     node = CNode.get_child(masterNode,'2')
-#     print number_of_generations(tree, node, masterNode), node.depth
+
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
  
+#     mesh_graph = set_graph(masterNode,llist)
+#     print 'shortest path', find_shortest_path(mesh_graph, '00', '11')
+
+#     node = CNode.get_child(masterNode,'2')
+#     print number_of_generations(tree, node, masterNode), node.depth
+
     [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
+#     set_homog(masterNode,llist,p_regCList)
+
     
     [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
+
 
     
     full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
@@ -1972,7 +2311,7 @@ if __name__ == "__main__":
     # location of the interface along the y dimension (assuming no interface in the x)
     # material conductivities
     k1 = 1
-    k2 = 10
+    k2 = 1000
     # generate Legendre-Gauss nodes and weights:
     ruleOrder = 4
     [ui,wi] = lgwt(ruleOrder,-1,1)

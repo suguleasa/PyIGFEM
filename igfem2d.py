@@ -400,8 +400,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     polygonList = []
 
     # COMPUTING THE L-2 NORM
-    for e in range(0,T):
-#     for e in range(0,250):
+#     for e in range(0,T):
+    for e in range(800,841):
 
 #    for e in range(34,51):
 #     for e in [35,37,38,40,43,44,47,48,49,50]:
@@ -462,7 +462,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 #         if len(nodes) == 4 and root.ishomog == 1:
         if (len(nodes) == 4 or  root.ishomog == 1) or thru_corner == True:
             
-            
+            print 'element: e',e
             x_coords = coords[:,0]
             y_coords = coords[:,1]
 
@@ -2699,7 +2699,7 @@ def print_vtk_file(p,Usolution,plist):
 
     target.close()
 
-def NW_corner(p,ui,wi,k1,k2,nodess):
+def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -2733,19 +2733,32 @@ def NW_corner(p,ui,wi,k1,k2,nodess):
 #    else:
 #        K_cst = [k2,k2,k2,k1]
         
-    cornerD_s = f_circle_s(x0,y1)
-    cornerD_c1 = f_circle1(x0,y1)
-    cornerD_c2 = f_circle2(x0,y1)
-    Rs = 1.0/3.0
-    R1 = 1.0/6.0
-    R2 = 1.0/6.0
-
-    if (cornerD_s <= Rs * Rs) or (cornerD_c1 <= R1 * R1) or (cornerD_c2 <= R2 * R2) :
+#     cornerD_s = f_circle_s(x0,y1)
+#     cornerD_c1 = f_circle1(x0,y1)
+#     cornerD_c2 = f_circle2(x0,y1)
+#     Rs = 1.0/3.0
+#     R1 = 1.0/6.0
+#     R2 = 1.0/6.0
+# 
+#     if (cornerD_s <= Rs * Rs) or (cornerD_c1 <= R1 * R1) or (cornerD_c2 <= R2 * R2) :
+#         K_cst = [k1,k1,k1,k2]
+#     else:
+#         K_cst = [k2,k2,k2,k1]
+    
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if NW
+    if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 > binBnd[1] and
+        ( is_in_same_bin(pxVal4,pxVal2)==True and is_in_same_bin(pxVal2,pxVal3)) ):
         K_cst = [k1,k1,k1,k2]
     else:
         K_cst = [k2,k2,k2,k1]
-    
-
+        
     #if point_in_on_poly(x0,y1,domainInclusion) == True:
     #    K_cst = [k1,k1,k1,k2]
     #else: 
@@ -2965,7 +2978,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-    #if SE-South
+    #if SW
     if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal4 > binBnd[1] and
         ( is_in_same_bin(pxVal1,pxVal2)==True and is_in_same_bin(pxVal2,pxVal3)) ):
         K_cst = [k2,k1,k1,k1]
@@ -3122,7 +3135,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def NE_corner(p,ui,wi,k1,k2,nodess):
+def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -3164,15 +3177,29 @@ def NE_corner(p,ui,wi,k1,k2,nodess):
 #    else:
 #        K_cst = [k2,k2,k2,k1]
 
-    cornerC_s = f_circle_s(x1,y1)
-    cornerC_c1 = f_circle1(x1,y1)
-    cornerC_c2 = f_circle2(x1,y1)
-
-    Rs = 1.0/3.0
-    R1 = 1.0/6.0
-    R2 = 1.0/6.0
+#     cornerC_s = f_circle_s(x1,y1)
+#     cornerC_c1 = f_circle1(x1,y1)
+#     cornerC_c2 = f_circle2(x1,y1)
+# 
+#     Rs = 1.0/3.0
+#     R1 = 1.0/6.0
+#     R2 = 1.0/6.0
+#     
+#     if (cornerC_s <= Rs * Rs) or (cornerC_c1 <= R1 * R1) or (cornerC_c2 <= R2 * R2):
+#         K_cst = [k1,k1,k1,k2]
+#     else:
+#         K_cst = [k2,k2,k2,k1]
+        
+    p1,p2,p3,p4 = root.rect
     
-    if (cornerC_s <= Rs * Rs) or (cornerC_c1 <= R1 * R1) or (cornerC_c2 <= R2 * R2):
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if NE
+    if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal2 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal3)==True and is_in_same_bin(pxVal4,pxVal3)) ):
         K_cst = [k1,k1,k1,k2]
     else:
         K_cst = [k2,k2,k2,k1]
@@ -3331,7 +3358,7 @@ def NE_corner(p,ui,wi,k1,k2,nodess):
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def SE_corner(p,ui,wi,k1,k2,nodess):
+def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
 #def SE_corner(p,ui,wi,k1,k2,nodess,UConf,pConf,tConf):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
@@ -3365,20 +3392,33 @@ def SE_corner(p,ui,wi,k1,k2,nodess):
 #        K_cst = [k1,k1,k1,k2]
 #    else:
 #        K_cst = [k2,k2,k2,k1]
+# 
+#     Rs = 1.0/3.0
+#     R1 = 1.0/6.0
+#     R2 = 1.0/6.0
+# 
+#     cornerB_s = f_circle_s(x1,y0)
+#     cornerB_c1 = f_circle1(x1,y0)
+#     cornerB_c2 = f_circle2(x1,y0)
+# 
+#     if (cornerB_s <= Rs * Rs) or (cornerB_c1 <= R1 * R1) or (cornerB_c2 <= R2 * R2):
+#         K_cst = [k1,k1,k1,k2]
+#     else:
+#         K_cst = [k2,k2,k2,k1]
 
-    Rs = 1.0/3.0
-    R1 = 1.0/6.0
-    R2 = 1.0/6.0
-
-    cornerB_s = f_circle_s(x1,y0)
-    cornerB_c1 = f_circle1(x1,y0)
-    cornerB_c2 = f_circle2(x1,y0)
-
-    if (cornerB_s <= Rs * Rs) or (cornerB_c1 <= R1 * R1) or (cornerB_c2 <= R2 * R2):
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if SE
+    if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)==True and is_in_same_bin(pxVal2,pxVal4)) ):
         K_cst = [k1,k1,k1,k2]
     else:
         K_cst = [k2,k2,k2,k1]
-
 
 #if point_in_on_poly(x1,y0,domainInclusion) == True:
     #    K_cst = [k1,k1,k1,k2]
@@ -3586,23 +3626,32 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
     pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
+    
     
     #if SE - East
     if ( is_in_same_bin(pxVal3,pxVal2) == False and pxVal3 > binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal2)==True ) ):
+        ( is_in_same_bin(pxVal1,pxVal2)==True ) and
+        is_in_same_bin(pxVal12,pxVal14) == True):
         K_cst = [k2,k1,k1]
     else: 
         if (  is_in_same_bin(pxVal3,pxVal2) == False and pxVal3 <= binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal2)==True )):
+        ( is_in_same_bin(pxVal1,pxVal2)==True ) and
+        is_in_same_bin(pxVal12,pxVal14) == True):
             K_cst = [k1,k2,k2]
 
     # if NE - East
     if ( is_in_same_bin(pxVal3,pxVal2) == False and pxVal2 > binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal4)==True ) ):
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) and
+        is_in_same_bin(pxVal14,pxVal34) == True ):
         K_cst = [k1,k1,k2]
     else:
         if( is_in_same_bin(pxVal3,pxVal2) == False and pxVal2 <= binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal4)==True ) ):
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) and
+        is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
 
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
@@ -3765,26 +3814,34 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
     
     #if SE-South
     if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 > binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal4)==True ) ):
+        ( is_in_same_bin(pxVal1,pxVal4) == True ) and
+        is_in_same_bin(pxVal14,pxVal12) == True):
         K_cst = [k1,k1,k2]
     else: 
         if (  is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 <= binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal4)==True )):
+        ( is_in_same_bin(pxVal1,pxVal4) == True ) and
+        is_in_same_bin(pxVal14,pxVal12) == True):
             K_cst = [k2,k2,k1]
 
     # if SW-South
-    if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal2 > binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal2)==True ) ):
+    if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal4 > binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal2) == True ) and
+        is_in_same_bin(pxVal12,pxVal23) == True):
         K_cst = [k2,k1,k1]
     else:
-        if( is_in_same_bin(pxVal3,pxVal4) == False and pxVal2 <= binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal2)==True ) ):
+        if( is_in_same_bin(pxVal3,pxVal4) == False and pxVal4 <= binBnd[1] and
+        ( is_in_same_bin(pxVal3,pxVal2)==True ) and
+        is_in_same_bin(pxVal12,pxVal23) == True):
              K_cst = [k1,k2,k2]
 
-
+    
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
     [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -3969,23 +4026,31 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
     pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
     
     #if NW - North
     if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal1 > binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal2)==True ) ):
+        ( is_in_same_bin(pxVal3,pxVal2) == True ) and
+        is_in_same_bin(pxVal34, pxVal23) == True):
         K_cst = [k2,k1,k1]
     else: 
         if (  is_in_same_bin(pxVal1,pxVal2) == False and pxVal1 <= binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal2)==True )):
+        ( is_in_same_bin(pxVal3,pxVal2) == True ) and
+        is_in_same_bin(pxVal34, pxVal23) == True):
             K_cst = [k1,k2,k2]
 
     # if NE - North 
     if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal2 > binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal4)==True ) ):
+        ( is_in_same_bin(pxVal1,pxVal4) == True ) and 
+        is_in_same_bin(pxVal14,pxVal34) == True):
         K_cst = [k1,k1,k2]
     else:
         if( is_in_same_bin(pxVal1,pxVal2) == False and pxVal2 <= binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal4)==True ) ):
+        ( is_in_same_bin(pxVal1,pxVal4) == True ) and 
+        is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
              
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
@@ -4162,23 +4227,31 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
     pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
     
     #if NW - West
     if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 > binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal4)==True ) ):
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) and
+        is_in_same_bin(pxVal34,pxVal23) == True):
         K_cst = [k1,k1,k2]
     else: 
         if (  is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 <= binBnd[1] and
-        ( is_in_same_bin(pxVal3,pxVal4)==True )):
+        ( is_in_same_bin(pxVal3,pxVal4)==True ) and
+        is_in_same_bin(pxVal34,pxVal23) == True):
             K_cst = [k2,k2,k1]
 
     # if SW - West
     if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal4 > binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal2)==True ) ):
+        ( is_in_same_bin(pxVal1,pxVal2)==True ) and
+        is_in_same_bin(pxVal12, pxVal23) == True ):
         K_cst = [k2,k1,k1]
     else:
         if( is_in_same_bin(pxVal1,pxVal4) == False and pxVal4 <= binBnd[1] and
-        ( is_in_same_bin(pxVal1,pxVal2)==True ) ):
+        ( is_in_same_bin(pxVal1,pxVal2) == True ) and
+        is_in_same_bin(pxVal12, pxVal23) == True):
              K_cst = [k1,k2,k2]
              
              
@@ -4312,7 +4385,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     return [K,Fe]
 
-def horizontal_cut(p,ui,wi,k1,k2,nodes):
+def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
     enrich1 = np.array(p[nodes[4]])
     enrich2 = np.array(p[nodes[5]])
@@ -4365,31 +4438,46 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes):
 #        else:
 #            print 'ERROR! inside horizontal interface of stiffness matrix computation'
 
-    Rs = 1.0/3.0
-    R1 = 1.0/6.0
-    R2 = 1.0/6.0
-    cornerA_s = f_circle_s(x0,y0)
-    cornerB_s = f_circle_s(x1,y0)
-    cornerC_s = f_circle_s(x1,y1)
-    cornerD_s = f_circle_s(x0,y1)
+#     Rs = 1.0/3.0
+#     R1 = 1.0/6.0
+#     R2 = 1.0/6.0
+#     cornerA_s = f_circle_s(x0,y0)
+#     cornerB_s = f_circle_s(x1,y0)
+#     cornerC_s = f_circle_s(x1,y1)
+#     cornerD_s = f_circle_s(x0,y1)
+# 
+#     cornerA_c1 = f_circle1(x0,y0)
+#     cornerB_c1 = f_circle1(x1,y0)
+#     cornerC_c1 = f_circle1(x1,y1)
+#     cornerD_c1 = f_circle1(x0,y1)
+# 
+#     cornerA_c2 = f_circle2(x0,y0)
+#     cornerB_c2 = f_circle2(x1,y0)
+#     cornerC_c2 = f_circle2(x1,y1)
+#     cornerD_c2 = f_circle2(x0,y1)
+# 
+# 
+#     if ( ( (cornerA_s <= Rs*Rs and cornerB_s <= Rs*Rs) and (cornerC_s > Rs*Rs and cornerD_s > Rs*Rs) ) or
+#             ( (cornerA_c1 <= R1*R1 and cornerB_c1 <= R1*R1) and (cornerC_c1 > R1*R1 and cornerD_c1 > R1*R1) ) or
+#             ( (cornerA_c2 <= R2*R2 and cornerB_c2 <= R2*R2) and (cornerC_c2 > R2*R2 and cornerD_c2 > R2*R2) ) ):
+#         K_cst = [k2,k1]
+#     else:
+#             K_cst = [k1,k2]
 
-    cornerA_c1 = f_circle1(x0,y0)
-    cornerB_c1 = f_circle1(x1,y0)
-    cornerC_c1 = f_circle1(x1,y1)
-    cornerD_c1 = f_circle1(x0,y1)
-
-    cornerA_c2 = f_circle2(x0,y0)
-    cornerB_c2 = f_circle2(x1,y0)
-    cornerC_c2 = f_circle2(x1,y1)
-    cornerD_c2 = f_circle2(x0,y1)
-
-
-    if ( ( (cornerA_s <= Rs*Rs and cornerB_s <= Rs*Rs) and (cornerC_s > Rs*Rs and cornerD_s > Rs*Rs) ) or
-            ( (cornerA_c1 <= R1*R1 and cornerB_c1 <= R1*R1) and (cornerC_c1 > R1*R1 and cornerD_c1 > R1*R1) ) or
-            ( (cornerA_c2 <= R2*R2 and cornerB_c2 <= R2*R2) and (cornerC_c2 > R2*R2 and cornerD_c2 > R2*R2) ) ):
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if SE-South
+    if ( is_in_same_bin(pxVal1,pxVal2) == True and pxVal1 > binBnd[1] and
+         is_in_same_bin(pxVal3,pxVal4) == True and
+        (is_in_same_bin(pxVal1,pxVal4) == False and is_in_same_bin(pxVal2,pxVal3) == False) ):
         K_cst = [k2,k1]
     else:
-            K_cst = [k1,k2]
+        K_cst = [k1,k2]
 
 #definition of rhombus corners
 #    A = Point(0.5, 1.0/3.0)
@@ -4550,7 +4638,7 @@ def on_corners(enrich,x0,y0,x1,y1):
 
     return False
 
-def vertical_cut(p,ui,wi,k1,k2,nodes):
+def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     enrich1 = np.array(p[nodes[4]])
     enrich2 = np.array(p[nodes[5]])
 
@@ -4600,30 +4688,45 @@ def vertical_cut(p,ui,wi,k1,k2,nodes):
 #        else:
 #            print 'ERROR inside vertical quad-quad stiffness matrix implementation'
 
-    Rs = 1.0/3.0
-    R1 = 1.0/6.0
-    R2 = 1.0/6.0
-    cornerA_s = f_circle_s(x0,y0)
-    cornerB_s = f_circle_s(x1,y0)
-    cornerC_s = f_circle_s(x1,y1)
-    cornerD_s = f_circle_s(x0,y1)
+#     Rs = 1.0/3.0
+#     R1 = 1.0/6.0
+#     R2 = 1.0/6.0
+#     cornerA_s = f_circle_s(x0,y0)
+#     cornerB_s = f_circle_s(x1,y0)
+#     cornerC_s = f_circle_s(x1,y1)
+#     cornerD_s = f_circle_s(x0,y1)
+# 
+#     cornerA_c1 = f_circle1(x0,y0)
+#     cornerB_c1 = f_circle1(x1,y0)
+#     cornerC_c1 = f_circle1(x1,y1)
+#     cornerD_c1 = f_circle1(x0,y1)
+# 
+#     cornerA_c2 = f_circle2(x0,y0)
+#     cornerB_c2 = f_circle2(x1,y0)
+#     cornerC_c2 = f_circle2(x1,y1)
+#     cornerD_c2 = f_circle2(x0,y1)
+# 
+#     if ( ( (cornerA_s <= Rs*Rs and cornerD_s <= Rs*Rs) and (cornerB_s > Rs*Rs and cornerC_s > Rs*Rs)) or
+#         ( (cornerA_c1 <= R1*R1 and cornerD_c1 <= R1*R1) and (cornerB_c1 > R1*R1 and cornerC_c1 > R1*R1)) or
+#         ( (cornerA_c2 <= R2*R2 and cornerD_c2 <= R2*R2) and (cornerB_c2 > R2*R2 and cornerC_c2 > R2*R2)) ) :
+#         K_cst = [k2,k1]
+#     else:
+#         K_cst = [k1,k2]
 
-    cornerA_c1 = f_circle1(x0,y0)
-    cornerB_c1 = f_circle1(x1,y0)
-    cornerC_c1 = f_circle1(x1,y1)
-    cornerD_c1 = f_circle1(x0,y1)
-
-    cornerA_c2 = f_circle2(x0,y0)
-    cornerB_c2 = f_circle2(x1,y0)
-    cornerC_c2 = f_circle2(x1,y1)
-    cornerD_c2 = f_circle2(x0,y1)
-
-    if ( ( (cornerA_s <= Rs*Rs and cornerD_s <= Rs*Rs) and (cornerB_s > Rs*Rs and cornerC_s > Rs*Rs)) or
-        ( (cornerA_c1 <= R1*R1 and cornerD_c1 <= R1*R1) and (cornerB_c1 > R1*R1 and cornerC_c1 > R1*R1)) or
-        ( (cornerA_c2 <= R2*R2 and cornerD_c2 <= R2*R2) and (cornerB_c2 > R2*R2 and cornerC_c2 > R2*R2)) ) :
+    p1,p2,p3,p4 = root.rect
+    
+    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+    #if SE-South
+    if ( is_in_same_bin(pxVal1,pxVal4) == True and is_in_same_bin(pxVal2,pxVal3) == True and pxVal4 > binBnd[1] and
+        ( is_in_same_bin(pxVal1,pxVal2)== False and is_in_same_bin(pxVal4,pxVal3) == False) ):
         K_cst = [k2,k1]
     else:
         K_cst = [k1,k2]
+        
 
 #    slanted_rectangle = polygonDef#[ (0.57,0.0), (1.0,0.0), (1.0,1.0), (0.6,1.0) ]
     #if point_in_on_poly(x0,y0,domainInclusion) and point_in_on_poly(x0,y1,domainInclusion) and point_in_on_poly(x1,y0,domainInclusion) and point_in_on_poly(x1,y1,domainInclusion):
@@ -4951,8 +5054,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     F = sparse.lil_matrix((N,1))
 
     list_hanging_nodes = []
-    for e in range(0,T):
-#     for e in range(0,250):
+#     for e in range(0,T):
+    for e in range(800,841):
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
     
@@ -5125,8 +5228,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 elif root.ishomog == 1:
                     if pxValMed > binBnd[1]:
                         K_cst = k2
+#                         print root.index, 'k2 =================== ', k2
                     else:
                         K_cst = k1
+#                         print root.index,'================k1', k1
         
             if thru_corner == True:
                 if which_corner == 1: 
@@ -5210,6 +5315,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 west_node = w_ind[0][0]            
                 list_hanging_nodes = list_hanging_nodes + [[ west_node, nodes[0], nodes[3] ]]
 
+            print 'element: ', e, K_cst, nodes
     
             [x_fct,y_fct] = xy_fct(coords[0:4,0],coords[0:4,1])
             Jac = jacobian_mat( coords[0:4,0], coords[0:4,1])
@@ -5452,7 +5558,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     Ke_trid2 = np.zeros((3,3))
                     Fe_trid2 = np.zeros((3,1))
 
-                    # even diagonal
+                    # even diagonal: SW - NE
                     if(corner0 == True and corner2 == True):
                         nodes_trid1 = [nodes[0], nodes[1], nodes[2]]
                         nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
@@ -5470,7 +5576,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                             K_cst_trid2 = k1
                             K_cst_trid1 = k2
                         
-                    # odd diagonal
+                    # odd diagonal: SE - NW
                     else:
                         nodes_trid1 = [nodes[0], nodes[1], nodes[3]]
                         nodes_trid2 = [nodes[1], nodes[2], nodes[3]]
@@ -5490,7 +5596,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                             K_cst_trid2 = k1
                             K_cst_trid1 = k2
 
-                             
+                     
                     coords_trid1 = p[nodes_trid1]
                     coords_trid2 = p[nodes_trid2]
 
@@ -5577,7 +5683,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NW corner"
-                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes)
+                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image)
 
                         
                         # add the local stiffness matrix and local load vector to the global K and F
@@ -5609,7 +5715,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         print root.enrichNodes[0].x, root.enrichNodes[0].y
 # #                         print root.enrichNodes[1].x, root.enrichNodes[1].y
                         
-                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes)
+                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -5627,7 +5733,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NE corner"
-                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes)
+                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -5744,7 +5850,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
                     if ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
                         print "horizontal slide: quad-quad"
-                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes)
+                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
                     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -5758,7 +5864,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
                     if ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0 )) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
                         print "vertical slide: quad-quad"
-                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes)
+                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image)
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):

@@ -2193,6 +2193,10 @@ if __name__ == "__main__":
 #    outputImage = sitk.ReadImage("images/channels.png");
 #    inputImage = sitk.ReadImage("images/circlesOld.png");
 #    outputImage = sitk.ReadImage("images/circlesOld.png");
+#     inputImage = sitk.ReadImage("southedge.png");
+#     outputImage = sitk.ReadImage("southedge.png");
+#     inputImage = sitk.ReadImage("southcorner3.png");
+#     outputImage = sitk.ReadImage("southcorner3.png");
     inputImage = sitk.ReadImage("images/circles.png");
     outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
@@ -2270,9 +2274,7 @@ if __name__ == "__main__":
     [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
 #     set_homog(masterNode,llist,p_regCList)
 
-    
     [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-
 
     
     full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
@@ -2293,16 +2295,18 @@ if __name__ == "__main__":
     p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
     
 
+#     p_reg[10,1] = 0.45;
     
+    print p_reg
 #    print root_i.hn[2].x, root_i.hn[2].y
 #    print p_reg
-#    print t_reg
+#     print t_reg
     
     print 'writing the image out'
  
-    sitk.WriteImage(outputImage,"outCircles.png")
+#     sitk.WriteImage(outputImage,"outSouthEdge.png")
     
-#    sitk.WriteImage(outputImage,"outChannels.png");
+    sitk.WriteImage(outputImage,"outChannels.png");
 
 #    ndim = 8
 #    ndim = int(ndim) + 1
@@ -2311,7 +2315,7 @@ if __name__ == "__main__":
     # location of the interface along the y dimension (assuming no interface in the x)
     # material conductivities
     k1 = 1
-    k2 = 1000
+    k2 = 10
     # generate Legendre-Gauss nodes and weights:
     ruleOrder = 4
     [ui,wi] = lgwt(ruleOrder,-1,1)
@@ -2381,5 +2385,6 @@ if __name__ == "__main__":
     aa1 = numpy.array([UU])
     ww1 = numpy.array(aa1[()])
     UU = ww1[0].item()[:,:]
+#     print 'sol', UU
 
     print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

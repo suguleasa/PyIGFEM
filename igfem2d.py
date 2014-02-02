@@ -1,4 +1,5 @@
 from scipy import  sparse
+
 import scipy.sparse.linalg.dsolve as linsolve
 #import matplotlib
 #import pylab
@@ -382,6 +383,1062 @@ def Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N,S,E,W):
     
     return [N1,N2,N3,N4]
 
+def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
+#def myquad(m,n,k1,k2,loc,ui,wi,p,t,UConf,pConf,tConf):
+    
+    #definition of rhombus corners
+#    A = Point(0.5, 1.0/3.0)
+#    B = Point(2.0/3.0, 0.5)
+#    C = Point(1.0/3.0, 0.5)
+#    D = Point(0.5, 2.0/3.0)
+#    rhombus = [ (A.x, A.y), (B.x,B.y), (D.x,D.y), (C.x,C.y) ]
+    
+    #A = Point(1.0/6.0, 0.0)
+    #B = Point(2.0/3.0, 0.0)
+    #C = Point(3.0/4.0+1.0/6.0, 1.0/2.0)
+    #D = Point(1.0/4.0+1.0/6.0, 1.0/2.0)
+
+    #rhombus = [ (A.x, A.y), (B.x,B.y), (C.x,C.y), (D.x,D.y) ]
+
+
+    #print "sizes:",m,n
+    # reading data
+    #filename = 'vertical2by2.txt'
+    #lines = [line.strip() for line in open(filename)]
+
+    # numbering boundary nodes
+#    lbcs = [0] + range(m,m*n,m)
+#    rbcs = [m-1] + range(2*m-1,m*n,m)
+#    tbcs = range(1,m-1)
+#    bbcs = range(lbcs[-1]+1,rbcs[-1]) 
+    
+    tbcs = []
+    bbcs = []
+    lbcs = []
+    rbcs = []
+    for i in range(0, len(p)):
+         # bottom boundary
+        if p[i,1] == 0.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
+            bbcs = bbcs + [i]
+        else:
+            # top boundary            
+            if p[i,1] == 1.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
+                tbcs = tbcs + [i]
+            else:
+                # left boundary
+                if p[i,0] == 0.0:
+                   lbcs = lbcs + [i]
+                else:
+                    # right boundary
+                    if p[i,0] == 1.0:
+                        rbcs = rbcs + [i]
+                            
+#     print 'tbcs', tbcs
+#     print 'lbcs', lbcs
+#     print 'rbcs', rbcs
+#     print 'bbcs', bbcs
+
+    # temperatures for Dirichlet BCs
+    leftDirich = 1
+    rightDirich = 1
+    topDirich = 0
+    bottomDirich = 0
+    Temp_left = 0
+    Temp_right = 0
+    Temp_top = 0
+    Temp_bottom = 0
+
+    # Neumann BCs
+    leftNeumann = 0
+    rightNeumann = 0
+    topNeumann = 1
+    bottomNeumann = 1
+    g1_left = 0
+    g1_right = 0
+    g1_top = 0
+    g1_bottom = 0
+
+    # vector with boundary nodes: bottom, left, right, top
+#    b = range(0,m) + range(m,m*n,m) + range(2*m-1,m*n,m) + range(m*n-m+2-1,m*n-1) 
+
+    N = len(p)  #+ 5 # number of nodes
+    T = len(t) #+ 3 # number of elements
+
+#    p = numpy.vstack([p,[ 0.8125, 0.5 ]])
+#    p = numpy.vstack([p,[ 0.75, 0.5625 ]])
+#    p = numpy.vstack([p,[ 0.8125, 0.5625 ]])
+#    p = numpy.vstack([p,[ 0.875, 0.5625 ]])
+#    p = numpy.vstack([p,[ 0.8125, 0.6125 ]])
+
+#    for e in range(0,T):
+#        nodes = t[e]
+#        if nodes[0] == 42 and nodes[1] == 43:
+#            t =  t[0:e] + t[e+1:len(t)]
+#            t = t + [[42, 111, 113, 112]]
+#            t = t + [[111, 43, 114, 113]]
+#            t = t + [[112, 113, 115, 51]]
+#            t = t + [[113, 114, 52, 115]]
+
+    K = sparse.lil_matrix((N,N))
+    F = sparse.lil_matrix((N,1))
+
+    list_hanging_nodes = []
+    for e in range(0,T): #800, 833
+#     for e in range(820, T):
+#     for e in range(833, T):
+
+#     for e in range(1814,T):
+        
+        nodes = t[e] # row of t =  node numbers of the 4 corners of element e
+        
+        root = get_node_by_id(masterNode,llist[e])
+        p1,p2,p3,p4 = root.rect
+    
+        pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+        pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+        pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+        pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    
+#         if p1.x == 686 and p1.y == 905:
+#             print 'Elementtttt --- ',e
+
+
+#         if root.index == '323210':#'210333':
+#             print '-----------------------------------'
+# #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+#             enrN1 = root.enrichNodes[0]
+#             enrN2 = root.enrichNodes[1]
+#             print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
+#             print p[36], p[37]
+#             print p[60], p[61]
+#             print 'Enrch 1', p[1041]
+#             print 'Enrch 2', p[1042]
+#             print '-----------------------------------'
+             
+        # 2-column matrix containing on each row the coordinates of each of the nodes
+        coords = p[nodes,:]    
+
+        Pe = np.zeros((4,4))
+        Pe[:,0] = np.ones((4,1)).transpose()
+        Pe[:,1] = p[nodes[0:4],0]
+        Pe[:,2] = p[nodes[0:4],1]
+        Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
+
+        C = np.linalg.inv(Pe)
+
+        Nbasis = basisFct(C)
+        Nx = derivX(C)
+        Ny = derivY(C)
+
+        x0 = coords[0,0]
+        x1 = coords[1,0]
+        y0 = coords[0,1]
+        y1 = coords[2,1]
+
+
+#        # multiple inclusions
+#        cornerA = f_circle(x0,y0)
+#        cornerB = f_circle(x1,y0)
+#        cornerC = f_circle(x1,y1)
+#        cornerD = f_circle(x0,y1)
+#        R = 1.0/3.0
+#
+#        cornerA_s = f_circle_s(x0,y0)
+#        cornerB_s = f_circle_s(x1,y0)
+#        cornerC_s = f_circle_s(x1,y1)
+#        cornerD_s = f_circle_s(x0,y1)
+#        Rs = 1.0/3.0
+#
+#        cornerA_c1 = f_circle1(x0,y0)
+#        cornerB_c1 = f_circle1(x1,y0)
+#        cornerC_c1 = f_circle1(x1,y1)
+#        cornerD_c1 = f_circle1(x0,y1)
+#        R1 = 1.0/6.0
+#
+#        cornerA_c2 = f_circle2(x0,y0)
+#        cornerB_c2 = f_circle2(x1,y0)
+#        cornerC_c2 = f_circle2(x1,y1)
+#        cornerD_c2 = f_circle2(x0,y1)
+#        R2 = 1.0/6.0
+
+        #cornerA = point_in_poly(x0,y0,rhombus)
+        #cornerB = point_in_poly(x1,y0,rhombus)
+        #cornerC = point_in_poly(x1,y1,rhombus) 
+        #cornerD = point_in_poly(x0,y1,rhombus)
+
+        # NE corner triangle
+        #domainInclusion = [(0.9,1.0), (1.0,1.0),(1.0,0.9)]
+        # SE corner triangle
+        #domainInclusion = [(0.9,0), (1.0,0.0),(1.0,0.1)]
+        # NW corner triangle
+        #domainInclusion = [(0.0,0.9), (0.1,1.0),(0.0,1.0)]
+        # SW corner triangle
+        #domainInclusion = [(0.0,0.0),(0.1,0.0),(0.0,0.1)]
+        # SE Triangle with SE/NW corners cut
+        #domainInclusion = [(2.0/3.0,0), (1.0,0.0),(1.0,1.0/3.0)]
+
+        #cornerA = point_in_poly(x0,y0,domainInclusion)
+        #cornerB = point_in_poly(x1,y0,domainInclusion)
+        #cornerC = point_in_poly(x1,y1,domainInclusion) 
+        #cornerD = point_in_poly(x0,y1,domainInclusion)
+
+        thru_corner = False
+
+        if len(nodes) == 5:
+                enrich1 = np.array(p[nodes[4]])
+
+                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+                corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+
+                which_corner = -1
+                if corner0 == True and corner1 == False and corner2 == False and corner3 == False:
+                    thru_corner = True
+                    which_corner = 1
+                if corner0 == False and corner1 == True and corner2 == False and corner3 == False:
+                    thru_corner = True
+                    which_corner = 2
+                if corner0 == False and corner1 == False and corner2 == True and corner3 == False:
+                    thru_corner = True
+                    which_corner = 3
+                if corner0 == False and corner1 == False and corner2 == False and corner3 == True:
+                    thru_corner = True
+                    which_corner = 4   
+                     
+#         if thru_corner == True:
+#             print root.index, which_index
+            
+#         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
+        if (len(nodes) == 4  or root.ishomog == 1) or thru_corner == True:        # elements need no enrichment
+                        
+            Ke = np.zeros((4,4))
+            Fe = np.zeros((4,1))
+            
+#             if root.index == '323210':#'210333':
+#                 print '-----------------------------------'
+#     #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+#                 enrN1 = root.enrichNodes[0]
+#                 enrN2 = root.enrichNodes[1]
+#                 print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
+
+            # slanted interface
+            # set the coefficient of the conductivity
+#            if coords[0,0] <= interface_fcn(coords[0,1]) and coords[1,0]<= interface_fcn(coords[0,1]) and k1!=k2:
+        #    if point_in_on_poly(x0,y0,polygonDef) and point_in_on_poly(x0,y1,polygonDef) and point_in_on_poly(x1,y0,polygonDef) and point_in_on_poly(x1,y1,polygonDef):
+        #        K_cst = k1 # y <= loc
+        #    else:
+        #        K_cst = k2 # y > loc
+            
+#            polygonDef = domainInclusion
+#            # rhombus inside domain:
+#            if point_in_on_poly(x0,y0,polygonDef) and point_in_on_poly(x0,y1,polygonDef) and point_in_on_poly(x1,y0,polygonDef) and point_in_on_poly(x1,y1,polygonDef):
+#                K_cst = k2 
+#            else:
+#                K_cst = k1
+
+
+#            if cornerA>R*R and cornerB>R*R and cornerC>R*R and cornerD>R*R:
+#                K_cst = k1
+#            else:
+#                if cornerA < R*R and cornerB < R*R and cornerC < R*R and cornerD < R*R:
+#                    K_cst = k2
+#                else:
+#                    print 'ERROR!'
+#                    K_cst = k1
+            p1,p2,p3,p4 = root.rect
+            
+            pxVal1 = image.GetPixel(int(p1.x), int(p1.y))
+            pxVal2 = image.GetPixel(int(p2.x), int(p2.y))
+            pxVal3 = image.GetPixel(int(p3.x), int(p3.y))
+            pxVal4 = image.GetPixel(int(p4.x), int(p4.y))
+            pxValMed = image.GetPixel(int((p1.x+p3.x)/2.0), int((p1.y+p3.y)/2.0))
+            
+            if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
+                 is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 <= binBnd[1] ):
+                K_cst = k1
+            else: 
+                if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
+                 is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 > binBnd[1] ):
+                    K_cst = k2
+                elif root.ishomog == 1:
+                    if pxValMed > binBnd[1]:
+                        K_cst = k2
+#                         print root.index, 'k2 =================== ', k2
+                    else:
+                        K_cst = k1
+#                         print root.index,'================k1', k1
+        
+            if thru_corner == True:
+                if which_corner == 1: 
+                    if pxVal1 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2
+                if which_corner == 2: 
+                    if pxVal2 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2
+                if which_corner == 3: 
+                    if pxVal3 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2
+                if which_corner == 4: 
+                    if pxVal4 <= binBnd[1]:
+                        K_cst = k1
+                    else:
+                        K_cst = k2                                                
+                
+
+                
+
+#            # multiple inclusions:
+#            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 
+#                (cornerA_c1>R1*R1 and cornerB_c1>R1*R1 and cornerC_c1>R1*R1 and cornerD_c1>R1*R1) and 
+#                (cornerA_c2>R2*R2 and cornerB_c2>R2*R2 and cornerC_c2>R2*R2 and cornerD_c2>R2*R2) ):
+#                K_cst = k1
+#            else:
+#                K_cst = k2
+
+            #if cornerA == True and cornerB == True and cornerC == True and cornerD == True:
+            #    K_cst = k2
+            #else:    
+            #    if cornerA == False and cornerB == False and cornerC == False and cornerD == False:
+            #        K_cst = k1
+            #    else:
+            #            print 'ERROR! -  inside igfem2d.py - assembling the stiffness matrix'                
+
+            #N,S,E,W
+            [N_hn,S_hn,E_hn,W_hn] = root.nsew
+            
+            # Method 2 for computing HangingNodes
+            #===================================================================
+            # [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
+            # Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
+            # det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+            #===================================================================
+            
+            # Method 1 for computing Hanging Nodes: averaging
+            if N_hn == 1: # North
+                north_hn = root.hn[0]
+                nhn = [north_hn.x, north_hn.y]
+                n_ind = numpy.where(numpy.all(p==nhn,axis=1))
+                north_node = n_ind[0][0]           
+                list_hanging_nodes = list_hanging_nodes + [[ north_node, nodes[2], nodes[3] ]]
+
+            if S_hn == 1:
+                south_hn = root.hn[1]
+                shn = [south_hn.x, south_hn.y]
+                s_ind = numpy.where(numpy.all(p==shn,axis=1))
+                south_node = s_ind[0][0]
+                list_hanging_nodes = list_hanging_nodes + [[ south_node, nodes[0], nodes[1] ]]
+
+                    
+            if E_hn == 1:
+                east_hn = root.hn[2]
+                ehn = [east_hn.x, east_hn.y]
+                e_ind = numpy.where(numpy.all(p==ehn,axis=1))
+                east_node = e_ind[0][0]   
+                list_hanging_nodes = list_hanging_nodes + [[ east_node, nodes[1], nodes[2] ]]
+
+                                                 
+            if W_hn == 1:
+                west_hn = root.hn[3]
+                whn = [west_hn.x, west_hn.y]
+                w_ind = numpy.where(numpy.all(p==whn,axis=1))
+                west_node = w_ind[0][0]            
+                list_hanging_nodes = list_hanging_nodes + [[ west_node, nodes[0], nodes[3] ]]
+
+
+            [x_fct,y_fct] = xy_fct(coords[0:4,0],coords[0:4,1])
+            Jac = jacobian_mat( coords[0:4,0], coords[0:4,1])
+            det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+            
+#            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,1,0)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,1,0)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'east edge'
+#                
+#            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,0,1)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,0,1)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'west edge'
+#                
+#            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,1,0,0)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,1,0,0)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'south edge'
+#                
+#            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
+#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],1,0,0,0)
+#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],1,0,0,0)
+#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
+#                print 'north edge'
+                
+                    
+# Method 2 for Hanging Nodes                
+#===============================================================================
+#             # construct the local matrix and local components of the load vector    
+#             for i in range(0,4):
+#                 for j in range(0,4):
+#                     if nodes[i] >=  nodes[j]:
+#                         Kefunc = lambda ee,nn: K_cst * ( Nx[i](x_fct(ee,nn),y_fct(ee,nn)) * Nx[j](x_fct(ee,nn),y_fct(ee,nn)) + Ny[i](x_fct(ee,nn),y_fct(ee,nn)) * Ny[j](x_fct(ee,nn),y_fct(ee,nn)) ) * det_Jac(ee,nn)
+#                         Ke[i,j] = quad2d(Kefunc,-1,1,-1,1,ui,wi)
+# 
+#                 # construct the local load vector
+#                 fv = lambda ee,nn: rhs(x_fct(ee,nn),y_fct(ee,nn)) * Nbasis[i](x_fct(ee,nn),y_fct(ee,nn)) * det_Jac(ee,nn)
+#                 Fe[i] = quad2d(fv,-1,1,-1,1,ui,wi)
+#===============================================================================
+            print 'element e = ', e, " K = ", K_cst
+            print 'nodes =', nodes
+            
+            # Method 1
+            # construct the local matrix and local components of the load vector    
+            for i in range(0,4):
+                for j in range(0,4):
+#                     if nodes[i] >=  nodes[j]:
+                        Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
+                        Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
+
+                # construct the local load vector
+                fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
+                Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
+
+#             if e == 3800:
+#                 nodes = [169, 171, 187, 186, 170, 178]
+#                 [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
+# 
+#                 # add the local stiffness matrix and local load vector to the global K and F
+#                 for i in range(0,6):
+#                     for j in range(0,6):
+#                         if nodes[i] >= nodes[j]:
+#                             K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
+#                             K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+#                     F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+#             else:                    
+                #print e,Ke#.todense() 
+#             print Ke, Fe
+#             print K, F
+            # add the local stiffness matrix and local load vector to the global K and F
+            for i in range(0,4):
+                for j in range(0,4):
+#                     if nodes[i] >= nodes[j]:
+                        K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+#                         K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+
+    
+           
+        else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
+        
+            enrich1 = np.array(p[nodes[4]])
+
+            if len(nodes) == 5:
+                
+                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+                corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
+
+                elCorner = False
+    
+             # FALSE POSITIVIES: only corner is in a different material
+             # HOMOGENEOUS element
+                if (corner1 == True or corner3 == True):
+                    print 'False positive: Odd diagonal '
+                    elCorner = True
+                    midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
+                    
+                    pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
+                    if pxValMid > binBnd[1]:
+#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
+                        K_cst = k2
+                    else:
+                        K_cst = k1
+                
+                    
+                    Ke = np.zeros((4,4))
+                    Fe = np.zeros((4,1))
+                    # construct the local matrix and local components of the load vector    
+                    for i in range(0,4):
+                        for j in range(0,4):
+#                             if nodes[i] >=  nodes[j]:
+                                Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
+                                Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
+
+                        # construct the local load vector
+                        fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
+                        Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
+
+            
+                    # add the local stiffness matrix and local load vector to the global K and F
+                    for i in range(0,4):
+                        for j in range(0,4):
+#                             if nodes[i] >= nodes[j]:
+                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+#                                 K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+            
+
+             # FALSE POSITIVIES: only corner is in a different material
+             # HOMOGENEOUS element
+                if (corner0 == True or corner2 == True):
+                    print ' False positive: Even diagonal '
+                    elCorner = True
+                    midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
+                                        
+                    pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
+                    if pxValMid > binBnd[1]:
+#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
+                        K_cst = k2
+                    else:
+                        K_cst = k1
+                    
+                    Ke = np.zeros((4,4))
+                    Fe = np.zeros((4,1))
+            
+                    # construct the local matrix and local components of the load vector    
+                    for i in range(0,4):
+                        for j in range(0,4):
+#                             if nodes[i] >=  nodes[j]:
+                                Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
+                                Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
+
+                        # construct the local load vector
+                        fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
+                        Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
+
+            
+                    # add the local stiffness matrix and local load vector to the global K and F
+                    for i in range(0,4):
+                        for j in range(0,4):
+#                             if nodes[i] >= nodes[j]:
+                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+#                                 K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+
+
+#                # the South edge has the enrichment: 0-4-1
+#                if enrich1[1] == y0 and elCorner==False: 
+#                    print 'South edge'
+#                    [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,nodes)
+#
+#                    # add the local stiffness matrix and local load vector to the global K and F
+#                    for i in range(0,5):
+#                        for j in range(0,5):
+#                            if nodes[i] >= nodes[j]:
+#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_South[i,j]
+#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+#                        F[nodes[i],0] = F[nodes[i],0] + Fe_South[i]
+
+
+#                # the East edge has the enrichment: 1-4-2
+#                if enrich1[0] == x1 and elCorner==False:
+#                    print 'East edge, element: ', e
+#                    [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,nodes)
+#
+#                    # add the local stiffness matrix and local load vector to the global K and F
+#                    for i in range(0,5):
+#                        for j in range(0,5):
+#                            if nodes[i] >= nodes[j]:
+#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_East[i,j]
+#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+#                        F[nodes[i],0] = F[nodes[i],0] + Fe_East[i]
+
+#                # the West edge has the enrichment 0-4-3
+#                if enrich1[0] == x0 and elCorner==False:
+#                    print 'West edge'
+#                    [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,nodes)
+#
+#                    # add the local stiffness matrix and local load vector to the global K and F
+#                    for i in range(0,5):
+#                        for j in range(0,5):
+#                            if nodes[i] >= nodes[j]:
+#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_West[i,j]
+#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+#                        F[nodes[i],0] = F[nodes[i],0] + Fe_West[i]
+
+#                # the North edge has the enrichment: 3-4-2
+#                if enrich1[1] == y1 and elCorner==False :
+#                    print "North edge"
+#                    [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,nodes)
+#
+#                    # add the local stiffness matrix and local load vector to the global K and F
+#                    for i in range(0,5):
+#                        for j in range(0,5):
+#                            if nodes[i] >= nodes[j]:
+#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_North[i,j]
+#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+#                        F[nodes[i],0] = F[nodes[i],0] + Fe_North[i]
+
+
+            else: # or (len(nodes) == 6)
+
+                # enrichment nodes: enrichmentNode = [x y], x = enrichmentNode[0], y = enrichmentNode[1]
+                enrich1 = np.array(p[nodes[4]])
+                enrich2 = np.array(p[nodes[5]])
+
+                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
+                corner2 = ( min(abs(enrich2[0] - [x1]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
+                corner3 = ( min(abs(enrich2[0] - [x0]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
+
+                # testing if interface is along a diagonal
+                if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
+                    print 'Diagonal, element ', e
+                    Ke_trid1 = np.zeros((3,3))
+                    Fe_trid1 = np.zeros((3,1))
+                    Ke_trid2 = np.zeros((3,3))
+                    Fe_trid2 = np.zeros((3,1))
+
+                    # even diagonal: SW - NE
+                    if(corner0 == True and corner2 == True):
+                        nodes_trid1 = [nodes[0], nodes[1], nodes[2]]
+                        nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
+            
+#                        if point_in_on_poly(x0,y1,polygonDef) and not(point_in_on_poly(x1,y0,polygonDef)):
+#                            K_cst_trid2 = k2 
+#                            K_cst_trid1 = k1
+#                        else:
+#                            K_cst_trid2 = k1
+#                            K_cst_trid1 = k2
+                        if pxVal1 > binBnd[1] and pxVal3 <= binBnd[1]:
+                            K_cst_trid2 = k2 
+                            K_cst_trid1 = k1
+                        else:
+                            K_cst_trid2 = k1
+                            K_cst_trid1 = k2
+                        
+                    # odd diagonal: SE - NW
+                    else:
+                        nodes_trid1 = [nodes[0], nodes[1], nodes[3]]
+                        nodes_trid2 = [nodes[1], nodes[2], nodes[3]]
+
+#                        if point_in_on_poly(x1,y1,polygonDef) and not(point_in_on_poly(x0,y0,polygonDef)):
+#                            K_cst_trid2 = k2 
+#                            K_cst_trid1 = k1
+#                        else:
+#                            K_cst_trid2 = k1
+#                            K_cst_trid1 = k2
+
+    
+                        if pxVal2 > binBnd[1] and pxVal4 <= binBnd[1]:
+                            K_cst_trid2 = k2 
+                            K_cst_trid1 = k1
+                        else:
+                            K_cst_trid2 = k1
+                            K_cst_trid1 = k2
+
+                     
+                    print 'inside myquad', e
+                    print K_cst_trid1, K_cst_trid2
+                    print nodes_trid1, nodes_trid2
+                    
+                    coords_trid1 = p[nodes_trid1]
+                    coords_trid2 = p[nodes_trid2]
+
+                    Pe_trid1 = np.zeros((3,3))
+                    Pe_trid2 = np.zeros((3,3))
+    
+                    Pe_trid1[:,0] = np.ones((3,1)).transpose()                    
+                    Pe_trid1[:,1] = p[nodes_trid1[0:3],0]
+                    Pe_trid1[:,2] = p[nodes_trid1[0:3],1]
+
+                    Pe_trid2[:,0] = np.ones((3,1)).transpose()                    
+                    Pe_trid2[:,1] = p[nodes_trid2[0:3],0]
+                    Pe_trid2[:,2] = p[nodes_trid2[0:3],1]
+
+                    C_trid1 = np.linalg.inv(Pe_trid1)
+                    C_trid2 = np.linalg.inv(Pe_trid2)
+
+                    Nbasis_trid1 = tribasisFct(C_trid1)
+                    Nbasis_trid2 = tribasisFct(C_trid2)
+
+                    Nx_trid1 = triderivX(C_trid1)
+                    Ny_trid1 = triderivY(C_trid1)
+
+                    Nx_trid2 = triderivX(C_trid2)
+                    Ny_trid2 = triderivY(C_trid2)
+
+                    ## FIRST TRIANGLE
+                    # construct the local matrix and local components of the load vector    
+                    for i in range(0,3):
+                        for j in range(0,3):
+#                             if nodes_trid1[i] >=  nodes_trid1[j]:
+                                Kefunc_trid1 = lambda x,y: K_cst_trid1 * ( Nx_trid1[i](x,y) * Nx_trid1[j](x,y) + Ny_trid1[i](x,y) * Ny_trid1[j](x,y) )
+                                Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
+
+                        # construct the local load vector
+                        fv_trid1 = lambda x,y: rhs(x,y) * Nbasis_trid1[i](x,y)
+                        Fe_trid1[i] = 1.0/2.0 * quad2d(fv_trid1,x0,x1,y0,y1,ui,wi)
+
+            
+                    # add the local stiffness matrix and local load vector to the global K and F
+                    for i in range(0,3):
+                        for j in range(0,3):
+#                             if nodes_trid1[i] >= nodes_trid1[j]:
+                                K[nodes_trid1[i],nodes_trid1[j]] = K[nodes_trid1[i],nodes_trid1[j]] + Ke_trid1[i,j]
+#                                 K[nodes_trid1[j],nodes_trid1[i]] = K[nodes_trid1[i],nodes_trid1[j]]
+                        F[nodes_trid1[i],0] = F[nodes_trid1[i],0] + Fe_trid1[i]
+                        
+                    ## SECOND TRIANGLE
+                    # construct the local matrix and local components of the load vector    
+                    for i in range(0,3):
+                        for j in range(0,3):
+#                             if nodes_trid2[i] >=  nodes_trid2[j]:
+                                Kefunc_trid2 = lambda x,y: K_cst_trid2 * ( Nx_trid2[i](x,y) * Nx_trid2[j](x,y) + Ny_trid2[i](x,y) * Ny_trid2[j](x,y) )
+                                Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
+
+                        # construct the local load vector
+                        fv_trid2 = lambda x,y: rhs(x,y) * Nbasis_trid2[i](x,y)
+                        Fe_trid2[i] = 1.0/2.0 * quad2d(fv_trid2,x0,x1,y0,y1,ui,wi)
+
+            
+                    # add the local stiffness matrix and local load vector to the global K and F
+                    for i in range(0,3):
+                        for j in range(0,3):
+#                             if nodes_trid2[i] >= nodes_trid2[j]:
+                                K[nodes_trid2[i],nodes_trid2[j]] = K[nodes_trid2[i],nodes_trid2[j]] + Ke_trid2[i,j]
+#                                 K[nodes_trid2[j],nodes_trid2[i]] = K[nodes_trid2[i],nodes_trid2[j]]
+                        F[nodes_trid2[i],0] = F[nodes_trid2[i],0] + Fe_trid2[i]
+                        
+
+                else:
+
+#                     x0 = coords[0,0]
+#                     x1 = coords[1,0]
+#                     y0 = coords[0,1]
+#                     y1 = coords[2,1]
+#                     print x0,x1,y0,y1
+#                     print 'nodes:', nodes
+#                     print p[nodes,:]
+                    # the North-West corner is cut, 0-4-3, 2-5-3
+                    if (
+                        ((enrich1[0] == x0 and enrich2[1] == y1) or
+                         (enrich2[0] == x0 and enrich1[1] == y1)) and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        ):
+                        print "NW corner"
+                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image)
+
+                        
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+#                                 if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NW[i,j]
+#                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_NW[i]
+
+
+                    # the South-East corner is cut, 0-4-1, 1-5-2
+                    if ( 
+                        ((enrich1[1] == y0 and enrich2[0] == x1) or
+                          (enrich2[1] == y0 and enrich1[0] == x1)) and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        ):
+                        print 'SE corner'
+                        
+#                         print x1,y1, enrich1
+#                         print not(on_corners(enrich1,x0,y0,x1,y1))
+#                         print not(on_corners(enrich2,x0,y0,x1,y1))
+#                         print 'elem:', e, root.tlist
+#                         print 'coords ', [x0,x1],[y0,y1]
+#                         print 'pixels ',[p1.x,p3.x],[p1.y,p3.y]
+#                         print 'enrich1 ',enrich1
+# #                         print 'enrich2 ',enrich2
+#                         print root.enrichNodes[0].x, root.enrichNodes[0].y
+# #                         print root.enrichNodes[1].x, root.enrichNodes[1].y
+                        
+                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image)
+    
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+#                                 if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SE[i,j]
+#                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_SE[i]
+    
+                    # the North East corner is cut, 1-4-2, 2-5-3
+                    if ( 
+                        ((enrich1[0] == x1 and enrich2[1] == y1) or
+                          (enrich2[0] == x1 and enrich1[1] == y1)) and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        ):
+                        print "NE corner"
+                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image)
+    
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+#                                 if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NE[i,j]
+#                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_NE[i]
+
+                    # the South-West corner is cut, 0-4-1, and 0-5-3
+                    if ( 
+                        ((enrich1[1] == y0 and enrich2[0] == x0) or
+                         (enrich2[1] == y0 and enrich1[0] == x0)) and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        ):
+                        print "SW corner"
+                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image)
+        
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+#                                 if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
+#                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+                            
+                    # the South edge
+                    if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
+                        ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
+
+                        print 'South edge'
+                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                            south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
+                        else:
+                            south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
+
+                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image)
+
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,5):
+                            for j in range(0,5):
+#                                 if south_nodes[i] >= south_nodes[j]:
+                                    K[south_nodes[i],south_nodes[j]] = K[south_nodes[i],south_nodes[j]] + Ke_South[i,j]
+#                                     K[south_nodes[j],south_nodes[i]] = K[south_nodes[i],south_nodes[j]]
+                            F[south_nodes[i],0] = F[south_nodes[i],0] + Fe_South[i]
+
+                    # the North edge
+                    if ( ( (enrich1[1] == y0 and enrich2[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1)) or
+                        ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
+                        print 'North edge'
+
+                        if not(on_corners(enrich2,x0,y0,x1,y1)):
+                            north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
+                        else:
+                            north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
+                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image)
+
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,5):
+                            for j in range(0,5):
+#                                 if north_nodes[i] >= north_nodes[j]:
+                                    K[north_nodes[i],north_nodes[j]] = K[north_nodes[i],north_nodes[j]] + Ke_North[i,j]
+#                                     K[north_nodes[j],north_nodes[i]] = K[north_nodes[i],north_nodes[j]]
+                            F[north_nodes[i],0] = F[north_nodes[i],0] + Fe_North[i]
+
+                    
+                    # the West edge
+                    if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
+                        ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
+                        print 'West edge'
+
+                        print root.tlist
+                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                            west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
+                        else:
+                            west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
+
+                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image)
+
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,5):
+                            for j in range(0,5):
+#                                 if west_nodes[i] >= west_nodes[j]:
+                                    K[west_nodes[i],west_nodes[j]] = K[west_nodes[i],west_nodes[j]] + Ke_West[i,j]
+#                                     K[west_nodes[j],west_nodes[i]] = K[west_nodes[i],west_nodes[j]]
+                            F[west_nodes[i],0] = F[west_nodes[i],0] + Fe_West[i]
+
+
+
+                    # the East edge
+                    if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)) or
+                            ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
+                        print 'East edge'
+
+                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                            east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
+                        else:
+                            east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
+
+                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image)
+
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,5):
+                            for j in range(0,5):
+#                                 if east_nodes[i] >= east_nodes[j]:
+                                    K[east_nodes[i],east_nodes[j]] = K[east_nodes[i],east_nodes[j]] + Ke_East[i,j]
+#                                     K[east_nodes[j],east_nodes[i]] = K[east_nodes[i],east_nodes[j]]
+                            F[east_nodes[i],0] = F[east_nodes[i],0] + Fe_East[i]
+    
+
+    
+            
+                    # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
+                    if ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
+                        print "horizontal slide: quad-quad"
+                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
+                    
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+#                                 if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Horiz[i,j]
+#                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_Horiz[i]
+            
+
+                    # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
+                    if ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0 )) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
+                        print "vertical slide: quad-quad"
+                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image)
+                        # add the local stiffness matrix and local load vector to the global K and F
+                        for i in range(0,6):
+                            for j in range(0,6):
+#                                 if nodes[i] >= nodes[j]:
+                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Vertical[i,j]
+#                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
+                            F[nodes[i],0] = F[nodes[i],0] + Fe_Vertical[i]
+            
+    # end of loop
+    # BCs: a * U + b * dU/dx + c * dU/dy + d = 0
+    # Dirichlet: b,c = 0, homogeneous Dirichlet: b,c = 0, d = 0
+    # Neumann: a = 0, and b or c may be 0, but not both
+
+    U = sparse.lil_matrix((N,1))
+
+    # Setting Dirichlet BCs
+    # left side of the domain
+    if leftDirich == 1:
+        for l in lbcs:
+            U[l,0] = Temp_left
+
+    # right side of the domain
+    if rightDirich == 1:
+        for l in rbcs:
+            U[l,0] = Temp_right
+
+    #print "bcs", lbcs,rbcs
+    #print "top/bottom",range(1,m-1),range(lbcs[-1]+1,rbcs[-1])
+
+    # top side of the domain
+    if topDirich == 1:
+        for l in tbcs:
+            U[l,0] = Temp_top
+
+    # bottom side of the domain
+    if bottomDirich == 1:
+        for l in bbcs:
+            U[l,0] = Temp_bottom
+
+    
+    #F = F - np.dot(K,U)
+    F = F - K*U
+    #FreeNodes = list( (set(range(0,N))-set(lbcs)) - set(rbcs))
+
+    # in case the nodes have duplicate (x,y) coordinates 
+    # such as in the case of false positive need for enrichment
+    # those nodes need to be removed, as they are not contributing to the stiffness matrix
+    # zNodes contains the vector p, and the third column is the row number
+    zNodes = numpy.zeros((len(p),3))
+    zNodes[:,0] = p[:,0]
+    zNodes[:,1] = p[:,1]
+    zNodes[:,2] = range(0,len(p))
+
+    # starting the process of removing the row that have the first and second column duplicated
+    # we do not consider the third column in the duplication criterion
+    # for example: z = [ 0 0 1; 1 0 2; 2 0 3; 1 0 4; 3 0 5]
+    # in this ex we remove the duplicate and obtain:
+    # z = [0 0 1; 1 0 2; 2 0 3; 3 0 5]
+    keyfunc = lambda kf: kf[:2]
+    mypoints = []
+    for kind, gind in groupby( sorted( zip(zNodes[:,0], zNodes[:,1], zNodes[:,2]), key = keyfunc), keyfunc):
+        mypoints.append(list(gind)[0])
+
+    arr_mypoints = numpy.array(mypoints)
+    unique_nodes = range(0,len(p))#arr_mypoints[:,2]
+
+    # from all the nodes remove those corresponding to the left and right boundary
+    FreeNodes = list( (set( unique_nodes) - set(lbcs)) - set(rbcs))
+#     print 'FreeNodes', FreeNodes
+#     print  'k1 , k2 ', k1, k2
+#    print 'FreeNodes = ', FreeNodes
+
+    Kb = K[:,:]
+    Fb = F[:]
+
+
+#     scipy.io.savemat('Kb1.mat', mdict={'Kb': Kb})
+#     scipy.io.savemat('Fb1.mat', mdict={'Fb': Fb})
+#     print 'Kb', Kb
+#     print 'Fb', Fb
+
+#     print 'first ',Kb[29:37, 29:37]
+#     print 'second', Kb[1039,29:37]
+#     print 'third', Kb[29:37,1039]
+# 
+#     print 'i,j'
+    # Need to reduce the Kb matrix in order to be able to use it with SpSolve
+    Kbreduced = sparse.lil_matrix((len(FreeNodes),len(FreeNodes)));
+    for i in range(0,len(FreeNodes)):
+        for j in range(0,len(FreeNodes)):
+            Kbreduced[i,j] = Kb[FreeNodes[i],FreeNodes[j]]
+#             if FreeNodes[i] == 31 or FreeNodes[j] == 31:
+#                 print Kbreduced[i,j]
+    Kbreduced = Kbreduced.tocsr()
+
+#     print 'kbreduced',Kbreduced
+    # solve for the numerical solution
+    numericalSoln = linsolve.spsolve(Kbreduced,Fb[FreeNodes,0])
+    U[FreeNodes,0] = np.matrix(numericalSoln).T
+
+#     print 'matrix, vector:',Kbreduced, Fb[FreeNodes,0]
+#     scipy.io.savemat('U10small.mat', mdict={'U': U})
+#     scipy.io.savemat('Kbreduced10smallnH.mat', mdict={'Kbreduced': Kbreduced})
+#     Fbreduced = Fb[FreeNodes,0]
+#     scipy.io.savemat('Fbreduced10smallnH.mat', mdict={'Fbreduced': Fbreduced})
+#     print U
+    
+#     print '29 to 37', Kbreduced[29:37, 29:37]
+#     print 'length', len(FreeNodes)
+#     print 'U of 65', U[65,0]
+    
+#     print U[30,0], U[31,0], U[36,0], U[35,0], U[1039,0]
+#     myU = scipy.io.loadmat('matlabUrbicg1.mat')
+#     U = myU['urpcg1']
+#     print U[30,0], U[31,0], U[36,0], U[35,0], U[1039,0]
+    #print np.array(U)
+    # Getting the analytical solution and its vector form
+    #uexact = lambda x,y: ufct(x,loc,k1,k2) 
+
+#     HANGING NODES implementation
+    for i in range(0,len(list_hanging_nodes)):
+        listHN = list_hanging_nodes[i]
+        U[listHN[0],0] = ( U[listHN[1],0] + U[listHN[2],0] ) / 2.0
+
+
+       
+#     print U[30,0], U[31,0], U[36,0], U[35,0], U[1039,0]
+         
+#     U[65,0] = ( U[158,0]  + U[19,0]) / 2.0
+#     U[159,0] = ( U[158,0] + U[160,0]) / 2.0
+    return  np.array(U) 
+
 def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     print 'compute the L-2 norm ...'
 
@@ -393,15 +1450,17 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     e_arr = en_arr[:,0] # contains the epsilon coordinates
     n_arr = en_arr[:,1] # contains the niu coordinates
 
-    yloc     = 0.1
+    yloc = 0.1
     #xloc = yloc + 2.0/3.0
 
     Usolution = np.zeros((len(p),1))
     polygonList = []
 
     # COMPUTING THE L-2 NORM
-#     for e in range(0,T):
-    for e in range(800,841):
+    for e in range(0,T):
+#     for e in range(800, T):
+#     for e in range(833,T):
+#     for e in range(1814,T):
 
 #    for e in range(34,51):
 #     for e in [35,37,38,40,43,44,47,48,49,50]:
@@ -901,15 +1960,18 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                 corner2 = ( min(abs(enrich2[0] - [x1]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
                 corner3 = ( min(abs(enrich2[0] - [x0]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
 
-                odd_even_diag = False
-                # testing if interface is along a diagonal
+#                 odd_even_diag = False
+#                 # testing if interface is along a diagonal
+#                 if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
+#                     print 'Diagonal'
+#                     odd_even_diag = True
+#                 else:
+#                     odd_even_diag = False
+# 
+#                 print 'Diagonal element: ', e, odd_even_diag
+#                 print corner0, corner1, corner2, corner3
+#                 if odd_even_diag == True:
                 if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
-                    print 'Diagonal'
-                    odd_even_diag = True
-                else:
-                    odd_even_diag = False
-
-                if odd_even_diag == True:
                     if(corner0 == True and corner2 == True):
                         nodes_trid1 = [nodes[0], nodes[1], nodes[2]]
                         nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
@@ -921,9 +1983,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         tc1 = [0,1,3]
                         tc2 = [1,2,3]
 
+                    print 'Diagonal', e
                     coords_trid1 = p[nodes_trid1]
                     coords_trid2 = p[nodes_trid2]
-
+    
                     Pe_trid1 = np.zeros((3,3))
                     Pe_trid2 = np.zeros((3,3))
                         
@@ -946,13 +2009,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         
                     Nx_trid2 = triderivX(C_trid2)
                     Ny_trid2 = triderivY(C_trid2)
-
+    
                     uh_elem_trid1 = lambda x,y: ( 
                                 U[t[e][tc1[0]],0] * Nbasis_trid1[0](x,y) +
                                 U[t[e][tc1[1]],0] * Nbasis_trid1[1](x,y) +
                                 U[t[e][tc1[2]],0] * Nbasis_trid1[2](x,y)
                     )
-
+    
                     uh_elem_trid2 = lambda x,y: ( 
                                 U[t[e][tc2[0]],0] * Nbasis_trid2[0](x,y) +
                                 U[t[e][tc2[1]],0] * Nbasis_trid2[1](x,y) +
@@ -961,1673 +2024,1688 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
             
                     x_coords_trid1 = coords_trid1[:,0]
                     y_coords_trid1 = coords_trid1[:,1]
-
+    
                     x_coords_trid2 = coords_trid2[:,0]
                     y_coords_trid2 = coords_trid2[:,1]
-
+    
                     Usolution[nodes_trid1[0],0] = uh_elem_trid1(p[nodes_trid1[0],0],p[nodes_trid1[0],1])
                     Usolution[nodes_trid1[1],0] = uh_elem_trid1(p[nodes_trid1[1],0],p[nodes_trid1[1],1])
                     Usolution[nodes_trid1[2],0] = uh_elem_trid1(p[nodes_trid1[2],0],p[nodes_trid1[2],1])
                     polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], nodes_trid1[2] ]]
-
+    
                     [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
                     Jac_trid1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
                     detJ_trid1 = lambda eps,niu: determinant(Jac_trid1)(eps,niu)
             
                     el_sum_trid1 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid1,y_transform_fct_trid1,uh_elem_trid1,detJ_trid1)
                     all_elems_sum = all_elems_sum + el_sum_trid1;
-
-#                     if y0 <= yloc and yloc <= y1:
-#                         tx_trid1 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-#                         sfct_trid1 = uh_elem_trid1(tx_trid1,yloc)
-#                         pylab.plot(tx_trid1,sfct_trid1)
-
+    
+    #                     if y0 <= yloc and yloc <= y1:
+    #                         tx_trid1 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+    #                         sfct_trid1 = uh_elem_trid1(tx_trid1,yloc)
+    #                         pylab.plot(tx_trid1,sfct_trid1)
+    
                     Usolution[nodes_trid2[0],0] = uh_elem_trid2(p[nodes_trid2[0],0],p[nodes_trid2[0],1])
                     Usolution[nodes_trid2[1],0] = uh_elem_trid2(p[nodes_trid2[1],0],p[nodes_trid2[1],1])
                     Usolution[nodes_trid2[2],0] = uh_elem_trid2(p[nodes_trid2[2],0],p[nodes_trid2[2],1])
                     polygonList = polygonList + [[nodes_trid2[0], nodes_trid2[1], nodes_trid2[2] ]]
-
+    
                     [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct(x_coords_trid2,y_coords_trid2)            
                     Jac_trid2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
                     detJ_trid2 = lambda eps,niu: determinant(Jac_trid2)(eps,niu)
         
                     el_sum_trid2 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid2,y_transform_fct_trid2,uh_elem_trid2,detJ_trid2)
                     all_elems_sum = all_elems_sum + el_sum_trid2
+    
+    #                     if y0 <= yloc and yloc <= y1:
+    #                         tx_trid2 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+    #                         sfct_trid2 = uh_elem_trid2(tx_trid2,yloc)
+    #                         pylab.plot(tx_trid2,sfct_trid2)
 
-#                     if y0 <= yloc and yloc <= y1:
-#                         tx_trid2 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-#                         sfct_trid2 = uh_elem_trid2(tx_trid2,yloc)
-#                         pylab.plot(tx_trid2,sfct_trid2)
-
-                if ( ( (enrich1[1] == y0 and enrich2[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1)) or
-                      ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
-                    print 'norm computation: North edge'
-
-                    if not(on_corners(enrich2,x0,y0,x1,y1)):
-                        north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
-                    else:
-                        north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
-
-                    tri_nodes1 = [north_nodes[0],north_nodes[4],north_nodes[3]]
-                    tri_nodes2 = [north_nodes[0],north_nodes[1],north_nodes[4]]
-                    tri_nodes3 = [north_nodes[1],north_nodes[2],north_nodes[4]]
-                    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
+                else:
+                    if ( ( (enrich1[1] == y0 and enrich2[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1)) or
+                          ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
+                        print 'norm computation: North edge'
     
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
+                        if not(on_corners(enrich2,x0,y0,x1,y1)):
+                            north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
+                        else:
+                            north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
     
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-    
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-
-                    node_enr_4 = [north_nodes[4]]
-                    coords_enr_4 = p[node_enr_4]
-
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-
-                    n1 = x4 - x0
-                    n2 = x1 - x4
-                    factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
-                    if factor_N > EPS_FACTOR:
-                        factor_N = 1
-
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_N )
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
-                                            
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
-    
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_2( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
-                
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
-    
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-
-    
-                # the South edge
-                if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
-                      ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
-                    print 'norm computation: South edge'
-                    
-                    if not(on_corners(enrich2,x0,y0,x1,y1)) :
-                      south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
-                    else:
-                      south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
-
-                    tri_nodes1 = [south_nodes[0],south_nodes[4],south_nodes[3]]
-                    tri_nodes2 = [south_nodes[4],south_nodes[2],south_nodes[3]]
-                    tri_nodes3 = [south_nodes[4],south_nodes[1],south_nodes[2]] # the one triangle in a diff material
-    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-    
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-    
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-    
-                    node_enr_4 = [south_nodes[4]]
-                    coords_enr_4 = p[node_enr_4]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-    
-                    s1 = x4 - x0
-                    s2 = x1 - x4
-                    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
-                    if factor_S > EPS_FACTOR:
-                        factor_S = 1
-
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S)
-        
-    
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_S )
-    
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-    
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S )
-
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
-
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
-    
-                    txP = np.arange(x0,x1+0.00001,0.001)
-        
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        for idx in range(0,len(tx)):
-        
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
+                        tri_nodes1 = [north_nodes[0],north_nodes[4],north_nodes[3]]
+                        tri_nodes2 = [north_nodes[0],north_nodes[1],north_nodes[4]]
+                        tri_nodes3 = [north_nodes[1],north_nodes[2],north_nodes[4]]
                         
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-
-                # the West edge
-                if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
-                      ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
-                    print 'norm computation: West edge'
-                    if not(on_corners(enrich2,x0,y0,x1,y1)) :
-                      west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
-                    else:
-                        west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
-
-                    print 'element ',e, west_nodes
-                    tri_nodes1 = [west_nodes[0],west_nodes[1],west_nodes[4]]
-                    tri_nodes2 = [west_nodes[1],west_nodes[2],west_nodes[4]]
-                    tri_nodes3 = [west_nodes[4],west_nodes[2],west_nodes[3]] 
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
     
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
     
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-    
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-
-                    # scaling factor
-                    node_enr_4 = [west_nodes[4]]
-                    coords_enr_4 = p[node_enr_4]
-
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-
-                    w1 = y1 - y4
-                    w2 = y4 - y0
-                    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
-                    if factor_W > EPS_FACTOR:
-                        factor_W = 1
-
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_W )
-                                            
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_W)
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    print U[tri_nodes1[2],0], U[tri_nodes2[2],0], U[tri_nodes3[0],0]    
-                    print tri_nodes2
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
-    
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
-                
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-    
-
-
-                # the East edge
-                if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)) or
-                      ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
-                    print 'norm computation: East edge'
-
-                    if not(on_corners(enrich2,x0,y0,x1,y1)) :
-                      east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
-                    else:
-                        east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
-
-
-                    tri_nodes1 = [east_nodes[0],east_nodes[1],east_nodes[4]]
-                    tri_nodes2 = [east_nodes[0],east_nodes[4],east_nodes[3]]
-                    tri_nodes3 = [east_nodes[4],east_nodes[2],east_nodes[3]] # the one triangle in a diff material
-    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-    
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-    
-                    node_enr_4 = [east_nodes[4]]
-                    coords_enr_4 = p[node_enr_4]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-
-                    e1 = y1 - y4
-                    e2 = y4 - y0
-                    factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
-                    if factor_E > EPS_FACTOR:
-                        factor_E = 1
-    
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_E)
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
         
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
     
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E )
-    
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-    
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
-
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
-    
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
-                    txP = np.arange(x0,x1+0.00001,0.001)
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
         
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        for idx in range(0,len(tx)):
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
         
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
-                        
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-
-
-
-                # the North-West corner is cut, 0-4-3, 2-5-3
-                if ( 
-                    ((enrich1[0] == x0 and enrich2[1] == y1) or
-                    (enrich2[0] == x0 and enrich1[1] == y1)) and 
-                    odd_even_diag == False and 
-                    not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                    not(on_corners(enrich2,x0,y0,x1,y1))
-                    ):
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+        
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+    
+                        node_enr_4 = [north_nodes[4]]
+                        coords_enr_4 = p[node_enr_4]
+    
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+    
+                        n1 = x4 - x0
+                        n2 = x1 - x4
+                        factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
+                        if factor_N > EPS_FACTOR:
+                            factor_N = 1
+    
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_N )
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
-                    print "norm computation: NW corner"
-                    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (lower right corner cut)
-                    tri_nodes1 = [nodes[0],nodes[1],nodes[4]]
-                    tri_nodes2 = [nodes[4],nodes[1],nodes[5]]
-                    tri_nodes3 = [nodes[1],nodes[2],nodes[5]]
-                    tri_nodes4 = [nodes[4],nodes[5],nodes[3]] 
-
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                    polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-
-                    Pe4 = np.zeros((3,3))
-                    Pe4[:,0] = np.ones((3,1)).transpose()
-                    Pe4[:,1] = p[tri_nodes4[0:3],0]
-                    Pe4[:,2] = p[tri_nodes4[0:3],1]
-                    C4 = np.linalg.inv(Pe4)
-                    Nbasis_tri4 = tribasisFct(C4)
-                    Nx_tri4 = triderivX(C4)
-                    Ny_tri4 = triderivY(C4)
-
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-                    tri_coords4 = p[tri_nodes4]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-                    [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
-    
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-
-                    # scaling factor
-                    #sx1 = abs(p[nodes[5]][0]- x0)
-                    #sx2 = abs(x1 - p[nodes[5]][0])
-                    #s_factor_x = 1#( 2 * min(sx1,sx2)/(sx1+sx2)) ** 2
-    
-                    #sy1 = abs(p[nodes[4]][1]- y0)
-                    #sy2 = abs(y1 - p[nodes[4]][1])
-                    #s_factor_y = 1#( 2 * min(sy1,sy2)/(sy1+sy2)) ** 2
-
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
-
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
-
-                    w1 = y1 - y4
-                    w2 = y4 - y0
-                    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
-                    if factor_W > EPS_FACTOR:
-                        factor_W = 1
-
-                    n1 = x5 - x0
-                    n2 = x1 - x5
-                    factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
-                    if factor_N > EPS_FACTOR:
-                        factor_N = 1
-
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W +
-                                            U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
-                                            
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    uh_elem_4 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_W +
-                                            U[tri_nodes4[1],0] * Nbasis_tri4[1](x,y) * factor_N )
-    
-                    el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-    
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_4( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
-            
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        tx4 = []
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                tx4.append(tx[idx])
-    
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-                        tx4 = np.array(tx4)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-#                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
-                        
-    
-                # the South-East corner is cut, 0-4-1, 1-5-2
-                if (
-                    ((enrich1[1] == y0 and enrich2[0] == x1) or 
-                     (enrich2[1] == y0 and enrich1[0] == x1)) and 
-                     odd_even_diag == False and 
-                     not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                     not(on_corners(enrich2,x0,y0,x1,y1))
-                     ):
-                    
-                    print 'norm computation: SE corner'
-                    
-                    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (lower right corner cut)
-                    tri_nodes1 = [nodes[0],nodes[4],nodes[3]]
-                    tri_nodes2 = [nodes[4],nodes[5],nodes[3]]
-                    tri_nodes3 = [nodes[5],nodes[2],nodes[3]]
-                    tri_nodes4 = [nodes[4],nodes[1],nodes[5]] # the one triangle in a diff material
-    
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-    
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-    
-                    Pe4 = np.zeros((3,3))
-                    Pe4[:,0] = np.ones((3,1)).transpose()
-                    Pe4[:,1] = p[tri_nodes4[0:3],0]
-                    Pe4[:,2] = p[tri_nodes4[0:3],1]
-                    C4 = np.linalg.inv(Pe4)
-                    Nbasis_tri4 = tribasisFct(C4)
-                    Nx_tri4 = triderivX(C4)
-                    Ny_tri4 = triderivY(C4)
-    
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-                    tri_coords4 = p[tri_nodes4]
-    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                    polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-                    [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
-    
-                    #Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],lambda x,y: 0]
-                    #Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri2[0],Nbasis_tri2[1]]
-                    #Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri3[0]]
-                    #Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],Nbasis_tri4[2]]
-    
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-    
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-    
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
-    
-                    e1 = y1 - y5
-                    e2 = y5 - y0
-                    factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
-                    if factor_E > EPS_FACTOR:
-                        factor_E = 1
-    
-                    s1 = x4 - x0
-                    s2 = x1 - x4
-                    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
-                    if factor_S > EPS_FACTOR:
-                        factor_S = 1
-    
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S)
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
+                                                
         
-    
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_S +
-                                            U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E ) 
-    
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
-    
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    uh_elem_4 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S +
-                                            U[tri_nodes4[2],0] * Nbasis_tri4[2](x,y) * factor_E )
-    
-                    el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-    
-    
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
-
-#                    print 'SE - 1 ', uh_elem_1(p[nodes[4],0], p[nodes[4],1])
-#                    print 'SE - 2', uh_elem_2(p[nodes[4],0], p[nodes[4],1])
-#                    print 'SE - 3', uh_elem_3(p[nodes[4],0], p[nodes[4],1])
-#                    print 'SE - 4', uh_elem_4(p[nodes[4],0], p[nodes[4],1])
-#                    print 'SE - 1 - natural', uh_elem_1(p[nodes[0],0], p[nodes[0],1])
-#                    print 'SE - 2 - natural', uh_elem_2(p[nodes[0],0], p[nodes[0],1])
-#                    print 'SE - I - natural', uh_elem_1(p[nodes[3],0], p[nodes[3],1])
-#                    print 'SE - II - natural', uh_elem_2(p[nodes[3],0], p[nodes[3],1])
-#                    print 'SE - III - natural', uh_elem_3(p[nodes[3],0], p[nodes[3],1])
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
-
-                    txP = np.arange(x0,x1+0.00001,0.001)
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
         
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        tx4 = []
-                        for idx in range(0,len(tx)):
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
         
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                tx4.append(tx[idx])
-                        
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-                        tx4 = np.array(tx4)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-#                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
-#     
-                # the North East corner is cut, 1-4-2, 2-5-3
-                if (
-                    ((enrich1[0] == x1 and enrich2[1] == y1) or
-                     (enrich2[0] == x1 and enrich1[1] == y1)) 
-                    and odd_even_diag == False and 
-                    not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                    not(on_corners(enrich2,x0,y0,x1,y1)) 
-                    ):
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
+        
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_2( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
                     
-                    print "norm computation: NE corner"
-                    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
-                    tri_nodes1 = [nodes[0],nodes[5],nodes[3]]
-                    tri_nodes2 = [nodes[0],nodes[4],nodes[5]]
-                    tri_nodes3 = [nodes[0],nodes[1],nodes[4]]
-                    tri_nodes4 = [nodes[4],nodes[2],nodes[5]] # the one triangle in a diff material
-    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                    polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-    
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-    
-                    Pe4 = np.zeros((3,3))
-                    Pe4[:,0] = np.ones((3,1)).transpose()
-                    Pe4[:,1] = p[tri_nodes4[0:3],0]
-                    Pe4[:,2] = p[tri_nodes4[0:3],1]
-                    C4 = np.linalg.inv(Pe4)
-                    Nbasis_tri4 = tribasisFct(C4)
-                    Nx_tri4 = triderivX(C4)
-                    Ny_tri4 = triderivY(C4)
-
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-                    tri_coords4 = p[tri_nodes4]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-                    [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
-    
-    
-                    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri1[1]]
-                    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri2[1],Nbasis_tri2[2]]
-                    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[2],lambda x,y: 0]
-                    Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],Nbasis_tri4[2]]
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-    
-            
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-    
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
-    
-                    e1 = y1 - y4
-                    e2 = y4 - y0
-                    factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
-                    if factor_E > EPS_FACTOR:
-                        factor_E = 1
-    
-                    n1 = x5 - x0
-                    n2 = x1 - x5
-                    factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
-                    if factor_N > EPS_FACTOR:
-                        factor_N = 1
-    
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_N ) 
-    
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-                
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E +
-                                            U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-                
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_E)
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    uh_elem_4 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_E +
-                                                U[tri_nodes4[2],0] * Nbasis_tri4[2](x,y) * factor_N )
-    
-                    el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-    
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
-
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        tx4 = []
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            for idx in range(0,len(tx)):
+        
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
                                 
-                            if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                tx4.append(tx[idx])
-                        
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-                        tx4 = np.array(tx4)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-#                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
-    
-                # the South-West corner is cut, 0-4-1, and 0-5-3
-                if (
-                    ((enrich1[1] == y0 and enrich2[0] == x0) or
-                     (enrich2[1] == y0 and enrich1[0] == x0)) and 
-                    odd_even_diag == False and 
-                    not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                    not(on_corners(enrich2,x0,y0,x1,y1))
-                    ):
-                    
-                    print "norm computation: SW corner"
-                    # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
-                    tri_nodes1 = [nodes[0],nodes[4],nodes[5]]
-                    tri_nodes2 = [nodes[5],nodes[2],nodes[3]]
-                    tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
-                    tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
-    
-                    polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                    polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                    polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                    polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-
-                    Pe1 = np.zeros((3,3))
-                    Pe1[:,0] = np.ones((3,1)).transpose()
-                    Pe1[:,1] = p[tri_nodes1[0:3],0]
-                    Pe1[:,2] = p[tri_nodes1[0:3],1]
-                    C1 = np.linalg.inv(Pe1)
-                    Nbasis_tri1 = tribasisFct(C1)
-                    Nx_tri1 = triderivX(C1)
-                    Ny_tri1 = triderivY(C1)
-
-                    Pe2 = np.zeros((3,3))
-                    Pe2[:,0] = np.ones((3,1)).transpose()
-                    Pe2[:,1] = p[tri_nodes2[0:3],0]
-                    Pe2[:,2] = p[tri_nodes2[0:3],1]
-                    C2 = np.linalg.inv(Pe2)
-                    Nbasis_tri2 = tribasisFct(C2)
-                    Nx_tri2 = triderivX(C2)
-                    Ny_tri2 = triderivY(C2)
-    
-                    Pe3 = np.zeros((3,3))
-                    Pe3[:,0] = np.ones((3,1)).transpose()
-                    Pe3[:,1] = p[tri_nodes3[0:3],0]
-                    Pe3[:,2] = p[tri_nodes3[0:3],1]
-                    C3 = np.linalg.inv(Pe3)
-                    Nbasis_tri3 = tribasisFct(C3)
-                    Nx_tri3 = triderivX(C3)
-                    Ny_tri3 = triderivY(C3)
-    
-                    Pe4 = np.zeros((3,3))
-                    Pe4[:,0] = np.ones((3,1)).transpose()
-                    Pe4[:,1] = p[tri_nodes4[0:3],0]
-                    Pe4[:,2] = p[tri_nodes4[0:3],1]
-                    C4 = np.linalg.inv(Pe4)
-                    Nbasis_tri4 = tribasisFct(C4)
-                    Nx_tri4 = triderivX(C4)
-                    Ny_tri4 = triderivY(C4)
-    
-                    tri_coords1 = p[tri_nodes1]
-                    tri_coords2 = p[tri_nodes2]
-                    tri_coords3 = p[tri_nodes3]
-                    tri_coords4 = p[tri_nodes4]
-    
-                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                    [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-                    [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
-    
-                    Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],Nbasis_tri1[2]]
-                    Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri2[0]]
-                    Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[0],Nbasis_tri3[2]]
-                    Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],lambda x,y: 0]
-    
-                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                    J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                    J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
-                    detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                    detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                    detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                    detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
         
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
     
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
+        
+                    # the South edge
+                    if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
+                          ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
+                        print 'norm computation: South edge'
+                        
+                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                          south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
+                        else:
+                          south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
     
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
+                        tri_nodes1 = [south_nodes[0],south_nodes[4],south_nodes[3]]
+                        tri_nodes2 = [south_nodes[4],south_nodes[2],south_nodes[3]]
+                        tri_nodes3 = [south_nodes[4],south_nodes[1],south_nodes[2]] # the one triangle in a diff material
+                        
+                        print '================', nodes
+                        print south_nodes
+                        print tri_nodes1
+                        print tri_nodes2
+                        print tri_nodes3
+                        
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
     
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
+        
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
     
-                    w1 = y1 - y5
-                    w2 = y5 - y0
-                    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
-                    if factor_W > EPS_FACTOR:
-                        factor_W = 1
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+        
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+        
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+        
+                        node_enr_4 = [south_nodes[4]]
+                        coords_enr_4 = p[node_enr_4]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+        
+                        s1 = x4 - x0
+                        s2 = x1 - x4
+                        factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+                        if factor_S > EPS_FACTOR:
+                            factor_S = 1
     
-                    s1 = x4 - x0
-                    s2 = x1 - x4
-                    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
-                    if factor_S > EPS_FACTOR:
-                        factor_S = 1
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S)
+            
+        
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                    
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_S )
+        
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                    
+        
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S )
     
-                    uh_elem_1 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S+
-                                            U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
     
-                    el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
-    
-                    uh_elem_2 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W )
-    
-                    el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
-    
-                    uh_elem_3 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S +
-                                            U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_W )
-    
-                    el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-    
-                    uh_elem_4 = lambda x,y: (
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) +
-                                            U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S )
-    
-                    el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-    
-                    all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                
-                    Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_2( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
-
-                    if y0 <= yloc and yloc <= y1:
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        tx1 = []
-                        tx2 = []
-                        tx3 = []
-                        tx4 = []
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                tx1.append(tx[idx])
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
+        
+                        txP = np.arange(x0,x1+0.00001,0.001)
+            
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            for idx in range(0,len(tx)):
+            
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
                             
-                            if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                tx2.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                tx3.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                tx4.append(tx[idx])
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
     
-                        tx1 = np.array(tx1)
-                        tx2 = np.array(tx2)
-                        tx3 = np.array(tx3)
-                        tx4 = np.array(tx4)
-#                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
-#                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
-#                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
-#                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
+                    # the West edge
+                    if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
+                          ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
+                        print 'norm computation: West edge'
+                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                          west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
+                        else:
+                            west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
+    
+                        print 'element ',e, west_nodes
+                        tri_nodes1 = [west_nodes[0],west_nodes[1],west_nodes[4]]
+                        tri_nodes2 = [west_nodes[1],west_nodes[2],west_nodes[4]]
+                        tri_nodes3 = [west_nodes[4],west_nodes[2],west_nodes[3]] 
+        
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
     
     
-                # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
-                if ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1  and enrich2[0] == x0)) and odd_even_diag == False and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
-                    print "norm computation: horizontal slide: quad-quad"
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
     
-                    # nodes on the top and bottom side of the interface
-                    top_nodes = [nodes[4], nodes[5], nodes[2],nodes[3]]
-                    bottom_nodes = [nodes[0],nodes[1],nodes[5],nodes[4]]
-
-                    if (enrich1[0] == x1  and enrich2[0] == x0):
-                        top_nodes = [nodes[5], nodes[4], nodes[2],nodes[3]]
-                        bottom_nodes = [nodes[0],nodes[1],nodes[4],nodes[5]]
-
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
     
-                    top_coords = p[top_nodes,:]
-                    bottom_coords = p[bottom_nodes,:]
-
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+        
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+        
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
     
-                    polygonList = polygonList + [[top_nodes[0],top_nodes[1],top_nodes[2],top_nodes[3]]]
-                    polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],bottom_nodes[2],bottom_nodes[3]]]
-
-                    # build the shape functions at the enrichment nodes
-                    Pe_enr_top = np.zeros((4,4))
-                    Pe_enr_top[:,0] = np.ones((4,1)).transpose()
-                    Pe_enr_top[:,1] = p[top_nodes[0:4],0]
-                    Pe_enr_top[:,2] = p[top_nodes[0:4],1]
-                    Pe_enr_top[:,3] = p[top_nodes[0:4],0]*p[top_nodes[0:4],1]
-                    C_enr_top = np.linalg.inv(Pe_enr_top)
+                        # scaling factor
+                        node_enr_4 = [west_nodes[4]]
+                        coords_enr_4 = p[node_enr_4]
     
-                    # left enrichment shape function and its derivative wrt x & y
-                    Nbasis_enr_top = basisFct(C_enr_top)
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
     
-                    Pe_enr_bottom = np.zeros((4,4))
-                    Pe_enr_bottom[:,0] = np.ones((4,1)).transpose()
-                    Pe_enr_bottom[:,1] = p[bottom_nodes[0:4],0]
-                    Pe_enr_bottom[:,2] = p[bottom_nodes[0:4],1]
-                    Pe_enr_bottom[:,3] = p[bottom_nodes[0:4],0]*p[bottom_nodes[0:4],1]
-                    C_enr_bottom = np.linalg.inv(Pe_enr_bottom)
-    
-                    # bottom enrichment shape function and its derivatives wrt x & y
-                    Nbasis_enr_bottom = basisFct(C_enr_bottom)
-    
-                    # shape functions at enrichment nodes
-                    psi_left_B = lambda x,y: Nbasis_enr_bottom[3](x,y)
-                    psi_left_T = lambda x,y: Nbasis_enr_top[0](x,y)
-                    psi_right_B = lambda x,y: Nbasis_enr_bottom[2](x,y)
-                    psi_right_T = lambda x,y: Nbasis_enr_top[1](x,y)
-    
-                    [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
-                    [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
-    
-                    # computing the Jacobian and the determinant of the left and right children of the parent element
-                    J_top = jacobian_mat( top_coords[:,0], top_coords[:,1] )
-                    J_bottom = jacobian_mat( bottom_coords[:,0], bottom_coords[:,1] )
-                    detJ_top = lambda e,n: determinant(J_top)(e,n)
-                    detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)
-    
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-    
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
-    
-                    e1 = y1 - y5
-                    e2 = y5 - y0
-                    factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
-                    if factor_E > EPS_FACTOR:
-                        factor_E = 1
-    
-                    w1 = y1 - y4
-                    w2 = y4 - y0
-                    factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
-                    if factor_W > EPS_FACTOR:
+                        w1 = y1 - y4
+                        w2 = y4 - y0
+                        factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+                        if factor_W > EPS_FACTOR:
                             factor_W = 1
     
-                    # on the top side of the interface
-                    uh_elem_T = lambda x,y: (
-                                            U[top_nodes[0],0] * psi_left_T(x,y) * factor_W +
-                                            U[top_nodes[1],0] * psi_right_T(x,y) * factor_E +
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) )
-     
-                    top_coords = p[top_nodes,:]
-                    x_coords_T = top_coords[:,0]
-                    y_coords_T = top_coords[:,1]
-    
-                    # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-                    # for transformation from the parametric element to phisycal element
-                    # of the Gauss nodes ui
-                    [x_transform_fct_T,y_transform_fct_T] = xy_fct(x_coords_T,y_coords_T)            
-                    el_sum_T =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
-    
-                    # on the bottom of the interface
-                    uh_elem_B = lambda x,y: (
-                                            U[bottom_nodes[3],0] * psi_left_B(x,y) * factor_W +
-                                            U[bottom_nodes[2],0] * psi_right_B(x,y) * factor_E +
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) )
-    
-    
-                    bottom_coords = p[bottom_nodes,:]
-                    x_coords_B = bottom_coords[:,0]
-                    y_coords_B = bottom_coords[:,1]
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
         
-                    [x_transform_fct_B,y_transform_fct_B] = xy_fct(x_coords_B,y_coords_B)            
-                    el_sum_B =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                    
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_W )
+                                                
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                    
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_W)
+        
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        print U[tri_nodes1[2],0], U[tri_nodes2[2],0], U[tri_nodes3[0],0]    
+                        print tri_nodes2
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
+        
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
+                    
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            for idx in range(0,len(tx)):
+        
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
+        
     
-                    all_elems_sum = all_elems_sum + el_sum_T + el_sum_B;
+    
+                    # the East edge
+                    if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)) or
+                          ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
+                        print 'norm computation: East edge'
+    
+                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                          east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
+                        else:
+                            east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
+    
+    
+                        tri_nodes1 = [east_nodes[0],east_nodes[1],east_nodes[4]]
+                        tri_nodes2 = [east_nodes[0],east_nodes[4],east_nodes[3]]
+                        tri_nodes3 = [east_nodes[4],east_nodes[2],east_nodes[3]] # the one triangle in a diff material
+        
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+    
+    
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
+        
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
+    
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+        
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+        
+                        node_enr_4 = [east_nodes[4]]
+                        coords_enr_4 = p[node_enr_4]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+    
+                        e1 = y1 - y4
+                        e2 = y4 - y0
+                        factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
+                        if factor_E > EPS_FACTOR:
+                            factor_E = 1
+        
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_E)
+            
+        
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                    
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E )
+        
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                    
+        
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
+    
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
+        
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
+                        txP = np.arange(x0,x1+0.00001,0.001)
+            
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            for idx in range(0,len(tx)):
+            
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+    
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
+                            
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
+    
+    
+    
+                    # the North-West corner is cut, 0-4-3, 2-5-3
+                    if ( 
+                        ((enrich1[0] == x0 and enrich2[1] == y1) or
+                        (enrich2[0] == x0 and enrich1[1] == y1)) and 
+#                         odd_even_diag == False and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        ):
+                        
+                        print "norm computation: NW corner"
+                        # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (lower right corner cut)
+                        tri_nodes1 = [nodes[0],nodes[1],nodes[4]]
+                        tri_nodes2 = [nodes[4],nodes[1],nodes[5]]
+                        tri_nodes3 = [nodes[1],nodes[2],nodes[5]]
+                        tri_nodes4 = [nodes[4],nodes[5],nodes[3]] 
+    
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+    
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
+    
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
+    
+                        Pe4 = np.zeros((3,3))
+                        Pe4[:,0] = np.ones((3,1)).transpose()
+                        Pe4[:,1] = p[tri_nodes4[0:3],0]
+                        Pe4[:,2] = p[tri_nodes4[0:3],1]
+                        C4 = np.linalg.inv(Pe4)
+                        Nbasis_tri4 = tribasisFct(C4)
+                        Nx_tri4 = triderivX(C4)
+                        Ny_tri4 = triderivY(C4)
+    
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+                        tri_coords4 = p[tri_nodes4]
+        
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                        [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                        J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
+        
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+    
+                        # scaling factor
+                        #sx1 = abs(p[nodes[5]][0]- x0)
+                        #sx2 = abs(x1 - p[nodes[5]][0])
+                        #s_factor_x = 1#( 2 * min(sx1,sx2)/(sx1+sx2)) ** 2
+        
+                        #sy1 = abs(p[nodes[4]][1]- y0)
+                        #sy2 = abs(y1 - p[nodes[4]][1])
+                        #s_factor_y = 1#( 2 * min(sy1,sy2)/(sy1+sy2)) ** 2
+    
+                        node_enr_4 = [nodes[4]]
+                        node_enr_5 = [nodes[5]]
+                        coords_enr_4 = p[node_enr_4]
+                        coords_enr_5 = p[node_enr_5]
+    
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+    
+                        x5 = coords_enr_5[0,0]
+                        y5 = coords_enr_5[0,1]
+    
+                        w1 = y1 - y4
+                        w2 = y4 - y0
+                        factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+                        if factor_W > EPS_FACTOR:
+                            factor_W = 1
+    
+                        n1 = x5 - x0
+                        n2 = x1 - x5
+                        factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
+                        if factor_N > EPS_FACTOR:
+                            factor_N = 1
+    
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                    
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W +
+                                                U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
+                                                
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                    
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
+        
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        uh_elem_4 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_W +
+                                                U[tri_nodes4[1],0] * Nbasis_tri4[1](x,y) * factor_N )
+        
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+        
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_4( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
+                        Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
                 
-                    Usolution[nodes[0],0] = uh_elem_B( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_B( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_T( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_T( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_B( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_B( p[nodes[5],0], p[nodes[5],1]  )
-
-                    if y0 <= yloc and yloc <= y1:
-    
-                        tx = np.arange(coords[0,0],coords[1,0]+0.01,0.001)
-                        txT = []
-                        txB = []
-    
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, top_coords):
-                                txT.append(tx[idx])
-                            if point_in_on_poly( tx[idx]-0.1, yloc, top_coords):
-                                txT.append(tx[idx]-0.1)
-                            
-                            if point_in_on_poly( tx[idx], yloc, bottom_coords):
-                                txB.append(tx[idx])
-                            
-                        txT = np.array(txT)
-                        txB = np.array(txB)
-#                         pylab.plot( txT, uh_elem_T(txT, yloc))
-#                         pylab.plot( txB, uh_elem_B(txB, yloc))
-    
-                # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
-                if ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0)) and odd_even_diag == False and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
-                    print "norm computation: vertical slide: quad-quad"
-                    # nodes on the left side of the interface
-                    left_nodes = [nodes[0],nodes[4],nodes[5],nodes[3]]
-                    # nodes on the right side of the interface
-                    right_nodes = [nodes[4],nodes[1],nodes[2],nodes[5]]
-    
-                    if (enrich1[1] == y1 and enrich2[1] == y0):
-                        left_nodes = [nodes[0],nodes[5],nodes[4],nodes[3]]
-                        right_nodes = [nodes[5],nodes[1],nodes[2],nodes[4]]
-
-
-                    # coordinates of the left sub-element or sub-element number 1
-                    left_coords = p[left_nodes,:]
-                    # coordinates of the right sub-element or the sub-element number 2
-                    right_coords = p[right_nodes,:]
-    
-                    polygonList = polygonList + [[left_nodes[0],left_nodes[1],left_nodes[2],left_nodes[3]]]
-                    polygonList = polygonList + [[right_nodes[0],right_nodes[1],right_nodes[2],right_nodes[3]]]
-
-                    # build the shape functions at the enrichment nodes
-                    Pe_enr_left = np.zeros((4,4))
-                    Pe_enr_left[:,0] = np.ones((4,1)).transpose()
-                    Pe_enr_left[:,1] = p[left_nodes[0:4],0]
-                    Pe_enr_left[:,2] = p[left_nodes[0:4],1]
-                    Pe_enr_left[:,3] = p[left_nodes[0:4],0]*p[left_nodes[0:4],1]
-    
-                    C_enr_left = np.linalg.inv(Pe_enr_left)
-    
-                    # left enrichment shape function
-                    Nbasis_enr_left = basisFct(C_enr_left)
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            tx4 = []
+                            for idx in range(0,len(tx)):
         
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+                                    tx4.append(tx[idx])
+        
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+                            tx4 = np.array(tx4)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
+    #                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
+                            
+        
+                    # the South-East corner is cut, 0-4-1, 1-5-2
+                    if (
+                        ((enrich1[1] == y0 and enrich2[0] == x1) or 
+                         (enrich2[1] == y0 and enrich1[0] == x1)) and 
+#                          odd_even_diag == False and 
+                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                         not(on_corners(enrich2,x0,y0,x1,y1))
+                         ):
+                        
+                        print 'norm computation: SE corner'
+                        
+                        # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (lower right corner cut)
+                        tri_nodes1 = [nodes[0],nodes[4],nodes[3]]
+                        tri_nodes2 = [nodes[4],nodes[5],nodes[3]]
+                        tri_nodes3 = [nodes[5],nodes[2],nodes[3]]
+                        tri_nodes4 = [nodes[4],nodes[1],nodes[5]] # the one triangle in a diff material
+        
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
+        
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
+        
+                        Pe4 = np.zeros((3,3))
+                        Pe4[:,0] = np.ones((3,1)).transpose()
+                        Pe4[:,1] = p[tri_nodes4[0:3],0]
+                        Pe4[:,2] = p[tri_nodes4[0:3],1]
+                        C4 = np.linalg.inv(Pe4)
+                        Nbasis_tri4 = tribasisFct(C4)
+                        Nx_tri4 = triderivX(C4)
+                        Ny_tri4 = triderivY(C4)
+        
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+                        tri_coords4 = p[tri_nodes4]
+        
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
     
-                    Pe_enr_right = np.zeros((4,4))
-                    Pe_enr_right[:,0] = np.ones((4,1)).transpose()
-                    Pe_enr_right[:,1] = p[right_nodes[0:4],0]
-                    Pe_enr_right[:,2] = p[right_nodes[0:4],1]
-                    Pe_enr_right[:,3] = p[right_nodes[0:4],0]*p[right_nodes[0:4],1]
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                        [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
+        
+                        #Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],lambda x,y: 0]
+                        #Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri2[0],Nbasis_tri2[1]]
+                        #Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri3[0]]
+                        #Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],Nbasis_tri4[2]]
+        
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                        J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+        
+                        node_enr_4 = [nodes[4]]
+                        node_enr_5 = [nodes[5]]
+                        coords_enr_4 = p[node_enr_4]
+                        coords_enr_5 = p[node_enr_5]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+        
+                        x5 = coords_enr_5[0,0]
+                        y5 = coords_enr_5[0,1]
+        
+                        e1 = y1 - y5
+                        e2 = y5 - y0
+                        factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
+                        if factor_E > EPS_FACTOR:
+                            factor_E = 1
+        
+                        s1 = x4 - x0
+                        s2 = x1 - x4
+                        factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+                        if factor_S > EPS_FACTOR:
+                            factor_S = 1
+        
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S)
+            
+        
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                    
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_S +
+                                                U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E ) 
+        
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                    
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
+        
+        
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        uh_elem_4 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S +
+                                                U[tri_nodes4[2],0] * Nbasis_tri4[2](x,y) * factor_E )
+        
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+        
+        
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
+                        Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
+    
+    #                    print 'SE - 1 ', uh_elem_1(p[nodes[4],0], p[nodes[4],1])
+    #                    print 'SE - 2', uh_elem_2(p[nodes[4],0], p[nodes[4],1])
+    #                    print 'SE - 3', uh_elem_3(p[nodes[4],0], p[nodes[4],1])
+    #                    print 'SE - 4', uh_elem_4(p[nodes[4],0], p[nodes[4],1])
+    #                    print 'SE - 1 - natural', uh_elem_1(p[nodes[0],0], p[nodes[0],1])
+    #                    print 'SE - 2 - natural', uh_elem_2(p[nodes[0],0], p[nodes[0],1])
+    #                    print 'SE - I - natural', uh_elem_1(p[nodes[3],0], p[nodes[3],1])
+    #                    print 'SE - II - natural', uh_elem_2(p[nodes[3],0], p[nodes[3],1])
+    #                    print 'SE - III - natural', uh_elem_3(p[nodes[3],0], p[nodes[3],1])
+                        
+    
+                        txP = np.arange(x0,x1+0.00001,0.001)
+            
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            tx4 = []
+                            for idx in range(0,len(tx)):
+            
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+                                    tx4.append(tx[idx])
+                            
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+                            tx4 = np.array(tx4)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
+    #                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
+    #     
+                    # the North East corner is cut, 1-4-2, 2-5-3
+                    if (
+                        ((enrich1[0] == x1 and enrich2[1] == y1) or
+                         (enrich2[0] == x1 and enrich1[1] == y1)) and
+#                         odd_even_diag == False and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1)) 
+                        ):
+                        
+                        print "norm computation: NE corner"
+                        # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
+                        tri_nodes1 = [nodes[0],nodes[5],nodes[3]]
+                        tri_nodes2 = [nodes[0],nodes[4],nodes[5]]
+                        tri_nodes3 = [nodes[0],nodes[1],nodes[4]]
+                        tri_nodes4 = [nodes[4],nodes[2],nodes[5]] # the one triangle in a diff material
+        
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+    
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
+        
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
+        
+                        Pe4 = np.zeros((3,3))
+                        Pe4[:,0] = np.ones((3,1)).transpose()
+                        Pe4[:,1] = p[tri_nodes4[0:3],0]
+                        Pe4[:,2] = p[tri_nodes4[0:3],1]
+                        C4 = np.linalg.inv(Pe4)
+                        Nbasis_tri4 = tribasisFct(C4)
+                        Nx_tri4 = triderivX(C4)
+                        Ny_tri4 = triderivY(C4)
+    
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+                        tri_coords4 = p[tri_nodes4]
+        
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                        [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
+        
+        
+                        Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri1[1]]
+                        Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri2[1],Nbasis_tri2[2]]
+                        Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[2],lambda x,y: 0]
+                        Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],Nbasis_tri4[2]]
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                        J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+        
+                
+                        node_enr_4 = [nodes[4]]
+                        node_enr_5 = [nodes[5]]
+                        coords_enr_4 = p[node_enr_4]
+                        coords_enr_5 = p[node_enr_5]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+        
+                        x5 = coords_enr_5[0,0]
+                        y5 = coords_enr_5[0,1]
+        
+                        e1 = y1 - y4
+                        e2 = y4 - y0
+                        factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
+                        if factor_E > EPS_FACTOR:
+                            factor_E = 1
+        
+                        n1 = x5 - x0
+                        n2 = x1 - x5
+                        factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
+                        if factor_N > EPS_FACTOR:
+                            factor_N = 1
+        
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_N ) 
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                    
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E +
+                                                U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                    
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_E)
+        
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        uh_elem_4 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_E +
+                                                    U[tri_nodes4[2],0] * Nbasis_tri4[2](x,y) * factor_N )
+        
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+        
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
+                        Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
+    
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            tx4 = []
+                            for idx in range(0,len(tx)):
+        
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                    
+                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+                                    tx4.append(tx[idx])
+                            
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+                            tx4 = np.array(tx4)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
+    #                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
+        
+                    # the South-West corner is cut, 0-4-1, and 0-5-3
+                    if (
+                        ((enrich1[1] == y0 and enrich2[0] == x0) or
+                         (enrich2[1] == y0 and enrich1[0] == x0)) and 
+#                         odd_even_diag == False and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        ):
+                        
+                        print "norm computation: SW corner"
+                        # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (upper right corner cut)
+                        tri_nodes1 = [nodes[0],nodes[4],nodes[5]]
+                        tri_nodes2 = [nodes[5],nodes[2],nodes[3]]
+                        tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
+                        tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
+        
+                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+    
+                        Pe1 = np.zeros((3,3))
+                        Pe1[:,0] = np.ones((3,1)).transpose()
+                        Pe1[:,1] = p[tri_nodes1[0:3],0]
+                        Pe1[:,2] = p[tri_nodes1[0:3],1]
+                        C1 = np.linalg.inv(Pe1)
+                        Nbasis_tri1 = tribasisFct(C1)
+                        Nx_tri1 = triderivX(C1)
+                        Ny_tri1 = triderivY(C1)
+    
+                        Pe2 = np.zeros((3,3))
+                        Pe2[:,0] = np.ones((3,1)).transpose()
+                        Pe2[:,1] = p[tri_nodes2[0:3],0]
+                        Pe2[:,2] = p[tri_nodes2[0:3],1]
+                        C2 = np.linalg.inv(Pe2)
+                        Nbasis_tri2 = tribasisFct(C2)
+                        Nx_tri2 = triderivX(C2)
+                        Ny_tri2 = triderivY(C2)
+        
+                        Pe3 = np.zeros((3,3))
+                        Pe3[:,0] = np.ones((3,1)).transpose()
+                        Pe3[:,1] = p[tri_nodes3[0:3],0]
+                        Pe3[:,2] = p[tri_nodes3[0:3],1]
+                        C3 = np.linalg.inv(Pe3)
+                        Nbasis_tri3 = tribasisFct(C3)
+                        Nx_tri3 = triderivX(C3)
+                        Ny_tri3 = triderivY(C3)
+        
+                        Pe4 = np.zeros((3,3))
+                        Pe4[:,0] = np.ones((3,1)).transpose()
+                        Pe4[:,1] = p[tri_nodes4[0:3],0]
+                        Pe4[:,2] = p[tri_nodes4[0:3],1]
+                        C4 = np.linalg.inv(Pe4)
+                        Nbasis_tri4 = tribasisFct(C4)
+                        Nx_tri4 = triderivX(C4)
+                        Ny_tri4 = triderivY(C4)
+        
+                        tri_coords1 = p[tri_nodes1]
+                        tri_coords2 = p[tri_nodes2]
+                        tri_coords3 = p[tri_nodes3]
+                        tri_coords4 = p[tri_nodes4]
+        
+                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                        [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
+        
+                        Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],Nbasis_tri1[2]]
+                        Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],lambda x,y: 0,Nbasis_tri2[0]]
+                        Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri3[0],Nbasis_tri3[2]]
+                        Nbasis_4 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri4[0],lambda x,y: 0]
+        
+                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                        J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
+                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+            
+        
+                        node_enr_4 = [nodes[4]]
+                        node_enr_5 = [nodes[5]]
+                        coords_enr_4 = p[node_enr_4]
+                        coords_enr_5 = p[node_enr_5]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+        
+                        x5 = coords_enr_5[0,0]
+                        y5 = coords_enr_5[0,1]
+        
+                        w1 = y1 - y5
+                        w2 = y5 - y0
+                        factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+                        if factor_W > EPS_FACTOR:
+                            factor_W = 1
+        
+                        s1 = x4 - x0
+                        s2 = x1 - x4
+                        factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+                        if factor_S > EPS_FACTOR:
+                            factor_S = 1
+        
+                        uh_elem_1 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S+
+                                                U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
+        
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+        
+                        uh_elem_2 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W )
+        
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+        
+                        uh_elem_3 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S +
+                                                U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_W )
+        
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        uh_elem_4 = lambda x,y: (
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) +
+                                                U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S )
+        
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                    
+                        Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_2( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
+                        Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
+    
+                        if y0 <= yloc and yloc <= y1:
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            tx1 = []
+                            tx2 = []
+                            tx3 = []
+                            tx4 = []
+                            for idx in range(0,len(tx)):
+        
+                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+                                    tx1.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+                                    tx2.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+                                    tx3.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+                                    tx4.append(tx[idx])
+        
+                            tx1 = np.array(tx1)
+                            tx2 = np.array(tx2)
+                            tx3 = np.array(tx3)
+                            tx4 = np.array(tx4)
+    #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
+    #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
+    #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
+    #                         pylab.plot( tx4, uh_elem_4(tx4, yloc))
+        
+        
+                    # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
+                    if ( ((enrich1[0] == x0  and enrich2[0] == x1) or 
+                        (enrich1[0] == x1  and enrich2[0] == x0)) and 
+#                         odd_even_diag == False and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1)) ):
+                        print "norm computation: horizontal slide: quad-quad"
+        
+                        # nodes on the top and bottom side of the interface
+                        top_nodes = [nodes[4], nodes[5], nodes[2],nodes[3]]
+                        bottom_nodes = [nodes[0],nodes[1],nodes[5],nodes[4]]
+    
+                        if (enrich1[0] == x1  and enrich2[0] == x0):
+                            top_nodes = [nodes[5], nodes[4], nodes[2],nodes[3]]
+                            bottom_nodes = [nodes[0],nodes[1],nodes[4],nodes[5]]
+    
+        
+                        top_coords = p[top_nodes,:]
+                        bottom_coords = p[bottom_nodes,:]
+    
+        
+                        polygonList = polygonList + [[top_nodes[0],top_nodes[1],top_nodes[2],top_nodes[3]]]
+                        polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],bottom_nodes[2],bottom_nodes[3]]]
+    
+                        # build the shape functions at the enrichment nodes
+                        Pe_enr_top = np.zeros((4,4))
+                        Pe_enr_top[:,0] = np.ones((4,1)).transpose()
+                        Pe_enr_top[:,1] = p[top_nodes[0:4],0]
+                        Pe_enr_top[:,2] = p[top_nodes[0:4],1]
+                        Pe_enr_top[:,3] = p[top_nodes[0:4],0]*p[top_nodes[0:4],1]
+                        C_enr_top = np.linalg.inv(Pe_enr_top)
+        
+                        # left enrichment shape function and its derivative wrt x & y
+                        Nbasis_enr_top = basisFct(C_enr_top)
+        
+                        Pe_enr_bottom = np.zeros((4,4))
+                        Pe_enr_bottom[:,0] = np.ones((4,1)).transpose()
+                        Pe_enr_bottom[:,1] = p[bottom_nodes[0:4],0]
+                        Pe_enr_bottom[:,2] = p[bottom_nodes[0:4],1]
+                        Pe_enr_bottom[:,3] = p[bottom_nodes[0:4],0]*p[bottom_nodes[0:4],1]
+                        C_enr_bottom = np.linalg.inv(Pe_enr_bottom)
+        
+                        # bottom enrichment shape function and its derivatives wrt x & y
+                        Nbasis_enr_bottom = basisFct(C_enr_bottom)
+        
+                        # shape functions at enrichment nodes
+                        psi_left_B = lambda x,y: Nbasis_enr_bottom[3](x,y)
+                        psi_left_T = lambda x,y: Nbasis_enr_top[0](x,y)
+                        psi_right_B = lambda x,y: Nbasis_enr_bottom[2](x,y)
+                        psi_right_T = lambda x,y: Nbasis_enr_top[1](x,y)
+        
+                        [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
+                        [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
+        
+                        # computing the Jacobian and the determinant of the left and right children of the parent element
+                        J_top = jacobian_mat( top_coords[:,0], top_coords[:,1] )
+                        J_bottom = jacobian_mat( bottom_coords[:,0], bottom_coords[:,1] )
+                        detJ_top = lambda e,n: determinant(J_top)(e,n)
+                        detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)
+        
+                        node_enr_4 = [nodes[4]]
+                        node_enr_5 = [nodes[5]]
+                        coords_enr_4 = p[node_enr_4]
+                        coords_enr_5 = p[node_enr_5]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+        
+                        x5 = coords_enr_5[0,0]
+                        y5 = coords_enr_5[0,1]
+        
+                        e1 = y1 - y5
+                        e2 = y5 - y0
+                        factor_E = ( 2 * min(e1,e2) / (e1 + e2)) ** 2 
+                        if factor_E > EPS_FACTOR:
+                            factor_E = 1
+        
+                        w1 = y1 - y4
+                        w2 = y4 - y0
+                        factor_W = ( 2 * min(w1,w2) / (w1 + w2)) ** 2 
+                        if factor_W > EPS_FACTOR:
+                                factor_W = 1
+        
+                        # on the top side of the interface
+                        uh_elem_T = lambda x,y: (
+                                                U[top_nodes[0],0] * psi_left_T(x,y) * factor_W +
+                                                U[top_nodes[1],0] * psi_right_T(x,y) * factor_E +
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) )
+         
+                        top_coords = p[top_nodes,:]
+                        x_coords_T = top_coords[:,0]
+                        y_coords_T = top_coords[:,1]
+        
+                        # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                        # for transformation from the parametric element to phisycal element
+                        # of the Gauss nodes ui
+                        [x_transform_fct_T,y_transform_fct_T] = xy_fct(x_coords_T,y_coords_T)            
+                        el_sum_T =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
+        
+                        # on the bottom of the interface
+                        uh_elem_B = lambda x,y: (
+                                                U[bottom_nodes[3],0] * psi_left_B(x,y) * factor_W +
+                                                U[bottom_nodes[2],0] * psi_right_B(x,y) * factor_E +
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) )
+        
+        
+                        bottom_coords = p[bottom_nodes,:]
+                        x_coords_B = bottom_coords[:,0]
+                        y_coords_B = bottom_coords[:,1]
+            
+                        [x_transform_fct_B,y_transform_fct_B] = xy_fct(x_coords_B,y_coords_B)            
+                        el_sum_B =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
+        
+                        all_elems_sum = all_elems_sum + el_sum_T + el_sum_B;
+                    
+                        Usolution[nodes[0],0] = uh_elem_B( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_B( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_T( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_T( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_B( p[nodes[4],0], p[nodes[4],1]  )
+                        Usolution[nodes[5],0] = uh_elem_B( p[nodes[5],0], p[nodes[5],1]  )
+    
+                        if y0 <= yloc and yloc <= y1:
+        
+                            tx = np.arange(coords[0,0],coords[1,0]+0.01,0.001)
+                            txT = []
+                            txB = []
+        
+                            for idx in range(0,len(tx)):
+        
+                                if point_in_on_poly( tx[idx], yloc, top_coords):
+                                    txT.append(tx[idx])
+                                if point_in_on_poly( tx[idx]-0.1, yloc, top_coords):
+                                    txT.append(tx[idx]-0.1)
+                                
+                                if point_in_on_poly( tx[idx], yloc, bottom_coords):
+                                    txB.append(tx[idx])
+                                
+                            txT = np.array(txT)
+                            txB = np.array(txB)
+    #                         pylab.plot( txT, uh_elem_T(txT, yloc))
+    #                         pylab.plot( txB, uh_elem_B(txB, yloc))
+        
+                    # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
+                    if ( ((enrich1[1] == y0 and enrich2[1] == y1) or 
+                        (enrich1[1] == y1 and enrich2[1] == y0)) and 
+#                         odd_even_diag == False and 
+                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
+                        not(on_corners(enrich2,x0,y0,x1,y1)) ):
+                        print "norm computation: vertical slide: quad-quad"
+                        # nodes on the left side of the interface
+                        left_nodes = [nodes[0],nodes[4],nodes[5],nodes[3]]
+                        # nodes on the right side of the interface
+                        right_nodes = [nodes[4],nodes[1],nodes[2],nodes[5]]
+        
+                        if (enrich1[1] == y1 and enrich2[1] == y0):
+                            left_nodes = [nodes[0],nodes[5],nodes[4],nodes[3]]
+                            right_nodes = [nodes[5],nodes[1],nodes[2],nodes[4]]
+    
+    
+                        # coordinates of the left sub-element or sub-element number 1
+                        left_coords = p[left_nodes,:]
+                        # coordinates of the right sub-element or the sub-element number 2
+                        right_coords = p[right_nodes,:]
+        
+                        polygonList = polygonList + [[left_nodes[0],left_nodes[1],left_nodes[2],left_nodes[3]]]
+                        polygonList = polygonList + [[right_nodes[0],right_nodes[1],right_nodes[2],right_nodes[3]]]
+    
+                        # build the shape functions at the enrichment nodes
+                        Pe_enr_left = np.zeros((4,4))
+                        Pe_enr_left[:,0] = np.ones((4,1)).transpose()
+                        Pe_enr_left[:,1] = p[left_nodes[0:4],0]
+                        Pe_enr_left[:,2] = p[left_nodes[0:4],1]
+                        Pe_enr_left[:,3] = p[left_nodes[0:4],0]*p[left_nodes[0:4],1]
+        
+                        C_enr_left = np.linalg.inv(Pe_enr_left)
+        
+                        # left enrichment shape function
+                        Nbasis_enr_left = basisFct(C_enr_left)
+            
+        
+                        Pe_enr_right = np.zeros((4,4))
+                        Pe_enr_right[:,0] = np.ones((4,1)).transpose()
+                        Pe_enr_right[:,1] = p[right_nodes[0:4],0]
+                        Pe_enr_right[:,2] = p[right_nodes[0:4],1]
+                        Pe_enr_right[:,3] = p[right_nodes[0:4],0]*p[right_nodes[0:4],1]
+                 
+                        C_enr_right = np.linalg.inv(Pe_enr_right)
              
-                    C_enr_right = np.linalg.inv(Pe_enr_right)
          
-     
-                    # right enrichment shape function
-                    Nbasis_enr_right = basisFct(C_enr_right)
+                        # right enrichment shape function
+                        Nbasis_enr_right = basisFct(C_enr_right)
+             
+                        # shape functions at enrichment nodes
+                        psi_btm_L = lambda x,y: Nbasis_enr_left[1](x,y)
+                        psi_upr_L = lambda x,y: Nbasis_enr_left[2](x,y)
+                        psi_btm_R = lambda x,y: Nbasis_enr_right[0](x,y)
+                        psi_upr_R = lambda x,y: Nbasis_enr_right[3](x,y)
          
-                    # shape functions at enrichment nodes
-                    psi_btm_L = lambda x,y: Nbasis_enr_left[1](x,y)
-                    psi_upr_L = lambda x,y: Nbasis_enr_left[2](x,y)
-                    psi_btm_R = lambda x,y: Nbasis_enr_right[0](x,y)
-                    psi_upr_R = lambda x,y: Nbasis_enr_right[3](x,y)
-     
-     
-                    # getting x and y coordinates transformed into the [-1,1] and [-1,1] intervals
-                    [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
-                    [x_fct_R, y_fct_R] = xy_fct( right_coords[:,0], right_coords[:,1] )
-     
-                    # computing the Jacobian and the determinant of the left and right children of the parent element
-                    J_left = jacobian_mat( left_coords[:,0], left_coords[:,1] )
-                    J_right = jacobian_mat( right_coords[:,0], right_coords[:,1] )
-                    detJ_left = lambda eps,niu: determinant(J_left)(eps,niu)
-                    detJ_right = lambda eps,niu: determinant(J_right)(eps,niu)
          
-                    # scaling factor
-                    ##x1 = abs(loc - coords[0,0])
-                    ##x2 = abs(coords[1,0] - loc)
-                    #x1 = abs(left_coords[1,0]- coords[0,0])
-                    #x2 = abs(coords[1,0] - left_coords[1,0])
-                    s_factor = 1#( 2 * min(x1,x2)/(x1+x2)) ** 2
-    
+                        # getting x and y coordinates transformed into the [-1,1] and [-1,1] intervals
+                        [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
+                        [x_fct_R, y_fct_R] = xy_fct( right_coords[:,0], right_coords[:,1] )
+         
+                        # computing the Jacobian and the determinant of the left and right children of the parent element
+                        J_left = jacobian_mat( left_coords[:,0], left_coords[:,1] )
+                        J_right = jacobian_mat( right_coords[:,0], right_coords[:,1] )
+                        detJ_left = lambda eps,niu: determinant(J_left)(eps,niu)
+                        detJ_right = lambda eps,niu: determinant(J_right)(eps,niu)
+             
+                        # scaling factor
+                        ##x1 = abs(loc - coords[0,0])
+                        ##x2 = abs(coords[1,0] - loc)
+                        #x1 = abs(left_coords[1,0]- coords[0,0])
+                        #x2 = abs(coords[1,0] - left_coords[1,0])
+                        s_factor = 1#( 2 * min(x1,x2)/(x1+x2)) ** 2
         
-                    node_enr_4 = [nodes[4]]
-                    node_enr_5 = [nodes[5]]
-                    coords_enr_4 = p[node_enr_4]
-                    coords_enr_5 = p[node_enr_5]
-    
-                    x4 = coords_enr_4[0,0]
-                    y4 = coords_enr_4[0,1]
-    
-                    x5 = coords_enr_5[0,0]
-                    y5 = coords_enr_5[0,1]
-    
-                    s1 = x4 - x0
-                    s2 = x1 - x4
-                    factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
-                    if factor_S > EPS_FACTOR:
-                        factor_S = 1
-    
-                    n1 = x5 - x0
-                    n2 = x1 - x5
-                    factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
-                    if factor_N > EPS_FACTOR:
-                        factor_N = 1
-    
-                    # on the left side of the interface
-                    uh_elem_L = lambda x,y: (
-                                            U[left_nodes[1],0] * psi_btm_L(x,y) * factor_S +
-                                            U[left_nodes[2],0] * psi_upr_L(x,y) * factor_N +
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) )
-                                            #U[left_nodes[0],0] * Nbasis[0](x,y) +
-                                            #U[right_nodes[1],0] * Nbasis[1](x,y) +
-                                            #U[right_nodes[2],0] * Nbasis[2](x,y) +
-                                            #U[left_nodes[3],0] * Nbasis[3](x,y) ) #* detJ_left
-
-     
-                    left_coords = p[left_nodes,:]
-                    x_coords_L = left_coords[:,0]
-                    y_coords_L = left_coords[:,1]
-    
-                    # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-                    # for transformation from the parametric element to phisycal element
-                    # of the Gauss nodes ui
-                    [x_transform_fct_L,y_transform_fct_L] = xy_fct(x_coords_L,y_coords_L)            
-    
-                    el_sum_L =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
-    
-        
-    
-                    #tmp_array = np.arange(coords[0,0],left_coords[1,0],0.01)
-                    #tx_L = np.append(tmp_array,left_coords[1,0])
-                    #sfct_L = uh_elem_L(tx_L,0.03*yloc+0.57)
-                    #sfct_L = uh_elem_L(tx_L,loc)
-    
-                    # on the right side of the interface
-                    uh_elem_R = lambda x,y: (
-                                            U[right_nodes[0],0] * psi_btm_R(x,y) * factor_S +
-                                            U[right_nodes[3],0] * psi_upr_R(x,y) * factor_N +
-                                            U[nodes[0],0] * Nbasis[0](x,y) +
-                                            U[nodes[1],0] * Nbasis[1](x,y) + 
-                                            U[nodes[2],0] * Nbasis[2](x,y) +
-                                            U[nodes[3],0] * Nbasis[3](x,y) )
-    
-                                            #U[left_nodes[0],0] * Nbasis[0](x,y) +
-                                            #U[right_nodes[1],0] * Nbasis[1](x,y) +
-                                            #U[right_nodes[2],0] * Nbasis[2](x,y) +
-                                            #U[left_nodes[3],0] * Nbasis[3](x,y)
-                                            #)# * detJ_right
-    
-                    right_coords = p[right_nodes,:]
-                    x_coords_R = right_coords[:,0]
-                    y_coords_R = right_coords[:,1]
-        
-                    [x_transform_fct_R,y_transform_fct_R] = xy_fct(x_coords_R,y_coords_R)            
             
+                        node_enr_4 = [nodes[4]]
+                        node_enr_5 = [nodes[5]]
+                        coords_enr_4 = p[node_enr_4]
+                        coords_enr_5 = p[node_enr_5]
+        
+                        x4 = coords_enr_4[0,0]
+                        y4 = coords_enr_4[0,1]
+        
+                        x5 = coords_enr_5[0,0]
+                        y5 = coords_enr_5[0,1]
+        
+                        s1 = x4 - x0
+                        s2 = x1 - x4
+                        factor_S = ( 2 * min(s1,s2) / (s1 + s2)) ** 2 
+                        if factor_S > EPS_FACTOR:
+                            factor_S = 1
+        
+                        n1 = x5 - x0
+                        n2 = x1 - x5
+                        factor_N = ( 2 * min(n1,n2) / (n1 + n2)) ** 2 
+                        if factor_N > EPS_FACTOR:
+                            factor_N = 1
+        
+                        # on the left side of the interface
+                        uh_elem_L = lambda x,y: (
+                                                U[left_nodes[1],0] * psi_btm_L(x,y) * factor_S +
+                                                U[left_nodes[2],0] * psi_upr_L(x,y) * factor_N +
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) )
+                                                #U[left_nodes[0],0] * Nbasis[0](x,y) +
+                                                #U[right_nodes[1],0] * Nbasis[1](x,y) +
+                                                #U[right_nodes[2],0] * Nbasis[2](x,y) +
+                                                #U[left_nodes[3],0] * Nbasis[3](x,y) ) #* detJ_left
+    
+         
+                        left_coords = p[left_nodes,:]
+                        x_coords_L = left_coords[:,0]
+                        y_coords_L = left_coords[:,1]
+        
+                        # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                        # for transformation from the parametric element to phisycal element
+                        # of the Gauss nodes ui
+                        [x_transform_fct_L,y_transform_fct_L] = xy_fct(x_coords_L,y_coords_L)            
+        
+                        el_sum_L =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
+        
             
-                    el_sum_R =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
+        
+                        #tmp_array = np.arange(coords[0,0],left_coords[1,0],0.01)
+                        #tx_L = np.append(tmp_array,left_coords[1,0])
+                        #sfct_L = uh_elem_L(tx_L,0.03*yloc+0.57)
+                        #sfct_L = uh_elem_L(tx_L,loc)
+        
+                        # on the right side of the interface
+                        uh_elem_R = lambda x,y: (
+                                                U[right_nodes[0],0] * psi_btm_R(x,y) * factor_S +
+                                                U[right_nodes[3],0] * psi_upr_R(x,y) * factor_N +
+                                                U[nodes[0],0] * Nbasis[0](x,y) +
+                                                U[nodes[1],0] * Nbasis[1](x,y) + 
+                                                U[nodes[2],0] * Nbasis[2](x,y) +
+                                                U[nodes[3],0] * Nbasis[3](x,y) )
+        
+                                                #U[left_nodes[0],0] * Nbasis[0](x,y) +
+                                                #U[right_nodes[1],0] * Nbasis[1](x,y) +
+                                                #U[right_nodes[2],0] * Nbasis[2](x,y) +
+                                                #U[left_nodes[3],0] * Nbasis[3](x,y)
+                                                #)# * detJ_right
+        
+                        right_coords = p[right_nodes,:]
+                        x_coords_R = right_coords[:,0]
+                        y_coords_R = right_coords[:,1]
+            
+                        [x_transform_fct_R,y_transform_fct_R] = xy_fct(x_coords_R,y_coords_R)            
+                
+                
+                        el_sum_R =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
+        
+        
+                        #tx_R = np.arange(left_coords[1,0],coords[1,0]+0.01,0.01)
+                        #sfct_R = uh_elem_R(tx_R,0.03*yloc+0.57)
+                        #sfct_R = uh_elem_R(tx_R,loc)
+        
+        
+                        all_elems_sum = all_elems_sum + el_sum_R + el_sum_L;
+        
+                        Usolution[nodes[0],0] = uh_elem_L( p[nodes[0],0], p[nodes[0],1]  )
+                        Usolution[nodes[1],0] = uh_elem_R( p[nodes[1],0], p[nodes[1],1]  )
+                        Usolution[nodes[2],0] = uh_elem_R( p[nodes[2],0], p[nodes[2],1]  )
+                        Usolution[nodes[3],0] = uh_elem_L( p[nodes[3],0], p[nodes[3],1]  )
+                        Usolution[nodes[4],0] = uh_elem_L( p[nodes[4],0], p[nodes[4],1]  )
+                        Usolution[nodes[5],0] = uh_elem_L( p[nodes[5],0], p[nodes[5],1]  )
     
     
-                    #tx_R = np.arange(left_coords[1,0],coords[1,0]+0.01,0.01)
-                    #sfct_R = uh_elem_R(tx_R,0.03*yloc+0.57)
-                    #sfct_R = uh_elem_R(tx_R,loc)
-    
-    
-                    all_elems_sum = all_elems_sum + el_sum_R + el_sum_L;
-    
-                    Usolution[nodes[0],0] = uh_elem_L( p[nodes[0],0], p[nodes[0],1]  )
-                    Usolution[nodes[1],0] = uh_elem_R( p[nodes[1],0], p[nodes[1],1]  )
-                    Usolution[nodes[2],0] = uh_elem_R( p[nodes[2],0], p[nodes[2],1]  )
-                    Usolution[nodes[3],0] = uh_elem_L( p[nodes[3],0], p[nodes[3],1]  )
-                    Usolution[nodes[4],0] = uh_elem_L( p[nodes[4],0], p[nodes[4],1]  )
-                    Usolution[nodes[5],0] = uh_elem_L( p[nodes[5],0], p[nodes[5],1]  )
-
-
-                    if y0 <= yloc and yloc <= y1:
-    
-                        tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                        txL = []
-                        txR = []
-    
-                        for idx in range(0,len(tx)):
-    
-                            if point_in_on_poly( tx[idx], yloc, left_coords):
-                                txL.append(tx[idx])
-                            
-                            if point_in_on_poly( tx[idx], yloc, right_coords):
-                                txR.append(tx[idx])
-                            
-                        txL = np.array(txL)
-                        txR = np.array(txR)
-#                         pylab.plot( txL, uh_elem_L(txL, yloc))
-#                         pylab.plot( txR, uh_elem_R(txR, yloc))
-    
+                        if y0 <= yloc and yloc <= y1:
+        
+                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+                            txL = []
+                            txR = []
+        
+                            for idx in range(0,len(tx)):
+        
+                                if point_in_on_poly( tx[idx], yloc, left_coords):
+                                    txL.append(tx[idx])
+                                
+                                if point_in_on_poly( tx[idx], yloc, right_coords):
+                                    txR.append(tx[idx])
+                                
+                            txL = np.array(txL)
+                            txR = np.array(txR)
+    #                         pylab.plot( txL, uh_elem_L(txL, yloc))
+    #                         pylab.plot( txR, uh_elem_R(txR, yloc))
+        
 
 #    print Usolution
     print 'Writing VTK file...' 
@@ -2934,6 +4012,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     coords2 = p[nodes2]
     coords3 = p[nodes3]
     coords4 = p[nodes4]
+    
 
     x0 = coords[0,0]
     x1 = coords[1,0]
@@ -3575,6 +4654,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
 
             #NEUMANN BCS are zero - code not inserted here
 
+    print 'South-East corner', K, Fe
     return [K,Fe]
 
 
@@ -3653,6 +4733,8 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
         ( is_in_same_bin(pxVal3,pxVal4)==True ) and
         is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
+
+    print 'East edge: K = ', K_cst
 
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
     [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
@@ -3772,18 +4854,34 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
     
 
 def South_edge(p,ui,wi,k1,k2,nodess,root,image):
-    K = numpy.zeros((5,5))
+    
+    Ke = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
     nodes = [nodess[0],nodess[1],nodess[2],nodess[3]]
     nodes1 = [nodess[0],nodess[4],nodess[3]]
     nodes2 = [nodess[4],nodess[2],nodess[3]]
     nodes3 = [nodess[4],nodess[1],nodess[2]]
+#     nodes3 = [nodess[1],nodess[4],nodess[2]]
+
+    print nodes
+    print nodes1
+    print nodes2
+    print nodes3
 
     coords = p[nodes]
     coords1 = p[nodes1]
     coords2 = p[nodes2]
     coords3 = p[nodes3]
+
+#     print nodes
+#     print nodes1
+#     print nodes2
+#     print nodes3
+#     print coords
+#     print coords1
+#     print coords2
+#     print coords3
 
     x0 = coords[0,0]
     x1 = coords[1,0]
@@ -3841,6 +4939,8 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
         is_in_same_bin(pxVal12,pxVal23) == True):
              K_cst = [k1,k2,k2]
 
+    print 'South edge: K = ', K_cst
+
     
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
     [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
@@ -3850,7 +4950,9 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
 
-    det_J1 = lambda e,n: determinant(J1)(e,n)
+#     det_J1 = lambda e,n: determinant(J1)(e,n)
+    det_J1 = lambda e,n: (-coords1[0,0] + coords1[1,0]) * (-coords1[0,1]+coords1[2,1]) - (-coords1[0,1]+coords1[1,1])*(-coords1[0,0]+coords1[2,0])
+    print (-coords1[0,0] + coords1[1,0]) * (-coords1[0,1]+coords1[2,1]) - (-coords1[0,1]+coords1[1,1])*(-coords1[0,0]+coords1[2,0])
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
 
@@ -3864,7 +4966,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     Nbasis = basisFct(C)
     Nx = derivX(C)
     Ny = derivY(C)
-
+    
     # triangle I
     Pe1 = numpy.zeros((3,3))
     Pe1[:,0] = numpy.ones((3,1)).transpose()
@@ -3907,6 +5009,8 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     if factor_S > EPS_FACTOR:
         factor_S = 1
 
+    factor_S = 1
+    
     Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis1[1](x,y)]
     Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis2[0](x,y)]
     Nbasis_3 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3], lambda x,y: factor_S * Nbasis3[0](x,y)]
@@ -3919,6 +5023,27 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     Ny_2 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny2[0](x,y)]
     Ny_3 = [Ny[0],Ny[1],Ny[2],Ny[3], lambda x,y: factor_S * Ny3[0](x,y)]
 
+#     ggg = lambda e,n:( (-2+2*n)*(-2+2*n) + (-2+2.0/3.0*e)*(-2+2.0/3.0*e)) * ( (-0.5+0.667)/2.0)
+#     fff = lambda x,y: (-2+4*y)*(-2+4*y) + (-4+4*x)*(-4+4*x)
+
+#     fff = lambda x,y: (2-4*y)*(2-4*y) + (2-4*x)*(2-4*x)
+#     fff = lambda x,y: (4*y)*(4*y) + (-2+4*x)*(-2+4*x)
+#     fff = lambda x,y: (-4*y)*(-4*y) + (4-4*x)*(4-4*x)
+#     fff = lambda x,y: (2-4*y)*(5.98802395) + (2-4*x)*(0)
+#     fff = lambda x,y: (2-4*y)*(0) + (2-4*x)*(-2)
+    fff = lambda x,y: (2-4*y)*(-3.003003) + (2-4*x)*(0)
+    
+    
+#     fff = lambda x,y: (Nx1[1](x,y)) *(Nx1[1](x,y)) + (Ny1[1](x,y)) *(Ny1[1](x,y))
+    
+    kefunct1 = lambda e,n: fff(x_fct_1(e,n), y_fct_1(e,n)) *  det_J1(e,n)
+    kefunct2 = lambda e,n: fff(x_fct_2(e,n), y_fct_2(e,n)) *  det_J2(e,n)
+    kefunct3 = lambda e,n: fff(x_fct_3(e,n), y_fct_3(e,n)) *  det_J3(e,n) * 10
+
+    print 'Kefunct: simpson ',simpson_rule(kefunct1) , simpson_rule(kefunct2) , simpson_rule(kefunct3)
+#     print 'simspon(ggg)',simpson_rule(ggg)
+    
+    
     for i in range(0,5):
         for j in range(0,5):
             Kefunc1 = lambda e,n: K_cst[0] * (
@@ -3943,7 +5068,9 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
             integral2 = simpson_rule(Kefunc2)
             integral3 = simpson_rule(Kefunc3)
 
-            K[i,j] = integral1 + integral2 + integral3 
+            if i == 4 and j == 1:
+                print'=============>>>>>>', integral1 , integral2 , integral3
+            Ke[i,j] = integral1 + integral2 + integral3 
 
     # construct the local matrix and local components of the load vector
     for i in range(0,5):
@@ -3956,7 +5083,10 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 
         #NEUMANN BCS are zero - code not inserted here
 
-    return [K,Fe]
+#     print Ke
+#     print Fe
+    print 'South EDGE:\n', Ke, Fe
+    return [Ke,Fe]
 
 def North_edge(p,ui,wi,k1,k2,nodess,root,image):
     K = numpy.zeros((5,5))
@@ -4052,7 +5182,9 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
         ( is_in_same_bin(pxVal1,pxVal4) == True ) and 
         is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
-             
+    
+    print "North Edge: K =", K_cst
+            
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
     [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -4254,7 +5386,9 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
         is_in_same_bin(pxVal12, pxVal23) == True):
              K_cst = [k1,k2,k2]
              
-             
+    print 'West edge: K = ', K_cst
+
+            
 #    cornerA_s = f_circle_s(x0,y0)
 #    cornerB_s = f_circle_s(x1,y0)
 #    cornerD_s = f_circle_s(x0,y1)
@@ -4954,1013 +6088,6 @@ def in_circle(center_x, center_y, radius, x, y):
     square_dist = (center_x - x) ** 2 + (center_y - y) ** 2
     return square_dist <= radius ** 2
 
-def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
-#def myquad(m,n,k1,k2,loc,ui,wi,p,t,UConf,pConf,tConf):
-    
-    #definition of rhombus corners
-#    A = Point(0.5, 1.0/3.0)
-#    B = Point(2.0/3.0, 0.5)
-#    C = Point(1.0/3.0, 0.5)
-#    D = Point(0.5, 2.0/3.0)
-#    rhombus = [ (A.x, A.y), (B.x,B.y), (D.x,D.y), (C.x,C.y) ]
-    
-    #A = Point(1.0/6.0, 0.0)
-    #B = Point(2.0/3.0, 0.0)
-    #C = Point(3.0/4.0+1.0/6.0, 1.0/2.0)
-    #D = Point(1.0/4.0+1.0/6.0, 1.0/2.0)
-
-    #rhombus = [ (A.x, A.y), (B.x,B.y), (C.x,C.y), (D.x,D.y) ]
-
-
-    #print "sizes:",m,n
-    # reading data
-    #filename = 'vertical2by2.txt'
-    #lines = [line.strip() for line in open(filename)]
-
-    # numbering boundary nodes
-#    lbcs = [0] + range(m,m*n,m)
-#    rbcs = [m-1] + range(2*m-1,m*n,m)
-#    tbcs = range(1,m-1)
-#    bbcs = range(lbcs[-1]+1,rbcs[-1]) 
-    
-    tbcs = []
-    bbcs = []
-    lbcs = []
-    rbcs = []
-    for i in range(0, len(p)):
-         # bottom boundary
-        if p[i,1] == 0.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
-            bbcs = bbcs + [i]
-        else:
-            # top boundary            
-            if p[i,1] == 1.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
-                tbcs = tbcs + [i]
-            else:
-                # left boundary
-                if p[i,0] == 0.0:
-                   lbcs = lbcs + [i]
-                else:
-                    # right boundary
-                    if p[i,0] == 1.0:
-                        rbcs = rbcs + [i]
-                            
-#     print 'tbcs', tbcs
-#     print 'lbcs', lbcs
-#     print 'rbcs', rbcs
-#     print 'bbcs', bbcs
-
-    # temperatures for Dirichlet BCs
-    leftDirich = 1
-    rightDirich = 1
-    topDirich = 0
-    bottomDirich = 0
-    Temp_left = 0
-    Temp_right = 0
-    Temp_top = 0
-    Temp_bottom = 0
-
-    # Neumann BCs
-    leftNeumann = 0
-    rightNeumann = 0
-    topNeumann = 1
-    bottomNeumann = 1
-    g1_left = 0
-    g1_right = 0
-    g1_top = 0
-    g1_bottom = 0
-
-    # vector with boundary nodes: bottom, left, right, top
-#    b = range(0,m) + range(m,m*n,m) + range(2*m-1,m*n,m) + range(m*n-m+2-1,m*n-1) 
-
-    N = len(p)  #+ 5 # number of nodes
-    T = len(t) #+ 3 # number of elements
-
-#    p = numpy.vstack([p,[ 0.8125, 0.5 ]])
-#    p = numpy.vstack([p,[ 0.75, 0.5625 ]])
-#    p = numpy.vstack([p,[ 0.8125, 0.5625 ]])
-#    p = numpy.vstack([p,[ 0.875, 0.5625 ]])
-#    p = numpy.vstack([p,[ 0.8125, 0.6125 ]])
-
-#    for e in range(0,T):
-#        nodes = t[e]
-#        if nodes[0] == 42 and nodes[1] == 43:
-#            t =  t[0:e] + t[e+1:len(t)]
-#            t = t + [[42, 111, 113, 112]]
-#            t = t + [[111, 43, 114, 113]]
-#            t = t + [[112, 113, 115, 51]]
-#            t = t + [[113, 114, 52, 115]]
-
-    K = sparse.lil_matrix((N,N))
-    F = sparse.lil_matrix((N,1))
-
-    list_hanging_nodes = []
-#     for e in range(0,T):
-    for e in range(800,841):
-        
-        nodes = t[e] # row of t =  node numbers of the 4 corners of element e
-    
-        root = get_node_by_id(masterNode,llist[e])
-        p1,p2,p3,p4 = root.rect
-    
-        pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-        pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-        pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-        pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
-    
-#         if root.index == '323210':#'210333':
-#             print '-----------------------------------'
-# #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-#             enrN1 = root.enrichNodes[0]
-#             enrN2 = root.enrichNodes[1]
-#             print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
-#             print p[36], p[37]
-#             print p[60], p[61]
-#             print 'Enrch 1', p[1041]
-#             print 'Enrch 2', p[1042]
-#             print '-----------------------------------'
-             
-        # 2-column matrix containing on each row the coordinates of each of the nodes
-        coords = p[nodes,:]    
-
-        Pe = np.zeros((4,4))
-        Pe[:,0] = np.ones((4,1)).transpose()
-        Pe[:,1] = p[nodes[0:4],0]
-        Pe[:,2] = p[nodes[0:4],1]
-        Pe[:,3] = p[nodes[0:4],0]*p[nodes[0:4],1]
-
-        C = np.linalg.inv(Pe)
-
-        Nbasis = basisFct(C)
-        Nx = derivX(C)
-        Ny = derivY(C)
-
-        x0 = coords[0,0]
-        x1 = coords[1,0]
-        y0 = coords[0,1]
-        y1 = coords[2,1]
-
-
-#        # multiple inclusions
-#        cornerA = f_circle(x0,y0)
-#        cornerB = f_circle(x1,y0)
-#        cornerC = f_circle(x1,y1)
-#        cornerD = f_circle(x0,y1)
-#        R = 1.0/3.0
-#
-#        cornerA_s = f_circle_s(x0,y0)
-#        cornerB_s = f_circle_s(x1,y0)
-#        cornerC_s = f_circle_s(x1,y1)
-#        cornerD_s = f_circle_s(x0,y1)
-#        Rs = 1.0/3.0
-#
-#        cornerA_c1 = f_circle1(x0,y0)
-#        cornerB_c1 = f_circle1(x1,y0)
-#        cornerC_c1 = f_circle1(x1,y1)
-#        cornerD_c1 = f_circle1(x0,y1)
-#        R1 = 1.0/6.0
-#
-#        cornerA_c2 = f_circle2(x0,y0)
-#        cornerB_c2 = f_circle2(x1,y0)
-#        cornerC_c2 = f_circle2(x1,y1)
-#        cornerD_c2 = f_circle2(x0,y1)
-#        R2 = 1.0/6.0
-
-        #cornerA = point_in_poly(x0,y0,rhombus)
-        #cornerB = point_in_poly(x1,y0,rhombus)
-        #cornerC = point_in_poly(x1,y1,rhombus) 
-        #cornerD = point_in_poly(x0,y1,rhombus)
-
-        # NE corner triangle
-        #domainInclusion = [(0.9,1.0), (1.0,1.0),(1.0,0.9)]
-        # SE corner triangle
-        #domainInclusion = [(0.9,0), (1.0,0.0),(1.0,0.1)]
-        # NW corner triangle
-        #domainInclusion = [(0.0,0.9), (0.1,1.0),(0.0,1.0)]
-        # SW corner triangle
-        #domainInclusion = [(0.0,0.0),(0.1,0.0),(0.0,0.1)]
-        # SE Triangle with SE/NW corners cut
-        #domainInclusion = [(2.0/3.0,0), (1.0,0.0),(1.0,1.0/3.0)]
-
-        #cornerA = point_in_poly(x0,y0,domainInclusion)
-        #cornerB = point_in_poly(x1,y0,domainInclusion)
-        #cornerC = point_in_poly(x1,y1,domainInclusion) 
-        #cornerD = point_in_poly(x0,y1,domainInclusion)
-
-        thru_corner = False
-
-        if len(nodes) == 5:
-                enrich1 = np.array(p[nodes[4]])
-
-                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
-                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
-                corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
-                corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
-
-                which_corner = -1
-                if corner0 == True and corner1 == False and corner2 == False and corner3 == False:
-                    thru_corner = True
-                    which_corner = 1
-                if corner0 == False and corner1 == True and corner2 == False and corner3 == False:
-                    thru_corner = True
-                    which_corner = 2
-                if corner0 == False and corner1 == False and corner2 == True and corner3 == False:
-                    thru_corner = True
-                    which_corner = 3
-                if corner0 == False and corner1 == False and corner2 == False and corner3 == True:
-                    thru_corner = True
-                    which_corner = 4   
-                     
-        if thru_corner == True:
-            print root.index, which_index
-            
-#         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
-        if (len(nodes) == 4  or root.ishomog == 1) or thru_corner == True:        # elements need no enrichment
-                        
-            Ke = np.zeros((4,4))
-            Fe = np.zeros((4,1))
-            
-#             if root.index == '323210':#'210333':
-#                 print '-----------------------------------'
-#     #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-#                 enrN1 = root.enrichNodes[0]
-#                 enrN2 = root.enrichNodes[1]
-#                 print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
-
-            # slanted interface
-            # set the coefficient of the conductivity
-#            if coords[0,0] <= interface_fcn(coords[0,1]) and coords[1,0]<= interface_fcn(coords[0,1]) and k1!=k2:
-        #    if point_in_on_poly(x0,y0,polygonDef) and point_in_on_poly(x0,y1,polygonDef) and point_in_on_poly(x1,y0,polygonDef) and point_in_on_poly(x1,y1,polygonDef):
-        #        K_cst = k1 # y <= loc
-        #    else:
-        #        K_cst = k2 # y > loc
-            
-#            polygonDef = domainInclusion
-#            # rhombus inside domain:
-#            if point_in_on_poly(x0,y0,polygonDef) and point_in_on_poly(x0,y1,polygonDef) and point_in_on_poly(x1,y0,polygonDef) and point_in_on_poly(x1,y1,polygonDef):
-#                K_cst = k2 
-#            else:
-#                K_cst = k1
-
-
-#            if cornerA>R*R and cornerB>R*R and cornerC>R*R and cornerD>R*R:
-#                K_cst = k1
-#            else:
-#                if cornerA < R*R and cornerB < R*R and cornerC < R*R and cornerD < R*R:
-#                    K_cst = k2
-#                else:
-#                    print 'ERROR!'
-#                    K_cst = k1
-            p1,p2,p3,p4 = root.rect
-            
-            pxVal1 = image.GetPixel(int(p1.x), int(p1.y))
-            pxVal2 = image.GetPixel(int(p2.x), int(p2.y))
-            pxVal3 = image.GetPixel(int(p3.x), int(p3.y))
-            pxVal4 = image.GetPixel(int(p4.x), int(p4.y))
-            pxValMed = image.GetPixel(int((p1.x+p3.x)/2.0), int((p1.y+p3.y)/2.0))
-            
-            if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
-                 is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 <= binBnd[1] ):
-                K_cst = k1
-            else: 
-                if ( is_in_same_bin(pxVal1,pxVal2) == True and is_in_same_bin(pxVal3,pxVal4)==True and 
-                 is_in_same_bin(pxVal3,pxVal2)==True and  pxVal1 > binBnd[1] ):
-                    K_cst = k2
-                elif root.ishomog == 1:
-                    if pxValMed > binBnd[1]:
-                        K_cst = k2
-#                         print root.index, 'k2 =================== ', k2
-                    else:
-                        K_cst = k1
-#                         print root.index,'================k1', k1
-        
-            if thru_corner == True:
-                if which_corner == 1: 
-                    if pxVal1 <= binBnd[1]:
-                        K_cst = k1
-                    else:
-                        K_cst = k2
-                if which_corner == 2: 
-                    if pxVal2 <= binBnd[1]:
-                        K_cst = k1
-                    else:
-                        K_cst = k2
-                if which_corner == 3: 
-                    if pxVal3 <= binBnd[1]:
-                        K_cst = k1
-                    else:
-                        K_cst = k2
-                if which_corner == 4: 
-                    if pxVal4 <= binBnd[1]:
-                        K_cst = k1
-                    else:
-                        K_cst = k2                                                
-                
-
-                
-
-#            # multiple inclusions:
-#            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 
-#                (cornerA_c1>R1*R1 and cornerB_c1>R1*R1 and cornerC_c1>R1*R1 and cornerD_c1>R1*R1) and 
-#                (cornerA_c2>R2*R2 and cornerB_c2>R2*R2 and cornerC_c2>R2*R2 and cornerD_c2>R2*R2) ):
-#                K_cst = k1
-#            else:
-#                K_cst = k2
-
-            #if cornerA == True and cornerB == True and cornerC == True and cornerD == True:
-            #    K_cst = k2
-            #else:    
-            #    if cornerA == False and cornerB == False and cornerC == False and cornerD == False:
-            #        K_cst = k1
-            #    else:
-            #            print 'ERROR! -  inside igfem2d.py - assembling the stiffness matrix'                
-
-            #N,S,E,W
-            [N_hn,S_hn,E_hn,W_hn] = root.nsew
-            
-            # Method 2 for computing HangingNodes
-            #===================================================================
-            # [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
-            # Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],N_hn,S_hn,E_hn,W_hn)
-            # det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-            #===================================================================
-            
-            # Method 1 for computing Hanging Nodes: averaging
-            if N_hn == 1: # North
-                north_hn = root.hn[0]
-                nhn = [north_hn.x, north_hn.y]
-                n_ind = numpy.where(numpy.all(p==nhn,axis=1))
-                north_node = n_ind[0][0]           
-                list_hanging_nodes = list_hanging_nodes + [[ north_node, nodes[2], nodes[3] ]]
-
-            if S_hn == 1:
-                south_hn = root.hn[1]
-                shn = [south_hn.x, south_hn.y]
-                s_ind = numpy.where(numpy.all(p==shn,axis=1))
-                south_node = s_ind[0][0]
-                list_hanging_nodes = list_hanging_nodes + [[ south_node, nodes[0], nodes[1] ]]
-
-                    
-            if E_hn == 1:
-                east_hn = root.hn[2]
-                ehn = [east_hn.x, east_hn.y]
-                e_ind = numpy.where(numpy.all(p==ehn,axis=1))
-                east_node = e_ind[0][0]   
-                list_hanging_nodes = list_hanging_nodes + [[ east_node, nodes[1], nodes[2] ]]
-
-                                                 
-            if W_hn == 1:
-                west_hn = root.hn[3]
-                whn = [west_hn.x, west_hn.y]
-                w_ind = numpy.where(numpy.all(p==whn,axis=1))
-                west_node = w_ind[0][0]            
-                list_hanging_nodes = list_hanging_nodes + [[ west_node, nodes[0], nodes[3] ]]
-
-            print 'element: ', e, K_cst, nodes
-    
-            [x_fct,y_fct] = xy_fct(coords[0:4,0],coords[0:4,1])
-            Jac = jacobian_mat( coords[0:4,0], coords[0:4,1])
-            det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-            
-#            if nodes[0] == 41 and nodes[1] == 42 and nodes[2] == 51 and nodes[3] == 50:
-#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,1,0)
-#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,1,0)
-#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-#                print 'east edge'
-#                
-#            if nodes[0] == 43 and nodes[1] == 44 and nodes[2] == 53 and nodes[3] == 52:
-#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,0,0,1)
-#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,0,0,1)
-#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-#                print 'west edge'
-#                
-#            if nodes[0] == 51 and nodes[1] == 52 and nodes[2] == 61 and nodes[3] == 60:
-#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],0,1,0,0)
-#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],0,1,0,0)
-#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-#                print 'south edge'
-#                
-#            if nodes[0] == 33 and nodes[1] == 34 and nodes[2] == 43 and nodes[3] == 42:
-#                [x_fct,y_fct] = xy_fct_HN(coords[0:4,0],coords[0:4,1],1,0,0,0)
-#                Jac = jacobian_mat_HN( coords[0:4,0], coords[0:4,1],1,0,0,0)
-#                det_Jac = lambda ee,nn: determinant(Jac)(ee,nn)
-#                print 'north edge'
-                
-                    
-# Method 2 for Hanging Nodes                
-#===============================================================================
-#             # construct the local matrix and local components of the load vector    
-#             for i in range(0,4):
-#                 for j in range(0,4):
-#                     if nodes[i] >=  nodes[j]:
-#                         Kefunc = lambda ee,nn: K_cst * ( Nx[i](x_fct(ee,nn),y_fct(ee,nn)) * Nx[j](x_fct(ee,nn),y_fct(ee,nn)) + Ny[i](x_fct(ee,nn),y_fct(ee,nn)) * Ny[j](x_fct(ee,nn),y_fct(ee,nn)) ) * det_Jac(ee,nn)
-#                         Ke[i,j] = quad2d(Kefunc,-1,1,-1,1,ui,wi)
-# 
-#                 # construct the local load vector
-#                 fv = lambda ee,nn: rhs(x_fct(ee,nn),y_fct(ee,nn)) * Nbasis[i](x_fct(ee,nn),y_fct(ee,nn)) * det_Jac(ee,nn)
-#                 Fe[i] = quad2d(fv,-1,1,-1,1,ui,wi)
-#===============================================================================
-
-            
-            # Method 1
-            # construct the local matrix and local components of the load vector    
-            for i in range(0,4):
-                for j in range(0,4):
-                    if nodes[i] >=  nodes[j]:
-                        Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
-                        Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-
-                # construct the local load vector
-                fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
-                Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
-
-#             if e == 3800:
-#                 nodes = [169, 171, 187, 186, 170, 178]
-#                 [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
-# 
-#                 # add the local stiffness matrix and local load vector to the global K and F
-#                 for i in range(0,6):
-#                     for j in range(0,6):
-#                         if nodes[i] >= nodes[j]:
-#                             K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
-#                             K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                     F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
-#             else:                    
-                #print e,Ke#.todense() 
-            # add the local stiffness matrix and local load vector to the global K and F
-            for i in range(0,4):
-                for j in range(0,4):
-                    if nodes[i] >= nodes[j]:
-                        K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                        K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                F[nodes[i],0] = F[nodes[i],0] + Fe[i]
-
-    
-           
-        else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
-        
-            enrich1 = np.array(p[nodes[4]])
-
-            if len(nodes) == 5:
-                
-                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
-                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
-                corner2 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
-                corner3 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y1])) <= 1e-12 )
-
-                elCorner = False
-    
-             # FALSE POSITIVIES: only corner is in a different material
-             # HOMOGENEOUS element
-                if (corner1 == True or corner3 == True):
-                    print 'False positive: Odd diagonal '
-                    elCorner = True
-                    midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
-                    
-                    pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
-                    if pxValMid > binBnd[1]:
-#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
-                        K_cst = k2
-                    else:
-                        K_cst = k1
-                
-                    
-                    Ke = np.zeros((4,4))
-                    Fe = np.zeros((4,1))
-                    # construct the local matrix and local components of the load vector    
-                    for i in range(0,4):
-                        for j in range(0,4):
-                            if nodes[i] >=  nodes[j]:
-                                Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
-                                Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-
-                        # construct the local load vector
-                        fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
-                        Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
-
-            
-                    # add the local stiffness matrix and local load vector to the global K and F
-                    for i in range(0,4):
-                        for j in range(0,4):
-                            if nodes[i] >= nodes[j]:
-                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
-            
-
-             # FALSE POSITIVIES: only corner is in a different material
-             # HOMOGENEOUS element
-                if (corner0 == True or corner2 == True):
-                    print ' False positive: Even diagonal '
-                    elCorner = True
-                    midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
-                                        
-                    pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
-                    if pxValMid > binBnd[1]:
-#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
-                        K_cst = k2
-                    else:
-                        K_cst = k1
-                    
-                    Ke = np.zeros((4,4))
-                    Fe = np.zeros((4,1))
-            
-                    # construct the local matrix and local components of the load vector    
-                    for i in range(0,4):
-                        for j in range(0,4):
-                            if nodes[i] >=  nodes[j]:
-                                Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
-                                Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-
-                        # construct the local load vector
-                        fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
-                        Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
-
-            
-                    # add the local stiffness matrix and local load vector to the global K and F
-                    for i in range(0,4):
-                        for j in range(0,4):
-                            if nodes[i] >= nodes[j]:
-                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
-
-
-#                # the South edge has the enrichment: 0-4-1
-#                if enrich1[1] == y0 and elCorner==False: 
-#                    print 'South edge'
-#                    [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_South[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_South[i]
-
-
-#                # the East edge has the enrichment: 1-4-2
-#                if enrich1[0] == x1 and elCorner==False:
-#                    print 'East edge, element: ', e
-#                    [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_East[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_East[i]
-
-#                # the West edge has the enrichment 0-4-3
-#                if enrich1[0] == x0 and elCorner==False:
-#                    print 'West edge'
-#                    [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_West[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_West[i]
-
-#                # the North edge has the enrichment: 3-4-2
-#                if enrich1[1] == y1 and elCorner==False :
-#                    print "North edge"
-#                    [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_North[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_North[i]
-
-
-            else: # or (len(nodes) == 6)
-
-                # enrichment nodes: enrichmentNode = [x y], x = enrichmentNode[0], y = enrichmentNode[1]
-                enrich1 = np.array(p[nodes[4]])
-                enrich2 = np.array(p[nodes[5]])
-
-                corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
-                corner1 = ( min(abs(enrich1[0] - [x1]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
-                corner2 = ( min(abs(enrich2[0] - [x1]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
-                corner3 = ( min(abs(enrich2[0] - [x0]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
-
-                # testing if interface is along a diagonal
-                if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
-                    print 'Diagonal, element ', e
-                    Ke_trid1 = np.zeros((3,3))
-                    Fe_trid1 = np.zeros((3,1))
-                    Ke_trid2 = np.zeros((3,3))
-                    Fe_trid2 = np.zeros((3,1))
-
-                    # even diagonal: SW - NE
-                    if(corner0 == True and corner2 == True):
-                        nodes_trid1 = [nodes[0], nodes[1], nodes[2]]
-                        nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
-            
-#                        if point_in_on_poly(x0,y1,polygonDef) and not(point_in_on_poly(x1,y0,polygonDef)):
-#                            K_cst_trid2 = k2 
-#                            K_cst_trid1 = k1
-#                        else:
-#                            K_cst_trid2 = k1
-#                            K_cst_trid1 = k2
-                        if pxVal1 > binBnd[1] and pxVal3 <= binBnd[1]:
-                            K_cst_trid2 = k2 
-                            K_cst_trid1 = k1
-                        else:
-                            K_cst_trid2 = k1
-                            K_cst_trid1 = k2
-                        
-                    # odd diagonal: SE - NW
-                    else:
-                        nodes_trid1 = [nodes[0], nodes[1], nodes[3]]
-                        nodes_trid2 = [nodes[1], nodes[2], nodes[3]]
-
-#                        if point_in_on_poly(x1,y1,polygonDef) and not(point_in_on_poly(x0,y0,polygonDef)):
-#                            K_cst_trid2 = k2 
-#                            K_cst_trid1 = k1
-#                        else:
-#                            K_cst_trid2 = k1
-#                            K_cst_trid1 = k2
-
-    
-                        if pxVal2 > binBnd[1] and pxVal4 <= binBnd[1]:
-                            K_cst_trid2 = k2 
-                            K_cst_trid1 = k1
-                        else:
-                            K_cst_trid2 = k1
-                            K_cst_trid1 = k2
-
-                     
-                    coords_trid1 = p[nodes_trid1]
-                    coords_trid2 = p[nodes_trid2]
-
-                    Pe_trid1 = np.zeros((3,3))
-                    Pe_trid2 = np.zeros((3,3))
-    
-                    Pe_trid1[:,0] = np.ones((3,1)).transpose()                    
-                    Pe_trid1[:,1] = p[nodes_trid1[0:3],0]
-                    Pe_trid1[:,2] = p[nodes_trid1[0:3],1]
-
-                    Pe_trid2[:,0] = np.ones((3,1)).transpose()                    
-                    Pe_trid2[:,1] = p[nodes_trid2[0:3],0]
-                    Pe_trid2[:,2] = p[nodes_trid2[0:3],1]
-
-                    C_trid1 = np.linalg.inv(Pe_trid1)
-                    C_trid2 = np.linalg.inv(Pe_trid2)
-
-                    Nbasis_trid1 = tribasisFct(C_trid1)
-                    Nbasis_trid2 = tribasisFct(C_trid2)
-
-                    Nx_trid1 = triderivX(C_trid1)
-                    Ny_trid1 = triderivY(C_trid1)
-
-                    Nx_trid2 = triderivX(C_trid2)
-                    Ny_trid2 = triderivY(C_trid2)
-
-                    ## FIRST TRIANGLE
-                    # construct the local matrix and local components of the load vector    
-                    for i in range(0,3):
-                        for j in range(0,3):
-                            if nodes_trid1[i] >=  nodes_trid1[j]:
-                                Kefunc_trid1 = lambda x,y: K_cst_trid1 * ( Nx_trid1[i](x,y) * Nx_trid1[j](x,y) + Ny_trid1[i](x,y) * Ny_trid1[j](x,y) )
-                                Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
-
-                        # construct the local load vector
-                        fv_trid1 = lambda x,y: rhs(x,y) * Nbasis_trid1[i](x,y)
-                        Fe_trid1[i] = 1.0/2.0 * quad2d(fv_trid1,x0,x1,y0,y1,ui,wi)
-
-            
-                    # add the local stiffness matrix and local load vector to the global K and F
-                    for i in range(0,3):
-                        for j in range(0,3):
-                            if nodes_trid1[i] >= nodes_trid1[j]:
-                                K[nodes_trid1[i],nodes_trid1[j]] = K[nodes_trid1[i],nodes_trid1[j]] + Ke_trid1[i,j]
-                                K[nodes_trid1[j],nodes_trid1[i]] = K[nodes_trid1[i],nodes_trid1[j]]
-                        F[nodes_trid1[i],0] = F[nodes_trid1[i],0] + Fe_trid1[i]
-                        
-                    ## SECOND TRIANGLE
-                    # construct the local matrix and local components of the load vector    
-                    for i in range(0,3):
-                        for j in range(0,3):
-                            if nodes_trid2[i] >=  nodes_trid2[j]:
-                                Kefunc_trid2 = lambda x,y: K_cst_trid2 * ( Nx_trid2[i](x,y) * Nx_trid2[j](x,y) + Ny_trid2[i](x,y) * Ny_trid2[j](x,y) )
-                                Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
-
-                        # construct the local load vector
-                        fv_trid2 = lambda x,y: rhs(x,y) * Nbasis_trid2[i](x,y)
-                        Fe_trid2[i] = 1.0/2.0 * quad2d(fv_trid2,x0,x1,y0,y1,ui,wi)
-
-            
-                    # add the local stiffness matrix and local load vector to the global K and F
-                    for i in range(0,3):
-                        for j in range(0,3):
-                            if nodes_trid2[i] >= nodes_trid2[j]:
-                                K[nodes_trid2[i],nodes_trid2[j]] = K[nodes_trid2[i],nodes_trid2[j]] + Ke_trid2[i,j]
-                                K[nodes_trid2[j],nodes_trid2[i]] = K[nodes_trid2[i],nodes_trid2[j]]
-                        F[nodes_trid2[i],0] = F[nodes_trid2[i],0] + Fe_trid2[i]
-                        
-
-                else:
-
-#                     x0 = coords[0,0]
-#                     x1 = coords[1,0]
-#                     y0 = coords[0,1]
-#                     y1 = coords[2,1]
-#                     print x0,x1,y0,y1
-#                     print 'nodes:', nodes
-#                     print p[nodes,:]
-                    # the North-West corner is cut, 0-4-3, 2-5-3
-                    if (
-                        ((enrich1[0] == x0 and enrich2[1] == y1) or
-                         (enrich2[0] == x0 and enrich1[1] == y1)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
-                        ):
-                        print "NW corner"
-                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image)
-
-                        
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NW[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_NW[i]
-
-
-                    # the South-East corner is cut, 0-4-1, 1-5-2
-                    if ( 
-                        ((enrich1[1] == y0 and enrich2[0] == x1) or
-                          (enrich2[1] == y0 and enrich1[0] == x1)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
-                        ):
-                        print 'SE corner'
-                        
-#                         print x1,y1, enrich1
-#                         print not(on_corners(enrich1,x0,y0,x1,y1))
-#                         print not(on_corners(enrich2,x0,y0,x1,y1))
-#                         print 'elem:', e, root.tlist
-#                         print 'coords ', [x0,x1],[y0,y1]
-#                         print 'pixels ',[p1.x,p3.x],[p1.y,p3.y]
-#                         print 'enrich1 ',enrich1
-# #                         print 'enrich2 ',enrich2
-#                         print root.enrichNodes[0].x, root.enrichNodes[0].y
-# #                         print root.enrichNodes[1].x, root.enrichNodes[1].y
-                        
-                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image)
-    
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SE[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_SE[i]
-    
-                    # the North East corner is cut, 1-4-2, 2-5-3
-                    if ( 
-                        ((enrich1[0] == x1 and enrich2[1] == y1) or
-                          (enrich2[0] == x1 and enrich1[1] == y1)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
-                        ):
-                        print "NE corner"
-                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image)
-    
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NE[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_NE[i]
-
-                    # the South-West corner is cut, 0-4-1, and 0-5-3
-                    if ( 
-                        ((enrich1[1] == y0 and enrich2[0] == x0) or
-                         (enrich2[1] == y0 and enrich1[0] == x0)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
-                        ):
-                        print "SW corner"
-                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image)
-        
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
-                            
-                    # the South edge
-                    if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
-                        ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
-
-                        print 'South edge'
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
-                            south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
-                        else:
-                            south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
-
-                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image)
-
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,5):
-                            for j in range(0,5):
-                                if south_nodes[i] >= south_nodes[j]:
-                                    K[south_nodes[i],south_nodes[j]] = K[south_nodes[i],south_nodes[j]] + Ke_South[i,j]
-                                    K[south_nodes[j],south_nodes[i]] = K[south_nodes[i],south_nodes[j]]
-                            F[south_nodes[i],0] = F[south_nodes[i],0] + Fe_South[i]
-
-                    # the North edge
-                    if ( ( (enrich1[1] == y0 and enrich2[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1)) or
-                        ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
-                        print 'North edge'
-
-                        if not(on_corners(enrich2,x0,y0,x1,y1)):
-                            north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
-                        else:
-                            north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
-                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image)
-
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,5):
-                            for j in range(0,5):
-                                if north_nodes[i] >= north_nodes[j]:
-                                    K[north_nodes[i],north_nodes[j]] = K[north_nodes[i],north_nodes[j]] + Ke_North[i,j]
-                                    K[north_nodes[j],north_nodes[i]] = K[north_nodes[i],north_nodes[j]]
-                            F[north_nodes[i],0] = F[north_nodes[i],0] + Fe_North[i]
-
-                    
-                    # the West edge
-                    if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
-                        ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
-                        print 'West edge'
-
-                        print root.tlist
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
-                            west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
-                        else:
-                            west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
-
-                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image)
-
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,5):
-                            for j in range(0,5):
-                                if west_nodes[i] >= west_nodes[j]:
-                                    K[west_nodes[i],west_nodes[j]] = K[west_nodes[i],west_nodes[j]] + Ke_West[i,j]
-                                    K[west_nodes[j],west_nodes[i]] = K[west_nodes[i],west_nodes[j]]
-                            F[west_nodes[i],0] = F[west_nodes[i],0] + Fe_West[i]
-
-
-
-                    # the East edge
-                    if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)) or
-                            ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
-                        print 'East edge'
-
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
-                            east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
-                        else:
-                            east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
-
-                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image)
-
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,5):
-                            for j in range(0,5):
-                                if east_nodes[i] >= east_nodes[j]:
-                                    K[east_nodes[i],east_nodes[j]] = K[east_nodes[i],east_nodes[j]] + Ke_East[i,j]
-                                    K[east_nodes[j],east_nodes[i]] = K[east_nodes[i],east_nodes[j]]
-                            F[east_nodes[i],0] = F[east_nodes[i],0] + Fe_East[i]
-    
-
-    
-            
-                    # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
-                    if ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
-                        print "horizontal slide: quad-quad"
-                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
-                    
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Horiz[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_Horiz[i]
-            
-
-                    # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
-                    if ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0 )) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
-                        print "vertical slide: quad-quad"
-                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image)
-                        # add the local stiffness matrix and local load vector to the global K and F
-                        for i in range(0,6):
-                            for j in range(0,6):
-                                if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Vertical[i,j]
-                                    K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_Vertical[i]
-            
-    # end of loop
-    # BCs: a * U + b * dU/dx + c * dU/dy + d = 0
-    # Dirichlet: b,c = 0, homogeneous Dirichlet: b,c = 0, d = 0
-    # Neumann: a = 0, and b or c may be 0, but not both
-
-    U = sparse.lil_matrix((N,1))
-
-    # Setting Dirichlet BCs
-    # left side of the domain
-    if leftDirich == 1:
-        for l in lbcs:
-            U[l,0] = Temp_left
-
-    # right side of the domain
-    if rightDirich == 1:
-        for l in rbcs:
-            U[l,0] = Temp_right
-
-    #print "bcs", lbcs,rbcs
-    #print "top/bottom",range(1,m-1),range(lbcs[-1]+1,rbcs[-1])
-
-    # top side of the domain
-    if topDirich == 1:
-        for l in tbcs:
-            U[l,0] = Temp_top
-
-    # bottom side of the domain
-    if bottomDirich == 1:
-        for l in bbcs:
-            U[l,0] = Temp_bottom
-
-    
-    #F = F - np.dot(K,U)
-    F = F - K*U
-    #FreeNodes = list( (set(range(0,N))-set(lbcs)) - set(rbcs))
-
-    # in case the nodes have duplicate (x,y) coordinates 
-    # such as in the case of false positive need for enrichment
-    # those nodes need to be removed, as they are not contributing to the stiffness matrix
-    # zNodes contains the vector p, and the third column is the row number
-    zNodes = numpy.zeros((len(p),3))
-    zNodes[:,0] = p[:,0]
-    zNodes[:,1] = p[:,1]
-    zNodes[:,2] = range(0,len(p))
-
-    # starting the process of removing the row that have the first and second column duplicated
-    # we do not consider the third column in the duplication criterion
-    # for example: z = [ 0 0 1; 1 0 2; 2 0 3; 1 0 4; 3 0 5]
-    # in this ex we remove the duplicate and obtain:
-    # z = [0 0 1; 1 0 2; 2 0 3; 3 0 5]
-    keyfunc = lambda kf: kf[:2]
-    mypoints = []
-    for kind, gind in groupby( sorted( zip(zNodes[:,0], zNodes[:,1], zNodes[:,2]), key = keyfunc), keyfunc):
-        mypoints.append(list(gind)[0])
-
-    arr_mypoints = numpy.array(mypoints)
-    unique_nodes = arr_mypoints[:,2]
-
-    # from all the nodes remove those corresponding to the left and right boundary
-    FreeNodes = list( (set( unique_nodes) - set(lbcs)) - set(rbcs))
-    
-#    print 'FreeNodes = ', FreeNodes
-
-    Kb = K[:,:]
-    Fb = F[:]
-
-
-    # Need to reduce the Kb matrix in order to be able to use it with SpSolve
-    Kbreduced = sparse.lil_matrix((len(FreeNodes),len(FreeNodes)));
-    for i in range(0,len(FreeNodes)):
-        for j in range(0,len(FreeNodes)):
-            Kbreduced[i,j] = Kb[FreeNodes[i],FreeNodes[j]]
-    Kbreduced = Kbreduced.tocsr()
-
-
-    # solve for the numerical solution
-    numericalSoln = linsolve.spsolve(Kbreduced,Fb[FreeNodes,0])
-    U[FreeNodes,0] = np.matrix(numericalSoln).T
-
-
-    #print np.array(U)
-    # Getting the analytical solution and its vector form
-    #uexact = lambda x,y: ufct(x,loc,k1,k2) 
-    for i in range(0,len(list_hanging_nodes)):
-        listHN = list_hanging_nodes[i]
-        U[listHN[0],0] = ( U[listHN[1],0] + U[listHN[2],0] ) / 2.0
-        
-    return  np.array(U)
      
 def in_same_domain(nd1,nd2,nd3):
 #checking to see if midpoint along edges created by nd1, nd2, and nd3 are

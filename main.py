@@ -691,6 +691,7 @@ class CNode(Node):
                 L3 = linear_search(self.inImage,p4,p3);
                 L4 = linear_search(self.inImage,p1,p4);
                 
+                
                 if len(L2)>1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1:
                     # interface croses one edge multiple times
                     draw_line(self.outImage,cMid12,cMid34);
@@ -705,7 +706,7 @@ class CNode(Node):
                         L3 = L3[0]
                     if len(L4) == 1:
                         L4 = L4[0]
-                
+                        
                 # NW
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     draw_line(self.outImage, L1, L4)
@@ -833,6 +834,7 @@ class CNode(Node):
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23);
                     return True
+
 
         return False
  
@@ -1547,6 +1549,7 @@ def process_list_of_elements(llist,root):
     coordsList2 = sorted(coordsList2,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list:
     coordsList2 = [ key for key,_ in groupby(coordsList2)]
+#     coordsList2 = [[0.667, 0.0], [0.75, 0.125], [0.75, 0.124], [0.834, 0.25], [0.875, 0.31199999999999994], [0.917, 0.375], [1.0, 0.5]]
     
     coordsList = coordsList1 + coordsList2
     pvec = numpy.vstack([pvec,coordsList])
@@ -1555,8 +1558,9 @@ def process_list_of_elements(llist,root):
     cList1 = sorted(cList1,key=lambda x: (x[1],x[0]))
     cList1 = [ key for key,_ in groupby(cList1)]
     cList2 = sorted(cList2,key=lambda x: (x[1],x[0]))
+    # remove duplicates from the list
     cList2 = [ key for key,_ in groupby(cList2)]
-    
+#     cList2 = [[999, 499], [916, 624], [874, 687], [833, 749], [749, 874], [749, 876], [666, 999]]
      
     cList = cList1 + cList2
     pvecCList = numpy.zeros((0,2))
@@ -2017,17 +2021,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                 p[ind1,0] = valx1
 #                 p[ind1,1] = valy1
 #                
-# #                 if tl[0] == 659:
-# #                         print '--11111--------'
-# #                         print 'enrich1 = ', enrich1
-# #                         print 'enrich2 = ', enrich2
-# #                         print tl
-# #                         print x2,y2
-# #                         print pvecPx[tp[4]]
-# #                         print pvecPx[tp[5]]
-# #                         print valx1, valy1
-# #                         print 'ind1', ind2, p[ind1]
-# #                                         
 #                
 #             # enrichment node 2 is one of the corners of the element   
 #             if on_corners(enrich2,p1.x,p1.y,p3.x,p3.y):
@@ -2045,26 +2038,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                 p[ind2,0] = valx2
 #                 p[ind2,1] = valy2
 # #                  
-# #                 if tl[0] == 659:
-# #                         print '--------------'
-# #                         print 'enrich1 = ', enrich1
-# #                         print 'enrich2 = ', enrich2
-# #                         print tl
-# #                         print x2,y2
-# #                         print pvecPx[tp[4]]
-# #                         print pvecPx[tp[5]]
-# #                         print valx2, valy2
-# #                         print 'ind2', ind2, p[ind2]
-                  
             # enrichment node 1 is on an edge
 #             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
-#                 if tl[0] == 944:
-#                     print 'enrich 1 on corners: ', ind1, ind2
-#                     print p[945]
 
-#                 x1 = p[tl[4],0]
-#                 y1 = p[tl[4],1]
                 x1 = enrich1[0] / 1000.0
                 y1 = enrich1[1] / 1000.0
                 if x1 != 0.0:
@@ -2195,10 +2172,20 @@ if __name__ == "__main__":
 #    outputImage = sitk.ReadImage("images/circlesOld.png");
 #     inputImage = sitk.ReadImage("southedge.png");
 #     outputImage = sitk.ReadImage("southedge.png");
-#     inputImage = sitk.ReadImage("southcorner3.png");
-#     outputImage = sitk.ReadImage("southcorner3.png");
-    inputImage = sitk.ReadImage("images/circles.png");
-    outputImage = sitk.ReadImage("images/circles.png");
+#     inputImage = sitk.ReadImage("square.png");
+#     outputImage = sitk.ReadImage("square.png");
+#     inputImage = sitk.ReadImage("southcorner.png");
+#     outputImage = sitk.ReadImage("southcorner.png");
+#     inputImage = sitk.ReadImage("slantedEdge.png");
+#     outputImage = sitk.ReadImage("slantedEdge.png"); 
+#     inputImage = sitk.ReadImage("slanted.png");
+#     outputImage = sitk.ReadImage("slanted.png");    
+#     inputImage = sitk.ReadImage("MatlabPrograms/diagonal.png");
+#     outputImage = sitk.ReadImage("MatlabPrograms/diagonal.png");
+    inputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
+    outputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
+#     inputImage = sitk.ReadImage("images/circles.png");
+#     outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -2265,6 +2252,14 @@ if __name__ == "__main__":
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
  
+#     root_i = get_node_by_id(masterNode,['330001'])
+#     root_i.enrichNodes[0].x = 779
+#     root_i.enrichNodes[1].y = 763
+#     root_i = get_node_by_id(masterNode,['330002'])
+#     root_i.enrichNodes[0].y = 765
+#     root_i.enrichNodes[1].x = 750   
+
+
 #     mesh_graph = set_graph(masterNode,llist)
 #     print 'shortest path', find_shortest_path(mesh_graph, '00', '11')
 
@@ -2281,27 +2276,27 @@ if __name__ == "__main__":
 
     set_nsew(llist,masterNode,full_vec)
 
-#     root_i = get_node_by_id(masterNode,['210333'])
+#     root_i = get_node_by_id(masterNode,['31313'])
 #     print root_i.enrichNodes[0].x, root_i.ishomog, root_i.index
 #     print root_i.index == '210333'
 
 #    pp1,pp2,pp3,pp4 = root_i.rect
 #    print pp1.x, pp2.x, pp1.y, pp3.y, pp4.y, pp3.x
 
-#     print '1041 - main:', p_reg[1041]
-#     print '1042 - main:', p_reg[1042]
-#     print p_regCList[1041]
-#     print p_regCList[1042]
+
     p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
     
+#     p_reg[9,0] = 1.0
+#     p_reg[10,1] = 0.5
+#     p_reg[11,0] = 0.5
+#     p_reg[12,1] = 1.0
 
-#     p_reg[10,1] = 0.45;
-    
-    print p_reg
+#     p_reg[28,1] = 0.5;
+#     print p_reg
 #    print root_i.hn[2].x, root_i.hn[2].y
-#    print p_reg
+#     print p_reg
 #     print t_reg
-    
+ 
     print 'writing the image out'
  
 #     sitk.WriteImage(outputImage,"outSouthEdge.png")
@@ -2385,6 +2380,6 @@ if __name__ == "__main__":
     aa1 = numpy.array([UU])
     ww1 = numpy.array(aa1[()])
     UU = ww1[0].item()[:,:]
-#     print 'sol', UU
 
     print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
+#     print 'sol', UU

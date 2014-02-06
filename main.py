@@ -1486,7 +1486,14 @@ def get_node_by_id(node,id):
             p = p.children[int(index[i])]
             
         return p  
-    
+def remove_duplicates(seq): 
+   # order preserving
+
+   noDupes = []
+   [noDupes.append(i) for i in seq if not noDupes.count(i)]
+   return noDupes
+
+
 def process_list_of_elements(llist,root):
     n = len(llist)
     pvec = numpy.zeros((0,2))
@@ -1549,9 +1556,9 @@ def process_list_of_elements(llist,root):
     coordsList2 = sorted(coordsList2,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list:
     coordsList2 = [ key for key,_ in groupby(coordsList2)]
-#     coordsList2 = [[0.667, 0.0], [0.75, 0.125], [0.75, 0.124], [0.834, 0.25], [0.875, 0.31199999999999994], [0.917, 0.375], [1.0, 0.5]]
     
     coordsList = coordsList1 + coordsList2
+    coordsList = remove_duplicates(coordsList)
     pvec = numpy.vstack([pvec,coordsList])
 
  
@@ -1563,6 +1570,7 @@ def process_list_of_elements(llist,root):
 #     cList2 = [[999, 499], [916, 624], [874, 687], [833, 749], [749, 874], [749, 876], [666, 999]]
      
     cList = cList1 + cList2
+    cList = remove_duplicates(cList)
     pvecCList = numpy.zeros((0,2))
     pvecCList = numpy.vstack([pvecCList,cList])
 
@@ -2040,7 +2048,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 # #                  
             # enrichment node 1 is on an edge
 #             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
-            if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
+            coords = numpy.array([[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
+            if not(on_corners(enrich1,coords)):
 
                 x1 = enrich1[0] / 1000.0
                 y1 = enrich1[1] / 1000.0
@@ -2083,8 +2092,9 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                 if tl[0] == 944:
 #                     print 'end p-945', p[945]
                 
-            # enrichment node 2 is on an edge                
-            if not(on_corners(enrich2,p1.x,p1.y,p3.x,p3.y)):
+            # enrichment node 2 is on an edge
+            coords = numpy.array( [[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])                
+            if not(on_corners(enrich2,coords)):
                 
                 x1 = enrich2[0] / 1000.0
                 y1 = enrich2[1] / 1000.0
@@ -2182,8 +2192,10 @@ if __name__ == "__main__":
 #     outputImage = sitk.ReadImage("slanted.png");    
 #     inputImage = sitk.ReadImage("MatlabPrograms/diagonal.png");
 #     outputImage = sitk.ReadImage("MatlabPrograms/diagonal.png");
-    inputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
-    outputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
+#     inputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
+#     outputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
+    inputImage = sitk.ReadImage("images/channelsUniform.png");
+    outputImage = sitk.ReadImage("images/channelsUniform.png");
 #     inputImage = sitk.ReadImage("images/circles.png");
 #     outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
@@ -2301,7 +2313,7 @@ if __name__ == "__main__":
  
 #     sitk.WriteImage(outputImage,"outSouthEdge.png")
     
-    sitk.WriteImage(outputImage,"outChannels.png");
+    sitk.WriteImage(outputImage,"outchannelsUniform1.png");
 
 #    ndim = 8
 #    ndim = int(ndim) + 1

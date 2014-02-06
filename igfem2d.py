@@ -524,16 +524,16 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         y0 = coords[0,1]
         y1 = coords[2,1]
 
-        if root.index == '313130':#'210333':
-            print '-----------------------------------'
-            print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-            enrN1 = root.enrichNodes[0]
-            enrN2 = root.enrichNodes[1]
-            print 'nodes', nodes, 'e =',e
-            print enrN1.x,enrN1.y, enrN2.x,enrN2.y
-            print 'xys', x1
-            print '-----------------------------------'
-             
+#         if root.index == '313130':#'210333':
+#             print '-----------------------------------'
+#             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+#             enrN1 = root.enrichNodes[0]
+#             enrN2 = root.enrichNodes[1]
+#             print 'nodes', nodes, 'e =',e
+#             print enrN1.x,enrN1.y, enrN2.x,enrN2.y
+#             print 'xys', x1
+#             print '-----------------------------------'
+#              
 
 #        # multiple inclusions
 #        cornerA = f_circle(x0,y0)
@@ -1114,19 +1114,26 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
                 else:
 
+                    # the North-West corner is cut, 0-4-3, 2-5-3
+#                     enrich1 = np.array(p[nodes[4]])
+#                     enrich2 = np.array(p[nodes[5]])
+#                     coords = p[nodes]
+#                     print coords
 #                     x0 = coords[0,0]
-#                     x1 = coords[1,0]
+#                     x1 = coords[2,0]
 #                     y0 = coords[0,1]
 #                     y1 = coords[2,1]
-#                     print x0,x1,y0,y1
-#                     print 'nodes:', nodes
-#                     print p[nodes,:]
-                    # the North-West corner is cut, 0-4-3, 2-5-3
+#                     print p[508], 'nodes', nodes
+#                     print enrich1[0], enrich1[1]
+#                     print [x0,x1], [y0,y1]
+#                     print enrich2[0],enrich2[1]
                     if (
                         ((enrich1[0] == x0 and enrich2[1] == y1) or
-                         (enrich2[0] == x0 and enrich1[1] == y1)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
+                         (enrich2[0] == x0 and enrich1[1] == y1)) and
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))                         
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NW corner"
                         [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image)
@@ -1145,8 +1152,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     if ( 
                         ((enrich1[1] == y0 and enrich2[0] == x1) or
                           (enrich2[1] == y0 and enrich1[0] == x1)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1))
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))                        
                         ):
                         print 'SE corner'
                         
@@ -1175,8 +1184,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     if ( 
                         ((enrich1[0] == x1 and enrich2[1] == y1) or
                           (enrich2[0] == x1 and enrich1[1] == y1)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NE corner"
                         [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image)
@@ -1192,9 +1203,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # the South-West corner is cut, 0-4-1, and 0-5-3
                     if ( 
                         ((enrich1[1] == y0 and enrich2[0] == x0) or
-                         (enrich2[1] == y0 and enrich1[0] == x0)) and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
+                         (enrich2[1] == y0 and enrich1[0] == x0)) and
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))                         
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "SW corner"
                         [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image)
@@ -1212,7 +1225,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
 
                         print 'South edge'
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                        if not(on_corners(enrich2,coords)) :
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)) :                            
                             south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                             south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
@@ -1233,7 +1247,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
                         print 'North edge'
 
-                        if not(on_corners(enrich2,x0,y0,x1,y1)):
+                        if not(on_corners(enrich2,coords)):
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
                         else:
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
@@ -1257,7 +1272,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         enrich1 = np.array(p[nodes[4]])
                         enrich2 = np.array(p[nodes[5]])
 
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                        if not(on_corners(enrich2,coords)) :
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
@@ -1279,7 +1295,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                             ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
                         print 'East edge'
 
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                        if not(on_corners(enrich2,coords)) :
+
                             east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                             east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
@@ -1310,7 +1328,12 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         print (p[nodes[5]])
                     
                     # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
-                    if ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
+                    if ( ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and 
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1)) ):
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords)) ):
+                        
                         print "horizontal slide: quad-quad"
                         [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
                     
@@ -1324,7 +1347,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
             
 
                     # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
-                    if ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0 )) and not(on_corners(enrich1,x0,y0,x1,y1)) and not(on_corners(enrich2,x0,y0,x1,y1)):
+                    if ( ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0 )) and 
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1)) ):
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords)) ):
                         print "vertical slide: quad-quad"
                         [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image)
                         # add the local stiffness matrix and local load vector to the global K and F
@@ -1369,7 +1396,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     
     #F = F - np.dot(K,U)
     F = F - K*U
-    #FreeNodes = list( (set(range(0,N))-set(lbcs)) - set(rbcs))
 
     # in case the nodes have duplicate (x,y) coordinates 
     # such as in the case of false positive need for enrichment
@@ -1394,14 +1420,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     #unique_nodes = range(0,len(p))#arr_mypoints[:,2]
     unique_nodes = arr_mypoints[:,2]
 
-#     print list( ( set(range(0,len(p))) - set(lbcs) - set(rbcs)))
-#     print list ((set( unique_nodes) - set(lbcs)) - set(rbcs)) 
-    extraNodes = [173,174]
+    extraNodes = []
     # from all the nodes remove those corresponding to the left and right boundary
     FreeNodes = list( ((set( unique_nodes) - set(lbcs)) - set(rbcs)) - set(extraNodes))
-#     print 'FreeNodes', FreeNodes
-#     print  'k1 , k2 ', k1, k2
-#    print 'FreeNodes = ', FreeNodes
 
     Kb = K[:,:]
     Fb = F[:]
@@ -1409,21 +1430,12 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
 #     scipy.io.savemat('Kb1.mat', mdict={'Kb': Kb})
 #     scipy.io.savemat('Fb1.mat', mdict={'Fb': Fb})
-#     print 'Kb', Kb
-#     print 'Fb', Fb
 
-#     print 'first ',Kb[29:37, 29:37]
-#     print 'second', Kb[1039,29:37]
-#     print 'third', Kb[29:37,1039]
-# 
-#     print 'i,j'
     # Need to reduce the Kb matrix in order to be able to use it with SpSolve
     Kbreduced = sparse.lil_matrix((len(FreeNodes),len(FreeNodes)));
     for i in range(0,len(FreeNodes)):
         for j in range(0,len(FreeNodes)):
             Kbreduced[i,j] = Kb[FreeNodes[i],FreeNodes[j]]
-#             if FreeNodes[i] == 31 or FreeNodes[j] == 31:
-#                 print Kbreduced[i,j]
     Kbreduced = Kbreduced.tocsr()
 
     # solve for the numerical solution
@@ -1445,12 +1457,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         listHN = list_hanging_nodes[i]
         U[listHN[0],0] = ( U[listHN[1],0] + U[listHN[2],0] ) / 2.0
 
-
-       
-#     print U[30,0], U[31,0], U[36,0], U[35,0], U[1039,0]
-         
-#     U[65,0] = ( U[158,0]  + U[19,0]) / 2.0
-#     U[159,0] = ( U[158,0] + U[160,0]) / 2.0
     return  np.array(U) 
 
 def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
@@ -2084,7 +2090,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                           ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
                         print 'norm computation: North edge'
     
-                        if not(on_corners(enrich2,x0,y0,x1,y1)):
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)):
+                        if not(on_corners(enrich2,coords)):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
                         else:
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
@@ -2219,7 +2226,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                           ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
                         print 'norm computation: South edge'
                         
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                        if not(on_corners(enrich2,coords)) :
                           south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                           south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
@@ -2355,7 +2363,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
                           ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
                         print 'norm computation: West edge'
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                        if not(on_corners(enrich2,coords)) :
                           west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
@@ -2494,7 +2503,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                           ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
                         print 'norm computation: East edge'
     
-                        if not(on_corners(enrich2,x0,y0,x1,y1)) :
+#                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
+                        if not(on_corners(enrich2,coords)) :
                           east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                             east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
@@ -2634,8 +2644,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         ((enrich1[0] == x0 and enrich2[1] == y1) or
                         (enrich2[0] == x0 and enrich1[1] == y1)) and 
 #                         odd_even_diag == False and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         
                         print "norm computation: NW corner"
@@ -2821,8 +2833,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         ((enrich1[1] == y0 and enrich2[0] == x1) or 
                          (enrich2[1] == y0 and enrich1[0] == x1)) and 
 #                          odd_even_diag == False and 
-                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                         not(on_corners(enrich2,x0,y0,x1,y1))
+#                          not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                          not(on_corners(enrich2,x0,y0,x1,y1))
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))
                          ):
                         
                         print 'norm computation: SE corner'
@@ -3020,8 +3034,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         ((enrich1[0] == x1 and enrich2[1] == y1) or
                          (enrich2[0] == x1 and enrich1[1] == y1)) and
 #                         odd_even_diag == False and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1)) 
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1)) 
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords)) 
                         ):
                         
                         print "norm computation: NE corner"
@@ -3202,8 +3218,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         ((enrich1[1] == y0 and enrich2[0] == x0) or
                          (enrich2[1] == y0 and enrich1[0] == x0)) and 
 #                         odd_even_diag == False and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1))
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1))
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords))
                         ):
                         
                         print "norm computation: SW corner"
@@ -3383,8 +3401,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     if ( ((enrich1[0] == x0  and enrich2[0] == x1) or 
                         (enrich1[0] == x1  and enrich2[0] == x0)) and 
 #                         odd_even_diag == False and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1)) ):
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1)) ):
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords)) ):
                         print "norm computation: horizontal slide: quad-quad"
         
                         # nodes on the top and bottom side of the interface
@@ -3532,8 +3552,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                     if ( ((enrich1[1] == y0 and enrich2[1] == y1) or 
                         (enrich1[1] == y1 and enrich2[1] == y0)) and 
 #                         odd_even_diag == False and 
-                        not(on_corners(enrich1,x0,y0,x1,y1)) and 
-                        not(on_corners(enrich2,x0,y0,x1,y1)) ):
+#                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
+#                         not(on_corners(enrich2,x0,y0,x1,y1)) ):
+                        not(on_corners(enrich1,coords)) and 
+                        not(on_corners(enrich2,coords)) ):
                         print "norm computation: vertical slide: quad-quad"
                         # nodes on the left side of the interface
                         left_nodes = [nodes[0],nodes[4],nodes[5],nodes[3]]
@@ -5769,7 +5791,31 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
     return [Ke_Horiz,Fe_Horiz]
 
-def on_corners(enrich,x0,y0,x1,y1):
+def on_corners(enrich,coords):
+    x0 = coords[0,0]
+    y0 = coords[0,1]
+    x1 = coords[1,0]
+    y1 = coords[1,1]
+    x2 = coords[2,0]
+    y2 = coords[2,1]
+    x3 = coords[3,0]
+    y3 = coords[3,1]
+    
+    if enrich[0] == x0 and enrich[1] == y0:
+        return True
+
+    if enrich[0] == x1 and enrich[1] == y1:
+        return True
+    
+    if enrich[0] == x2 and enrich[1] == y2:
+        return True
+
+    if enrich[0] == x3 and enrich[1] == y3:
+        return True
+
+    return False
+
+def on_corners1(enrich,x0,y0,x1,y1):
     if enrich[0] == x0 and enrich[1] == y0:
         return True
 

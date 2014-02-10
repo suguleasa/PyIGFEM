@@ -175,9 +175,10 @@ class Node():
         self.outImage = outImage
         self.inImage = inImage
         
-        L = set_interval(imageSize[0],self.depth)
-        self.i = list(L).index(p1.x)
-        self.j = list(L).index(p1.y)
+        Lx = set_interval(imageSize[0],self.depth)
+        Ly = set_interval(imageSize[1],self.depth)
+        self.i = list(Lx).index(p1.x)
+        self.j = list(Ly).index(p1.y)
         
     def subdivide(self): 
     # this method subdivides a node recursively if some
@@ -651,8 +652,7 @@ class CNode(Node):
     
         draw_line(self.outImage,cMid12,cMid34)
         draw_line(self.outImage,cMid14,cMid23)
-        
-                
+
         return True
     
     def division_criterion(self, rect, inImage, outImage):
@@ -662,7 +662,9 @@ class CNode(Node):
         cMid24 = find_mid_point(p2,p4)
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
-             
+        
+#         if self.index == '30100':
+#                             print ' -----------------------blah'     
 
         if abs(p1.x - p2.x) >= MAX_SIZE:               
             draw_line(self.outImage,cMid12,cMid34);
@@ -692,7 +694,10 @@ class CNode(Node):
                 L4 = linear_search(self.inImage,p1,p4);
                 
                 
-                if len(L2)>1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1:
+                if ( 
+                    len(L2) > 1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1 
+                     or len(L2) < 1 or len(L4) < 1 or len(L1) < 1 or len(L3) < 1
+                     ):
                     # interface croses one edge multiple times
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23)
@@ -714,6 +719,7 @@ class CNode(Node):
                     
                 # NE
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE):
+                    
                     draw_line(self.outImage, L1, L2)
                     self.ishomog = 0
                 # SE
@@ -1778,15 +1784,20 @@ def numbering(pvec,pvecCList, llist, masterNode):
                         mtl = [[c1,c2,c3,c4,c6,c5]]
                     else:
                         if pvecCList[c5][1] == pvecCList[c6][1]:
+#                             if c1 == 1147 and c2 == 1148:
+#                                 print pvecCList[1786], pvecCList[1785]
+#                                 print c5, c6         
+                    
                             if pvecCList[c5][0] < pvecCList[c6][0]:
-                                mtl = [[c1,c2,c3,c4,c6,c5]]
+                                mtl = [[c1,c2,c3,c4,c5,c6]]
+#                                 mtl = [[c1,c2,c3,c4,c6,c5]]
                             else:
-                                mtl =  [[c1,c2,c3,c4,c5,c6]]
+                                mtl =  [[c1,c2,c3,c4,c6,c5]]
+#                                 mtl = [[c1,c2,c3,c4,c6,c5]]
                         else:       
                             mtl =  [[c1,c2,c3,c4,c5,c6]]
                     
                     t = t + mtl
-                            
                     
 #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
@@ -1794,7 +1805,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
             
 #             t = t + [[c4,c3,c2,c1]]
         
-        
+    
         
     # convert from numbering system for Image Coordinate with (0,0) in the NW corner, to 
     # Euclidean coordinate system with (0,0) in the SW corner
@@ -1839,13 +1850,19 @@ def numbering(pvec,pvecCList, llist, masterNode):
                         tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
                 else:
                         tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
-                        
+                 
+#             if tk[0] == 270 and tk[1] == 271:
+#                     print tk       
+#                     print new_corners
+#                     print pvec[1529],pvec[1528] 
+                    
 #             print '----',pvec[new_corners[4]], pvec[new_corners[5]]
 #             print tk
 #             print pvec[1041], pvec[1042]
                        
         tvec = tvec + [tk]
-                
+          
+    print n      
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         root_i.tlist = tvec[i]
@@ -1966,6 +1983,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
     # and update them accordingly
 
     n = len(llist)
+    vec_indices = []
     # for each element 
     for i in range(0,n):
         root = get_node_by_id(masterNode,llist[i])
@@ -1983,7 +2001,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 
             enrich1 = pvecPx[tp[4]]
             enrich2 = pvecPx[tp[5]]
-            
+            coords = numpy.array([[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
             
 #             if pvecPx[tp[4]][1] < pvecPx[tp[5]][1]:
 #                 enrich1 = pvecPx[tp[5]]
@@ -2000,18 +2018,23 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                         
             ind1 = tl[4]
             ind2 = tl[5]
-
-#             if tl[0] == 944 or tl[0]==660:
-#                 print tp
-#                 print pvecPx[tp[4]]
-#                 print pvecPx[tp[5]]
-#                 print 'en 1:', enrich1
-#                 print 'en2:', enrich2
-
-#             print '-------', tl
-#             print tp
-#             print enrich1
-#             print enrich2
+            
+            if ind2 == 1059:
+                print tl, tp
+                print enrich1
+                print enrich2
+                root.printRect()
+                print not(on_corners(enrich1,coords)) , not(on_corners(enrich2,coords))
+#             if ind2 == 1059:
+#                 print p[1059]
+#                 print 'ce faci aici ba?', tl, root.printRect()
+#                 print 'iteration 2', i
+          
+#             if ind1 == 1059:
+#                 print 'iteration 1', i
+#                 print p[1528]
+#                 print enrich1[0], enrich1[1]
+#                 print not(on_corners(enrich1,coords)) , not(on_corners(enrich2,coords))
 
 #             # enrichment node 1 is one of the corners of the element
 #             if on_corners(enrich1,p1.x,p1.y,p3.x,p3.y):
@@ -2048,9 +2071,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 # #                  
             # enrichment node 1 is on an edge
 #             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
-            coords = numpy.array([[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
-            if not(on_corners(enrich1,coords)):
 
+            if ( not(on_corners(enrich1,coords)) and (on_corners(enrich2,coords)) ):
                 x1 = enrich1[0] / 1000.0
                 y1 = enrich1[1] / 1000.0
                 if x1 != 0.0:
@@ -2058,7 +2080,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                 if y1 != 0.0:
                     y1 += 0.001            
                 y1 = 1 - y1
-                 
+                
+                        
                 if ((enrich1[0] == p1.x or enrich1[0] == p3.x) and 
                  (enrich1[1] != p1.y and enrich1[1] != p3.y)):
                 
@@ -2068,19 +2091,100 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the X - coordinate to the nearest "point on the grid"
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
+#                     if ind1 == 1528 or ind2 == 1528:
+#                         print 'rerwrewrwerwerewrewrwrew'
+#                         print valx1, find_nearest(full_vec,x1)
+#                         print x1, y1
+#                         print p[ind1,0], ind1, ind2
+#                         print 'tl', tl
+#                         print 'tp', tp
+#                         print enrich1[0], enrich1[1]
+#                         print enrich2[0], enrich2[1]
+#                         print p1.x, p3.x
+#                         print p1.y, p3.y
                                     
-#                     if tl[0] == 36:
-#                         print '--------------'
-#                         print 'enrich1 = ', enrich1
-#                         print 'enrich2 = ', enrich2
-#                         print tl
-#                         print x1,y1
-#                         print pvecPx[tp[4]]
-#                         print pvecPx[tp[5]]
-#                         print valx1, valy1
-                        
                 if ((enrich1[0] != p1.x and enrich1[0] != p3.x) and 
-                 (enrich1[1] == p1.y or enrich1[1] == p3.y)):   
+                 (enrich1[1] == p1.y or enrich1[1] == p3.y)):  
+                     
+                    valx1 = x1
+                    valy1 = find_nearest(full_vec,y1)
+                                    
+                    # update the Y - coordinate to the nearest "point on the grid"    
+                    p[ind1,0] = valx1
+                    p[ind1,1] = valy1
+                    
+
+            if ( on_corners(enrich1,coords) and not(on_corners(enrich2,coords)) ):
+                x1 = enrich2[0] / 1000.0
+                y1 = enrich2[1] / 1000.0
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
+                y1 = 1 - y1
+                
+                if  ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
+                 (enrich2[1] != p1.y and enrich2[1] != p3.y)):
+                
+                    valx1 = find_nearest(full_vec,x1)
+                    valy1 = y1
+
+                    # update the X - coordinate to the nearest "point on the grid"
+                    p[ind2,0] = valx1
+                    p[ind2,1] = valy1
+                    
+#                     if ind1 == 1528 or ind2 == 1528:
+#                         print 'inside first part'
+#                         print find_nearest(full_vec,0.203125)
+#                         print x1,y1
+#                         print valx1
+                        
+                if ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
+                 (enrich2[1] == p1.y or enrich2[1] == p3.y)):                
+                    valx1 = x1
+                    valy1 = find_nearest(full_vec,y1)
+
+                    # update the Y - coordinate to the nearest "point on the grid"    
+                    p[ind2,0] = valx1
+                    p[ind2,1] = valy1                  
+                    
+
+            if (not(on_corners(enrich1,coords)) and not(on_corners(enrich2,coords))
+               # and not(ind1 in vec_indices) #and not(ind2 in vec_indices)
+                ):
+
+                x1 = enrich1[0] / 1000.0
+                y1 = enrich1[1] / 1000.0
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
+                y1 = 1 - y1
+                
+                        
+                if ((enrich1[0] == p1.x or enrich1[0] == p3.x) and 
+                 (enrich1[1] != p1.y and enrich1[1] != p3.y)):
+                
+                    valx1 = find_nearest(full_vec,x1)
+                    valy1 = y1
+                    
+                    # update the X - coordinate to the nearest "point on the grid"
+                    p[ind1,0] = valx1
+                    p[ind1,1] = valy1
+#                     if ind1 == 1528 or ind2 == 1528:
+#                         print 'rerwrewrwerwerewrewrwrew'
+#                         print valx1, find_nearest(full_vec,x1)
+#                         print x1, y1
+#                         print p[ind1,0], ind1, ind2
+#                         print 'tl', tl
+#                         print 'tp', tp
+#                         print enrich1[0], enrich1[1]
+#                         print enrich2[0], enrich2[1]
+#                         print p1.x, p3.x
+#                         print p1.y, p3.y
+                                    
+                if ((enrich1[0] != p1.x and enrich1[0] != p3.x) and 
+                 (enrich1[1] == p1.y or enrich1[1] == p3.y)):  
                      
                     valx1 = x1
                     valy1 = find_nearest(full_vec,y1)
@@ -2089,13 +2193,19 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
                 
-#                 if tl[0] == 944:
-#                     print 'end p-945', p[945]
-                
             # enrichment node 2 is on an edge
-            coords = numpy.array( [[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])                
-            if not(on_corners(enrich2,coords)):
-                
+            coords = numpy.array( [[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
+                            
+            if (not(on_corners(enrich2,coords)) and not(on_corners(enrich1,coords))
+                #and not(ind2 in vec_indices) 
+                ):
+#                 if ind1 == 1528:
+#                         print 'inside third after',p[1528]  
+#                         print ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
+#                  (enrich2[1] != p1.y and enrich2[1] != p3.y))
+#                         print ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
+#                  (enrich2[1] == p1.y or enrich2[1] == p3.y))
+                        
                 x1 = enrich2[0] / 1000.0
                 y1 = enrich2[1] / 1000.0
                 if x1 != 0.0:
@@ -2114,6 +2224,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1
                     
+#                     if ind1 == 1528 or ind2 == 1528:
+#                         print 'inside first part'
+#                         print find_nearest(full_vec,0.203125)
+#                         print x1,y1
+#                         print valx1
+                        
                 if ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
                  (enrich2[1] == p1.y or enrich2[1] == p3.y)):                
                     valx1 = x1
@@ -2122,15 +2238,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the Y - coordinate to the nearest "point on the grid"    
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1                  
-
+#                     if ind2 == 1528 or ind1==1528:
+#                         print 'inside second part'
+#                         print find_nearest(full_vec,0.203125)
+#                         print x1,y1
+#                         print valx1
     
-#             if p1.x == 420 and p2.x == 436 and p1.y == 389 and p3.y == 405:
-#                print on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)
-#                print on_corners(enrich2,p1.x,p1.y,p3.x,p3.y)
-#                print not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y))
-#                print not(on_corners(enrich2,p1.x,p1.y,p3.x,p3.y))
-     
-
             if enrich1[0] == enrich2[0] or enrich1[1] == enrich2[1]:
                 root.ishomog = 1
             else:
@@ -2144,6 +2257,9 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                 print enrich1, p[ind1]
 #                 print enrich2, p[ind2]
 #                 print root.index, root.ishomog
+            
+            vec_indices = vec_indices + [ind1, ind2]
+
     
     return p
 def set_homog(masterNode,llist,pvecPx):
@@ -2178,30 +2294,14 @@ if __name__ == "__main__":
     print "Reading image in..."
 #    inputImage = sitk.ReadImage("images/channels.png");
 #    outputImage = sitk.ReadImage("images/channels.png");
-#    inputImage = sitk.ReadImage("images/circlesOld.png");
-#    outputImage = sitk.ReadImage("images/circlesOld.png");
-#     inputImage = sitk.ReadImage("southedge.png");
-#     outputImage = sitk.ReadImage("southedge.png");
-#     inputImage = sitk.ReadImage("square.png");
-#     outputImage = sitk.ReadImage("square.png");
-#     inputImage = sitk.ReadImage("southcorner.png");
-#     outputImage = sitk.ReadImage("southcorner.png");
-#     inputImage = sitk.ReadImage("slantedEdge.png");
-#     outputImage = sitk.ReadImage("slantedEdge.png"); 
-#     inputImage = sitk.ReadImage("slanted.png");
-#     outputImage = sitk.ReadImage("slanted.png");    
-#     inputImage = sitk.ReadImage("MatlabPrograms/diagonal.png");
-#     outputImage = sitk.ReadImage("MatlabPrograms/diagonal.png");
-#     inputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
-#     outputImage = sitk.ReadImage("MatlabPrograms/circle3.png");
-    inputImage = sitk.ReadImage("images/channelsUniform.png");
-    outputImage = sitk.ReadImage("images/channelsUniform.png");
-#     inputImage = sitk.ReadImage("images/circles.png");
-#     outputImage = sitk.ReadImage("images/circles.png");
+
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
- 
+    nameOutputImage = "outRealSlice.png"
+    
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
  
@@ -2287,33 +2387,32 @@ if __name__ == "__main__":
     full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
 
     set_nsew(llist,masterNode,full_vec)
-
-#     root_i = get_node_by_id(masterNode,['31313'])
-#     print root_i.enrichNodes[0].x, root_i.ishomog, root_i.index
-#     print root_i.index == '210333'
-
-#    pp1,pp2,pp3,pp4 = root_i.rect
-#    print pp1.x, pp2.x, pp1.y, pp3.y, pp4.y, pp3.x
-
-
+#     print p_reg[1059]
     p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+#     print p_reg[1059]
+#     root_i = get_node_by_id(masterNode,['30100'])
+#     root_i.printRect()
+#     print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
+#     print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
+#     print root_i.ishomog, root_i.index
+# #     print root_i.index == '210333'
+# 
+# 
+#     root_i = get_node_by_id(masterNode,['30011'])
+#     root_i.printRect()
+#     print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
+#     print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
+#     print root_i.ishomog, root_i.index
     
-#     p_reg[9,0] = 1.0
-#     p_reg[10,1] = 0.5
-#     p_reg[11,0] = 0.5
-#     p_reg[12,1] = 1.0
-
-#     p_reg[28,1] = 0.5;
-#     print p_reg
-#    print root_i.hn[2].x, root_i.hn[2].y
 #     print p_reg
 #     print t_reg
- 
+#     print p_reg[274], p_reg[680]
+    
     print 'writing the image out'
  
 #     sitk.WriteImage(outputImage,"outSouthEdge.png")
     
-    sitk.WriteImage(outputImage,"outchannelsUniform1.png");
+    sitk.WriteImage(outputImage,nameOutputImage);
 
 #    ndim = 8
 #    ndim = int(ndim) + 1

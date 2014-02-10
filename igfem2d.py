@@ -524,16 +524,29 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         y0 = coords[0,1]
         y1 = coords[2,1]
 
-#         if root.index == '313130':#'210333':
-#             print '-----------------------------------'
-#             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-#             enrN1 = root.enrichNodes[0]
-#             enrN2 = root.enrichNodes[1]
-#             print 'nodes', nodes, 'e =',e
-#             print enrN1.x,enrN1.y, enrN2.x,enrN2.y
-#             print 'xys', x1
-#             print '-----------------------------------'
-#              
+        if root.index == '30100':#'210333':
+            print '-----------------------------------'
+            print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+            enrN1 = root.enrichNodes[0]
+            enrN2 = root.enrichNodes[1]
+            print 'nodes', nodes, 'e =',e
+            print enrN1.x,enrN1.y, enrN2.x,enrN2.y
+            print root.ishomog
+            print '-----------------------------------'
+              
+#         root_i = get_node_by_id(masterNode,['30100'])
+#         root_i.printRect()
+#         print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
+#         print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
+#         print root_i.ishomog, root_i.index
+#     #     print root_i.index == '210333'
+#     
+#     
+#         root_i = get_node_by_id(masterNode,['30011'])
+#         root_i.printRect()
+#         print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
+#         print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
+#         print root_i.ishomog, root_i.index
 
 #        # multiple inclusions
 #        cornerA = f_circle(x0,y0)
@@ -980,7 +993,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
 
             else: # or (len(nodes) == 6)
-
+                
+                
                 # enrichment nodes: enrichmentNode = [x y], x = enrichmentNode[0], y = enrichmentNode[1]
                 enrich1 = np.array(p[nodes[4]])
                 enrich2 = np.array(p[nodes[5]])
@@ -1036,9 +1050,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                             K_cst_trid2 = k1
                             K_cst_trid1 = k2
 
-                    print nodes
-                    print nodes_trid1, nodes_trid2
-                    print [p1.x,p2.x], [p1.y,p4.y]
+#                     print nodes
+#                     print nodes_trid1, nodes_trid2
+#                     print [p1.x,p2.x], [p1.y,p4.y]
 #                     print 'inside myquad', e
 #                     print K_cst_trid1, K_cst_trid2
 #                     print nodes_trid1, nodes_trid2
@@ -1127,6 +1141,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                     print enrich1[0], enrich1[1]
 #                     print [x0,x1], [y0,y1]
 #                     print enrich2[0],enrich2[1]
+
                     if (
                         ((enrich1[0] == x0 and enrich2[1] == y1) or
                          (enrich2[0] == x0 and enrich1[1] == y1)) and
@@ -1326,14 +1341,24 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         y0 = coords[0,1]
 #                         y1 = coords[2,1] 
 #                         print (p[nodes[5]])
-                    
+                    if root.index == '232110':   
+                        print ' ------=========----------blah'
+                        print not(on_corners(enrich1,coords)), not(on_corners(enrich2,coords))
+                        print 'coords', coords
+                        print 'nodes', nodes
+                        print 'enrich1', enrich1[0], enrich1[1]  
+                        print 'enrich2', enrich2[0], enrich2[1]
+                        print [x0,x1], [y0,y1]
                     # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
                     if ( ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and 
 #                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
 #                         not(on_corners(enrich2,x0,y0,x1,y1)) ):
                         not(on_corners(enrich1,coords)) and 
                         not(on_corners(enrich2,coords)) ):
-                        
+
+#                         if root.index == '203300':
+#                             print 'are we inside here?', e   
+
                         print "horizontal slide: quad-quad"
                         [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
                     

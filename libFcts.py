@@ -165,23 +165,24 @@ def draw_curve(image,p1,p2,d,x):
 ## larger than a certain area? If so, return true, otherwise return false
 def has_inclusions(image,p1,p2,p3,p4):
 
-	pxVal1 = image.GetPixel(p1.x,p1.y);
+    pxVal1 = image.GetPixel(p1.x,p1.y);
 
-	xHigh = p2.x 
-	xLow = p1.x	
-	yHigh = p4.y
-	yLow = p1.y
-	areaElem = abs( (p4.y - p1.y) * (p2.x - p1.x))
-	nr_samples = int(log(PROB)/log (abs(areaElem - AREA_INCLUSION)/areaElem))
+    xHigh = p2.x 
+    xLow = p1.x	
+    yHigh = p4.y
+    yLow = p1.y
+    areaElem = abs( (p4.y - p1.y) * (p2.x - p1.x))
+#     print areaElem, log (abs(areaElem - AREA_INCLUSION)/areaElem)
+    nr_samples = int(log(PROB)/log (abs(areaElem - AREA_INCLUSION)/areaElem))
 	
-	for i in range (1,nr_samples):
-		rx = random.randint(xLow,xHigh)
-		ry = random.randint(yLow,yHigh)
-		samplePixel = image.GetPixel(rx,ry,0)
-		if (0 == is_in_same_bin(pxVal1,samplePixel)):
-			return True
+    for i in range (1,nr_samples):
+        rx = random.randint(xLow,xHigh)
+        ry = random.randint(yLow,yHigh)
+        samplePixel = image.GetPixel(rx,ry,0)
+        if (0 == is_in_same_bin(pxVal1,samplePixel)):
+            return True
 
-	return False
+    return False
 
 
 ## Find distance between two points

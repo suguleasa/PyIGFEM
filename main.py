@@ -239,10 +239,8 @@ class Node():
                     if in_child_k(rects[n],L4) == True:
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L4]
         
-            
                 self.children[n].subdivide()
                 
-        
 #        if self.children == [None,None,None,None]:# and root.parent != None:
 #           self.has_children = False
 #        elif self.children != [None,None,None,None]:
@@ -293,18 +291,22 @@ class Node():
                     L1 = L1[0]
                     if in_child_k(rects[n],L1) == True:
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L1]
+                        self.children[n].ishomog = 0
                 if len(L2) == 1:
                     L2 = L2[0]
                     if in_child_k(rects[n],L2) == True:
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L2]
+                        self.children[n].ishomog = 0
                 if len(L3) == 1:
                     L3 = L3[0]
                     if in_child_k(rects[n],L3) == True:
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L3]
+                        self.children[n].ishomog = 0
                 if len(L4) == 1:
                     L4 = L4[0]
                     if in_child_k(rects[n],L4) == True:
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L4]
+                        self.children[n].ishomog = 0
         
                 
         if ( self.children[0] != None and
@@ -641,7 +643,6 @@ class CNode(Node):
 
     
     def division_criterionOnce(self, rect, inImage, outImage):
-        
         p1,p2,p3,p4 = self.rect
         
         cMid12 = find_mid_point(p1,p2)
@@ -649,13 +650,14 @@ class CNode(Node):
         cMid24 = find_mid_point(p2,p4)
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
-    
+
         draw_line(self.outImage,cMid12,cMid34)
         draw_line(self.outImage,cMid14,cMid23)
-
+        
         return True
     
     def division_criterion(self, rect, inImage, outImage):
+
         p1,p2,p3,p4 = self.rect
         cMid12 = find_mid_point(p1,p2)
         cMid14 = find_mid_point(p1,p4)
@@ -669,6 +671,7 @@ class CNode(Node):
         if abs(p1.x - p2.x) >= MAX_SIZE:               
             draw_line(self.outImage,cMid12,cMid34);
             draw_line(self.outImage,cMid14,cMid23);
+
             return True
         else:
             pxVal1 = self.inImage.GetPixel(p1.x,p1.y,0)
@@ -676,6 +679,7 @@ class CNode(Node):
             pxVal3 = self.inImage.GetPixel(p3.x,p3.y,0)
             pxVal4 = self.inImage.GetPixel(p4.x,p4.y,0)
             
+
             # are the 4 corners of the element in the same bin? i.e. homogeneous?
             isHomogeneous = four_corners_test(pxVal1,pxVal2,pxVal3,pxVal4);
 
@@ -696,7 +700,7 @@ class CNode(Node):
                 
                 if ( 
                     len(L2) > 1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1 
-                     or len(L2) < 1 or len(L4) < 1 or len(L1) < 1 or len(L3) < 1
+                    # or len(L2) < 1 or len(L4) < 1 or len(L1) < 1 or len(L3) < 1
                      ):
                     # interface croses one edge multiple times
                     draw_line(self.outImage,cMid12,cMid34);
@@ -712,10 +716,16 @@ class CNode(Node):
                     if len(L4) == 1:
                         L4 = L4[0]
                         
+#                 print L1
+#                 print L1.x, L1.y
+#                 print L2.x, L2.y 
+#                 print L3.x, L3.y
+#                 print L4.x, L4.y
+
                 # NW
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-                    draw_line(self.outImage, L1, L4)
                     self.ishomog = 0
+                    draw_line(self.outImage, L1, L4)
                     
                 # NE
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE):
@@ -739,12 +749,11 @@ class CNode(Node):
                     draw_line(self.outImage, L4, L2)
                     self.ishomog = 0
                 
- 
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 1"
-                    vecCoord1 = case_NW_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L1,L4);
-
+                    vecCoord1 = case_NW_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L1,L4,self);
+                    self.ishomog = 0
                     if ( vecCoord1[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
 
                         draw_line(self.outImage,cMid12,cMid34);
@@ -752,13 +761,14 @@ class CNode(Node):
                         return True
                     elif vecCoord1[0] != -1:
                         self.enrichNodes = vecCoord1#[L1, L4]
-                    self.ishomog = 0   
+                       
 #                        self.mat = 'Fluid'
 #                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
                 # case 2: interface crossing through L1 and L2
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE):
                     vecCoord2 = case_NE_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L1,L2);
+                    self.ishomog = 0
                     if(vecCoord2[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
                     #print "case 2"
 
@@ -768,7 +778,7 @@ class CNode(Node):
                     elif vecCoord2[0] != -1:
                         self.enrichNodes = vecCoord2
 #                        self.mat = 'Fluid'
-                    self.ishomog = 0
+                    
                         
                 # case 3: interface crossing through L2 and L3
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
@@ -830,13 +840,13 @@ class CNode(Node):
                  # the case of 3 consecutive-adjacent materials
                 if (l1==0 and l2==0 and l3==0 and l4==0) :
 #                    print "case 7"
-
+                    self.ishomog = 0
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23);
                     return True
                 
                 if (l1==1 and l2==1 and l3==0 and l4==1) or (l1==1 and l2==1 and l3==1 and l4==0) or (l1==0 and l2==1 and l3==1 and l4==1) or (l1==1 and l2==0 and l3==1 and l4==1) :
-
+                    self.ishomog = 0
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23);
                     return True
@@ -1387,7 +1397,6 @@ def set_graph(masterNode,llist):
             
              
 #         simple_graph[str(root.index)] = { graph_list}
-    print simple_graph
     return mesh_graph
  
 def find_shortest_path(graph, start, end, path = []):
@@ -1862,7 +1871,6 @@ def numbering(pvec,pvecCList, llist, masterNode):
                        
         tvec = tvec + [tk]
           
-    print n      
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         root_i.tlist = tvec[i]
@@ -2262,7 +2270,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 
     
     return p
-def set_homog(masterNode,llist,pvecPx):
+
+def set_homogOLD(masterNode,llist,pvecPx):
     n = len(llist)
     # for each element 
     for i in range(0,n):
@@ -2289,18 +2298,86 @@ def find_index(array,value):
 def find_nearest(array,value):
     idx = (numpy.abs(array-value)).argmin()
     return array[idx]
-                    
+ 
+def go_thru(tree_list, masterNode):
+    n = len(tree_list)
+    print tree_list
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,tree_list[i])     
+        if len(root_i.enrichNodes) > 1:
+            print 'ex'
+            
+def eq_tan(pt1,pt2,node):
+    midpt = find_mid_point(pt1,pt2)
+    
+    dx = pt1.x - pt2.x
+    dy = pt1.y - pt2.y
+    
+    N1 = [-dy, dx] #normal 1
+    N2 = [dy, -dx] #normal 2
+    
+    ptN1 = Coordinate( midpt.x + N1[0], midpt.y + N1[1])
+    ptN2 = Coordinate( midpt.x + N2[0], midpt.y + N2[1])
+
+    
+    dx_m = ptN1.x - midpt.x
+    dy_m = ptN1.y - midpt.y
+
+    
+    p1,p2,p3,p4 = node.rect
+    
+    #Compute the intersection of the normal with the 4 sides of an element
+    if dx_m == 0:
+        side1 = Coordinate(midpt.x, p1.y)
+        side2 = Coordinate(None,None) # normal runs parallel with the edge
+        side3 = Coordinate(midpt.x, p4.y)
+        side4 = Coordinate(None,None) # normal runs parallel with the edge
+    elif dy_m == 0:
+        side1 = Coordinate(None, None) # normal runs parallel with the edge
+        side2 = Coordinate(p2.x, midpt.y)
+        side3 = Coordinate(None,None) # normal runs parallel with the edge
+        side4 = Coordinate(p1.x, midpt.y)
+    else:
+        m_slope = float(dy_m) / dx_m
+        b = midpt.y - m_slope * midpt.x
+        if p1.x <= float(p1.y - b) / m_slope and float(p1.y - b) / m_slope <= p2.x:
+            side1 = Coordinate( float(p1.y - b) / m_slope, p1.y)
+        else:
+            side1 = Coordinate(None, None)
+        if p1.y <= m_slope * p2.x + b and  m_slope * p2.x + b <= p4.y:
+            side2 = Coordinate( p2.x, m_slope * p2.x + b)
+        else:
+            side2 = Coordinate(None, None)
+        if p1.x <= float(p4.y - b) / m_slope and float(p4.y - b) / m_slope <= p2.x:
+            side3 = Coordinate( float(p4.y - b) / m_slope, p4.y)
+        else:
+            side3 = Coordinate(None, None)
+        if p1.y <= m_slope * p1.x + b and m_slope * p1.x + b <= p4.y:
+            side4 = Coordinate( p1.x, m_slope * p1.x + b)
+        else:
+            side4 = Coordinate(None, None)
+
+    return [side1,side2,side3,side4]
+        
+def set_homog(masterNode,llist):
+    n = len(llist)
+    # for each element 
+    for i in range(0,n):
+        root = get_node_by_id(masterNode,llist[i])
+
+        if len(root.enrichNodes)>1:
+            print root.index
+           
 if __name__ == "__main__":
     print "Reading image in..."
-#    inputImage = sitk.ReadImage("images/channels.png");
-#    outputImage = sitk.ReadImage("images/channels.png");
-
+#     inputImage = sitk.ReadImage("images/channels.png");
+#     outputImage = sitk.ReadImage("images/channels.png");
     inputImage = sitk.ReadImage("images/circles.png");
     outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
-    nameOutputImage = "outRealSlice.png"
+    nameOutputImage = "outMesh.png"
     
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
@@ -2320,6 +2397,7 @@ if __name__ == "__main__":
 #    masterNode = rootNode
 #    tree.balance_tree(rootNode,masterNode)
  
+    
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
     while totalNumberOfNodes != newTotalNumberOfNodes:
@@ -2328,7 +2406,7 @@ if __name__ == "__main__":
         masterNode = rootNode
         ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-      
+        
     masterNode = rootNode
       
     totalNumberOfNodes = tree.count_nodes(rootNode)
@@ -2341,11 +2419,14 @@ if __name__ == "__main__":
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
  
-     
+    
+    
     masterNode = rootNode
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
-      
+
+    
+          
     while totalNumberOfNodes != newTotalNumberOfNodes:
         print '3 neighbor rule'
         totalNumberOfNodes = newTotalNumberOfNodes
@@ -2363,8 +2444,12 @@ if __name__ == "__main__":
 
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
- 
-#     root_i = get_node_by_id(masterNode,['330001'])
+#     print tree_list_of_nodes
+#     set_homog(masterNode,llist)
+    go_thru(tree_list_of_nodes, masterNode)
+#     
+#     root_i = get_node_by_id(masterNode,['330'])
+#     print '======',root_i.ishomog
 #     root_i.enrichNodes[0].x = 779
 #     root_i.enrichNodes[1].y = 763
 #     root_i = get_node_by_id(masterNode,['330002'])
@@ -2378,18 +2463,8 @@ if __name__ == "__main__":
 #     node = CNode.get_child(masterNode,'2')
 #     print number_of_generations(tree, node, masterNode), node.depth
 
-    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-#     set_homog(masterNode,llist,p_regCList)
-
-    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
 
     
-    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
-
-    set_nsew(llist,masterNode,full_vec)
-#     print p_reg[1059]
-    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
-#     print p_reg[1059]
 #     root_i = get_node_by_id(masterNode,['30100'])
 #     root_i.printRect()
 #     print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
@@ -2410,87 +2485,41 @@ if __name__ == "__main__":
     
     print 'writing the image out'
  
-#     sitk.WriteImage(outputImage,"outSouthEdge.png")
     
     sitk.WriteImage(outputImage,nameOutputImage);
 
-#    ndim = 8
-#    ndim = int(ndim) + 1
-#    n= ndim
-#    m = ndim
-    # location of the interface along the y dimension (assuming no interface in the x)
-    # material conductivities
-    k1 = 1
-    k2 = 10
-    # generate Legendre-Gauss nodes and weights:
-    ruleOrder = 4
-    [ui,wi] = lgwt(ruleOrder,-1,1)
-    
-    # get triangular mesh data
-    f = open("multipleinclusions.res", "r")
-    f2 = open("multipleinclusions.ele", "r")
-    [pTri,UTri] = read_p_U(f)
-    tTri = read_corners(f2)
-    f.close()
-    f2.close()
-    
-#    hx = 1.0/(m-1)
-#    hy = 1.0/(n-1)
-
-
-# ## MULTIPLE INCLUSIONS:
-#     p_reg = fake_reg_grid(m-1,m-1)
-#     t_reg = create_corners_list(m,m,p_reg,k1,k2,lambda x: 0.5)
+# Commenting out the solver 
+#===============================================================================
+#     [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
 # 
-#     # semi-circle
-#     a = 1.0
-#     b = 0.0
-#     r = 1.0/3.0
-#     coords_semiC = find_intersection_semicircle(m-1,a,b,r,p_reg)
-# #     t_semiC = number_nodes(m-1,p_semiC,t_reg)
+#     [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
 # 
-#     # circle 1
-#     a = 1.0/4.0
-#     b = 1.0/4.0
-#     r = 1.0/6.0
-#     coords_C1 = find_intersection(m-1,a,b,r,p_reg)
-# #     t_C1 = number_nodes(m-1,p_C1,t_reg)
-# 
-#     # circle 2
-#     a = 1.0/2.0
-#     b = 3.0/4.0
-#     r = 1.0/6.0
-#     coords_C2 = find_intersection(m-1,a,b,r,p_reg)
-# #     t_C2 = number_nodes(m-1,p_C2,t_reg)
 #     
-#     coordinates = numpy.vstack([coords_semiC,coords_C1])
-#     coordinates = numpy.vstack([coordinates,coords_C2])
-#     coordinates = sorted(coordinates, key=lambda x: (x[1],x[0]))
-#     p_reg = numpy.vstack([p_reg,coordinates])
-#     t_reg =  number_nodes(m-1,p_reg,t_reg)
-
-#     # hard coding a Hanging node example
-#     p_reg = numpy.vstack([p_reg,[ 0.8125, 0.5 ]])
-#     p_reg = numpy.vstack([p_reg,[ 0.75, 0.5625 ]])
-#     p_reg = numpy.vstack([p_reg,[ 0.8125, 0.5625 ]])
-#     p_reg = numpy.vstack([p_reg,[ 0.875, 0.5625 ]])
-#     p_reg = numpy.vstack([p_reg,[ 0.8125, 0.625 ]])
-#  
-#     T = len(t_reg)
-#     for e in range(0,T):
-#         nodes = t_reg[e]
-#         if nodes[0] == 42 and nodes[1] == 43:
-#             t_reg =  t_reg[0:e] + t_reg[e+1:len(t_reg)]
-#             t_reg = t_reg + [[42, 111, 113, 112]]
-#             t_reg = t_reg + [[111, 43, 114, 113]]
-#             t_reg = t_reg + [[112, 113, 115, 51]]
-#             t_reg = t_reg + [[113, 114, 52, 115]]
-     
-    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
-
-    aa1 = numpy.array([UU])
-    ww1 = numpy.array(aa1[()])
-    UU = ww1[0].item()[:,:]
-
-    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
-#     print 'sol', UU
+#     full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
+# 
+#     set_nsew(llist,masterNode,full_vec)
+# 
+#     p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+#     # material conductivities
+#     k1 = 1
+#     k2 = 10
+#     # generate Legendre-Gauss nodes and weights:
+#     ruleOrder = 4
+#     [ui,wi] = lgwt(ruleOrder,-1,1)
+#     
+#     # get triangular mesh data
+#     f = open("multipleinclusions.res", "r")
+#     f2 = open("multipleinclusions.ele", "r")
+#     [pTri,UTri] = read_p_U(f)
+#     tTri = read_corners(f2)
+#     f.close()
+#     f2.close()
+#     
+#      
+#     UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
+#     aa1 = numpy.array([UU])
+#     ww1 = numpy.array(aa1[()])
+#     UU = ww1[0].item()[:,:]
+# 
+#     print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
+#===============================================================================

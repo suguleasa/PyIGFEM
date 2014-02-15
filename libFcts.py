@@ -172,7 +172,7 @@ def has_inclusions(image,p1,p2,p3,p4):
     yHigh = p4.y
     yLow = p1.y
     areaElem = abs( (p4.y - p1.y) * (p2.x - p1.x))
-#     print areaElem, log (abs(areaElem - AREA_INCLUSION)/areaElem)
+#     print areaElem,  (abs(areaElem - AREA_INCLUSION)/areaElem)
     nr_samples = int(log(PROB)/log (abs(areaElem - AREA_INCLUSION)/areaElem))
 	
     for i in range (1,nr_samples):
@@ -315,10 +315,9 @@ def log_search(image,bbegin,eend):
 		return mid
 
 ## case 1: 3:1 -- P1 the outsider
-def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
-	x_is_F_of_y = False;
+def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4,root):
+    x_is_F_of_y = False;
 	
-
 # 	if len(L1)>1 or len(L4) > 1:
 # 		pt = Coordinate(-1,-1);
 # 		vecCoord = [];
@@ -328,7 +327,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 # 		L1 = L1[0]
 # 		L4 = L4[0]
 		
-	if ( find_distance(L1,L4) <= 2.0):
+    if ( find_distance(L1,L4) <= 2.0):
 		pt = Coordinate(-1,-1);
 		vecCoord = [];
 		vecCoord.append(pt);
@@ -338,35 +337,35 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 	
 	# LINEAR POLYNOMIAL
 	# Step 1. Search for the interface along the 45 degree line
-	A = log_search(image,p1,p3);
+    A = log_search(image,p1,p3);
 
 	# Step 2. Find intersection of line between L1,L4 and the 45 degree line
-	if (abs(L1.x-p1.x) < abs(L4.y - p1.y)):
+    if (abs(L1.x-p1.x) < abs(L4.y - p1.y)):
 		B = line_line_intersection_x(image,p1,p3,L1,L4);
 		x_is_F_of_y = True;
-	else:
+    else:
 		B = line_line_intersection_y(image,p1,p3,L1,L4);
 		x_is_F_of_y = False;
 			
 	# Step 3. If a linear is close enough, return coordinates.
-	if (find_distance(A,B) <= TOL_LINEARS):
-		draw_line(imageOut,L1,L4)
-		vecCoord = [L1, L4]
-		return vecCoord
+    if (find_distance(A,B) <= TOL_LINEARS):
+        draw_line(imageOut,L1,L4)
+        vecCoord = [L1, L4]
+        return vecCoord
 
 	# QUADRATIC POLYNOMIAL
 	# Step 1. Build the quadratic polynomial
-	if A.x==L4.x or A.x==L1.x:
+    if A.x==L4.x or A.x==L1.x:
 		pt = Coordinate(-1,-1);
 		vecCoord = []; 
 		vecCoord.append(pt);
 		return vecCoord;
 
-	xx = [L4.x,A.x,L1.x];
-	yy = [L4.y,A.y,L1.y];
-	d = newt_coef(xx,yy); 
+    xx = [L4.x,A.x,L1.x];
+    yy = [L4.y,A.y,L1.y];
+    d = newt_coef(xx,yy); 
 
-	if (x_is_F_of_y == False):
+    if (x_is_F_of_y == False):
 		# Step 2. Search for the interface along a vertical line
 		p12 = Coordinate( (p1.x + L1.x)/2.0, p1.y);
 		p34 = Coordinate( p12.x, p4.y);
@@ -374,7 +373,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 
 		# Step 3. Find intersection between quadratic and vertical line
 		D = Coordinate(p12.x, floor(newt_fct_eval(d,xx,p12.x)) );
-	else:
+    else:
 		# Step 2. Search for the interface along a vertical line
 		p14 = Coordinate( p1.x, (p1.y + L4.y) / 2.0 );
 		p23 = Coordinate( p2.x, p14.y );
@@ -388,7 +387,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 		D.y = int(temp);
 
 	# Step 4. Check distance
-	if (find_distance(C,D) <= TOL_QUADRATICS):
+    if (find_distance(C,D) <= TOL_QUADRATICS):
 #		draw_curve(imageOut,L4,L1,d,xx);
 		draw_line(imageOut,L4,C)
 		draw_line(imageOut,C,L1)
@@ -396,7 +395,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 		return vecCoord;
 
 	# CUBIC POLYNOMIAL
-	if (x_is_F_of_y == False):
+    if (x_is_F_of_y == False):
 		# Step 1. Search for the interface along vertical lines at 1/3 and 2/3
 		p1third12 = Coordinate( double ((L1.x - p1.x) / 3.0) + p1.x, p1.y);
 		p1third34 = Coordinate( p1third12.x, p4.y);
@@ -415,7 +414,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 		G = Coordinate( p1third12.x, floor(newt_fct_eval(di,xi,p1third12.x)) );
 		H = Coordinate( p2thirds12.x, floor(newt_fct_eval(di,xi,p2thirds12.x)) );
 
-	else:
+    else:
 		# Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
 		p1third14 = Coordinate( p1.x, float ((L4.y - p1.y) / 3.0) + p1.y);
 		p1third23 = Coordinate( p2.x, p1third14.y);
@@ -444,7 +443,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 
 		
 	# Step 4. Check distance
-	if (find_distance(E,G) <= TOL_CUBICS) and (find_distance(F,H) <= TOL_CUBICS):
+    if (find_distance(E,G) <= TOL_CUBICS) and (find_distance(F,H) <= TOL_CUBICS):
 		if E.y>F.y:
 			draw_line(imageOut,L4,E)
 			draw_line(imageOut,E,F)
@@ -458,10 +457,10 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4):
 		return vecCoord;
 
 
-	pt = Coordinate(-1,-1);
-	vecCoord = [];
-	vecCoord.append(pt);
-	return vecCoord;
+    pt = Coordinate(-1,-1);
+    vecCoord = [];
+    vecCoord.append(pt);
+    return vecCoord;
 
 
 

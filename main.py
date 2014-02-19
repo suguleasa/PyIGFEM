@@ -859,28 +859,27 @@ class CNode(Node):
                 # NW
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     self.ishomog = 0
-                    draw_line(self.outImage, L1, L4)
+#                     draw_line(self.outImage, L1, L4)
                     
                 # NE
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE):
-                    
-                    draw_line(self.outImage, L1, L2)
+#                     draw_line(self.outImage, L1, L2)
                     self.ishomog = 0
                 # SE
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-                    draw_line(self.outImage, L2, L3)
+#                     draw_line(self.outImage, L2, L3)
                     self.ishomog = 0
                 # SW
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-                    draw_line(self.outImage, L3, L4)
+#                     draw_line(self.outImage, L3, L4)
                     self.ishomog = 0
                 # vertical
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-                    draw_line(self.outImage, L1, L3)
+#                     draw_line(self.outImage, L1, L3)
                     self.ishomog = 0
                 # horizontal
                 if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-                    draw_line(self.outImage, L4, L2)
+#                     draw_line(self.outImage, L4, L2)
                     self.ishomog = 0
                 
                 # case 1: interface crossing through L1 and L4
@@ -2665,7 +2664,19 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
 
         
     return []
+  
+def draw_interface(image, tree_list, masterNode):
+    
+    n = len(tree_list)
+
+    # for each node in the tree:
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,tree_list[i])    
          
+        if len(root_i.enrichNodes) > 1:
+            draw_line(image,root_i.enrichNodes[0], root_i.enrichNodes[1])
+        
+                 
 def go_thru(tree_list, masterNode):
 
     n = len(tree_list)
@@ -2697,6 +2708,7 @@ def go_thru(tree_list, masterNode):
             currentIndex1 = root_i.index
             currentIndex2 = root_i.index
             list1.append(currentIndex1)
+            list2.append(currentIndex2)
 
             while counter1 <= 4:
                 neighs = find_neighbor_index_of(currentIndex1,whichEdge1, masterNode, tree_list)
@@ -2740,7 +2752,7 @@ def go_thru(tree_list, masterNode):
                 neigh_node = get_node_by_id(masterNode,[str(neighIndex)])
                 if not(neigh_node.ishomog):
                     #neighbor is non-homogeneous:                    
-#                     list1.append(neighIndex)
+                    list1.append(neighIndex)
                     break
                 else:
                     counter1 += 1
@@ -2750,50 +2762,161 @@ def go_thru(tree_list, masterNode):
                     list1.append(neighIndex)
                     
                  
-            print root_i.index
-            print list1   
-                
-#             while counter2 <= 4:
-#                 neighs = find_neighbor_index_of(currentIndex2,whichEdge2, masterNode, tree_list)
-#                 if len(neighs) == 2:
-#                     print 'decide'
-#                 else:
-#                     if len(neighs) == 0:
-#                         list2.append(currentIndex2)
-#                         print 'nada'
-#                     else:
-#                         print len(neighs)
-#                         
-#                 counter2 += 1
+#             print root_i.index
+#             print list1   
+            process_list(list1,masterNode)
 
+            while counter2 <= 4:     
+                neighs = find_neighbor_index_of(currentIndex2,whichEdge2, masterNode, tree_list)
+                
+                if len(neighs) == 2: # there are 2 neighbors sharing an edge with me
+                    neigh1 = get_node_by_id(masterNode,[str(neighs[0])]) 
+                    neigh2 = get_node_by_id(masterNode,[str(neighs[1])])
+
+                    p1n1,p2n1,p3n1,p4n1 = neigh1.rect
+                    
+                    if whichEdge1 == 'U':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side1.x >= p1n1.x and side1.x <= p2n1.x:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+
+                    if whichEdge1 == 'D':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side2.x >= p1n1.x and side2.x <= p2n1.x:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+
+                    if whichEdge1 == 'L':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side4.y >= p1n1.y and side4.y <= p4n1.y:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+                            
+                    if whichEdge1 == 'R':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side3.y >= p1n1.y and side3.y <= p4n1.y:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+                    
+                else:
+                    if len(neighs) == 0: # there are no neighbors of mine, perhaps we are at the margins of the image
+                        break
+                    else:
+                        neighIndex = str(neighs[0])
+
+                neigh_node = get_node_by_id(masterNode,[str(neighIndex)])
+                if not(neigh_node.ishomog):
+                    #neighbor is non-homogeneous:                    
+                    list2.append(neighIndex)
+                    break
+                else:
+                    counter2 += 1
+                    [side1,side2,side3,side4,neigh_listN,dir_listN] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], neigh_node)
+                    currentIndex2 = neighIndex
+                    whichEdge2 = swap_edges(whichEdge2, dir_listN)
+                    list2.append(neighIndex)
+                    
+#             print list2
+            process_list(list2,masterNode)
+
+def process_list(llist, masterNode):
+    # processing the list with elements in between interfaces
     
-def swap_edges(whichEdge1, dirlist):
-    
-    if whichEdge1 == 'U':
-        newEdge1 = 'D'
+    if len(llist) >= STRESS_MIN + 2: # we reached the minimum number of homog. elems between interfaces
+        return
+    else:
+        last_index = str(llist[-1])
+        last_node = get_node_by_id(masterNode, [str(last_index)])
+        if last_node.ishomog: 
+            # if the last node in the list is homogeneous, we are at the margins of the image
+            return
+        else:
+            if len(llist) == 2 + 1:
+#                 print 'only one homog elem in between'
+                node1 = get_node_by_id(masterNode, [str(llist[1])])
+                node1.divideOnce()
+                node1.children[0].divideOnce()
+                node1.children[1].divideOnce()
+                node1.children[2].divideOnce()
+                node1.children[3].divideOnce()
+            if len(llist) == 2 + 2:
+#                 print 'only 2 homog elems in between'
+                node1 = get_node_by_id(masterNode, [str(llist[1])])
+                node1.divideOnce()
+                node2 =  get_node_by_id(masterNode, [str(llist[2])])
+                node2.divideOnce()
+                
+            if len(llist) == 2 + 3:
+#                 print 'only 3 homog elems in between'
+                node1 = get_node_by_id(masterNode, [str(llist[1])])
+                p1,p2,p3,p4 = node1.rect
+                width1 = abs(p1.x - p2.x)
+                length1 = abs(p1.y - p4.y)
+                
+                node2 = get_node_by_id(masterNode, [str(llist[2])])
+                p1,p2,p3,p4 = node1.rect
+                width2 = abs(p1.x - p2.x)
+                length2 = abs(p1.y - p4.y)
+                
+                node3 = get_node_by_id(masterNode, [str(llist[3])])
+                p1,p2,p3,p4 = node1.rect
+                width3 = abs(p1.x - p2.x)
+                length3 = abs(p1.y - p4.y)
+                
+                wlist = [width1,width2,width3]
+                iind = wlist.index(max(wlist))
+                
+                if iind == 0:
+                    node1.divideOnce()
+                    node1.children[0].divideOnce()
+                    node1.children[1].divideOnce()
+                    node1.children[2].divideOnce()
+                    node1.children[3].divideOnce()
+                
+                if iind == 1:
+                    node2.divideOnce()
+                    node2.children[0].divideOnce()
+                    node2.children[1].divideOnce()
+                    node2.children[2].divideOnce()
+                    node2.children[3].divideOnce()
+                
+                if iind == 2:
+                    node3.divideOnce()
+                    node3.children[0].divideOnce()
+                    node3.children[1].divideOnce()
+                    node3.children[2].divideOnce()
+                    node3.children[3].divideOnce()
+                
+    return 
+def swap_edges(whichEdge, dirlist):
+# swapping whichEdge in dirlist with the other edge left in dirlist
+# dirlist always has two edges     
+    if whichEdge == 'U':
+        newEdge = 'D'
         
-    if whichEdge1 == 'D':
-         newEdge1 = 'U'
+    if whichEdge == 'D':
+         newEdge = 'U'
          
-    if whichEdge1 == 'L':
-         newEdge1 = 'R'
+    if whichEdge == 'L':
+         newEdge = 'R'
          
-    if whichEdge1 == 'R':
-         newEdge1 = 'L'
+    if whichEdge == 'R':
+         newEdge = 'L'
          
-    if whichEdge1 == 'LU':
-        newEdge1 = 'RD'
+    if whichEdge == 'LU':
+        newEdge = 'RD'
         
-    if whichEdge1 == 'RU':
-         newEdge1 = 'LD'
+    if whichEdge == 'RU':
+         newEdge = 'LD'
          
-    if whichEdge1 == 'LD':
-         newEdge1 = 'RU'
+    if whichEdge == 'LD':
+         newEdge = 'RU'
          
-    if whichEdge1 == 'RD':
-         newEdge1 = 'LU'
+    if whichEdge == 'RD':
+         newEdge = 'LU'
          
-    if newEdge1 == str(dirlist[0]):
+    if newEdge == str(dirlist[0]):
         return dirlist[1]
     else:
         return dirlist[0]
@@ -2828,7 +2951,66 @@ if __name__ == "__main__":
 #    masterNode = rootNode
 #    tree.balance_tree(rootNode,masterNode)
  
+
     
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'No enrichment nodes and hanging nodes in the same element '
+        totalNumberOfNodes = newTotalNumberOfNodes
+        masterNode = rootNode
+        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+        
+    masterNode = rootNode
+    
+    
+      
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+     
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'Rebalancing tree by multiple passes '
+        masterNode = rootNode
+        totalNumberOfNodes = newTotalNumberOfNodes
+        tree_balance(tree,rootNode,masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+ 
+    
+    masterNode = rootNode
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+
+    
+          
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print '3 neighbor rule'
+        totalNumberOfNodes = newTotalNumberOfNodes
+        masterNode = rootNode
+        three_neighbor_rule(tree, rootNode, masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+     
+    print 'total number of element nodes', newTotalNumberOfNodes
+#     masterNode = rootNode
+#     stress_concentration_constraint(tree,rootNode,masterNode)
+     
+    masterNode = rootNode
+    llist = []
+    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+    go_thru(tree_list_of_nodes, masterNode)
+    masterNode = rootNode
+
+#     stress_concentration_constraint(tree, rootNode, masterNode)
+#     masterNode = rootNode
+
+#     llist = []
+#     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+# #     print tree_list_of_nodes
+# #     set_homog(masterNode,llist)
+#     go_thru(tree_list_of_nodes, masterNode)
+#     masterNode = rootNode
+
+
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
     while totalNumberOfNodes != newTotalNumberOfNodes:
@@ -2866,20 +3048,12 @@ if __name__ == "__main__":
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
      
     print 'total number of element nodes', newTotalNumberOfNodes
-#     masterNode = rootNode
-#     stress_concentration_constraint(tree,rootNode,masterNode)
-     
-    masterNode = rootNode
-
-#     stress_concentration_constraint(tree, rootNode, masterNode)
-#     masterNode = rootNode
-
-    llist = []
-    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-#     print tree_list_of_nodes
-#     set_homog(masterNode,llist)
-    go_thru(tree_list_of_nodes, masterNode)
     
+    llist = []
+    tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
+    draw_interface(outputImage, tree_list, masterNode)  
+    masterNode = rootNode
+  
 #     
 #     root_i = get_node_by_id(masterNode,['330'])
 #     print '======',root_i.ishomog
@@ -2922,37 +3096,35 @@ if __name__ == "__main__":
     sitk.WriteImage(outputImage,nameOutputImage);
 
 # Commenting out the solver 
-#===============================================================================
-#     [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-# 
-#     [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-# 
-#     
-#     full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
-# 
-#     set_nsew(llist,masterNode,full_vec)
-# 
-#     p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
-#     # material conductivities
-#     k1 = 1
-#     k2 = 10
-#     # generate Legendre-Gauss nodes and weights:
-#     ruleOrder = 4
-#     [ui,wi] = lgwt(ruleOrder,-1,1)
-#     
-#     # get triangular mesh data
-#     f = open("multipleinclusions.res", "r")
-#     f2 = open("multipleinclusions.ele", "r")
-#     [pTri,UTri] = read_p_U(f)
-#     tTri = read_corners(f2)
-#     f.close()
-#     f2.close()
-#     
-#      
-#     UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
-#     aa1 = numpy.array([UU])
-#     ww1 = numpy.array(aa1[()])
-#     UU = ww1[0].item()[:,:]
-# 
-#     print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
-#===============================================================================
+    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
+ 
+    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
+ 
+     
+    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
+ 
+    set_nsew(llist,masterNode,full_vec)
+ 
+    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+    # material conductivities
+    k1 = 1
+    k2 = 10
+    # generate Legendre-Gauss nodes and weights:
+    ruleOrder = 4
+    [ui,wi] = lgwt(ruleOrder,-1,1)
+     
+    # get triangular mesh data
+    f = open("multipleinclusions.res", "r")
+    f2 = open("multipleinclusions.ele", "r")
+    [pTri,UTri] = read_p_U(f)
+    tTri = read_corners(f2)
+    f.close()
+    f2.close()
+     
+      
+    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
+    aa1 = numpy.array([UU])
+    ww1 = numpy.array(aa1[()])
+    UU = ww1[0].item()[:,:]
+ 
+    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

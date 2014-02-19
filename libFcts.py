@@ -349,7 +349,7 @@ def case_NW_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L4,root):
 			
 	# Step 3. If a linear is close enough, return coordinates.
     if (find_distance(A,B) <= TOL_LINEARS):
-        draw_line(imageOut,L1,L4)
+#         draw_line(imageOut,L1,L4)
         vecCoord = [L1, L4]
         return vecCoord
 
@@ -508,7 +508,7 @@ def case_NE_polynomial_test(image,imageOut,p1,p2,p3,p4,L1,L2):
 	
  	# Step 3. If a linear is close enough, return coordinates.
  	if(find_distance(A,B) <= TOL_LINEARS ):
-		draw_line(imageOut,L1,L2);
+# 		draw_line(imageOut,L1,L2);
 		vecCoord = [L1, L2]; 
 		return vecCoord;
 
@@ -657,7 +657,7 @@ def case_SE_polynomial_test(image,imageOut,p1,p2,p3,p4,L2,L3):
 
 	# Step 3. If a linear is close enough, return coordinates.
 	if(find_distance(A,B) <= TOL_LINEARS ):
-		draw_line(imageOut,L2,L3);
+# 		draw_line(imageOut,L2,L3);
 		vecCoord = [L2, L3];
 		return vecCoord;
 
@@ -804,7 +804,7 @@ def case_SW_polynomial_test(image, imageOut, p1, p2, p3, p4,L3,L4):
 
 	# Step 3. If a linear is close enough, return coordinates.
 	if(find_distance(A,B) <= TOL_LINEARS ):
-		draw_line(imageOut,L4,L3);
+# 		draw_line(imageOut,L4,L3);
 		vecCoord = [L4, L3];
 		return vecCoord;
 
@@ -946,7 +946,7 @@ def case_vertical_polynomial_test(image, imageOut, p1, p2, p3, p4,L1,L3):
 
 	# Step 3. If a linear is close enough, return coordinates.
 	if( find_distance(A,B) <= TOL_LINEARS):
-		draw_line(imageOut, L1, L3);
+# 		draw_line(imageOut, L1, L3);
 		vecCoord = [L1, L3];
 		return vecCoord;
 
@@ -1065,7 +1065,7 @@ def case_horizontal_polynomial_test(image,imageOut,p1,p2,p3,p4,L2,L4):
 	
 	# Step 3. If a linear is close enough, return coordinates.
 	if (find_distance(A,B) <= TOL_LINEARS):
-		draw_line(imageOut,L2,L4);
+# 		draw_line(imageOut,L2,L4);
 		vecCoord = [L2, L4];
 		return vecCoord;
 

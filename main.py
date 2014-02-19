@@ -254,6 +254,7 @@ class Node():
             self.has_children = True
         else:
             self.has_children = False
+            
     def divideOnce(self): 
     # this method divides once a given node
         
@@ -281,12 +282,18 @@ class Node():
                     self.children[n].index = '0'*diff_level + self.children[n].index 
         
                 p1r,p2r,p3r,p4r = rects[n]
+                
                 L1 = linear_search(self.inImage,p1r,p2r);
                 L2 = linear_search(self.inImage,p2r,p3r);
                 L3 = linear_search(self.inImage,p4r,p3r);
                 L4 = linear_search(self.inImage,p1r,p4r);
         
- 
+                l1 = ends_in_same_bin(self.inImage,p1r,p2r);
+                l2 = ends_in_same_bin(self.inImage,p2r,p3r);
+                l3 = ends_in_same_bin(self.inImage,p4r,p3r);
+                l4 = ends_in_same_bin(self.inImage,p1r,p4r);
+                
+                
                 if len(L1) == 1:
                     L1 = L1[0]
                     if in_child_k(rects[n],L1) == True:
@@ -308,6 +315,133 @@ class Node():
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L4]
                         self.children[n].ishomog = 0
         
+#                 # NW
+#                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
+#                     draw_line(self.outImage, L1, L4)
+#                     
+#                 # NE
+#                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE):
+#                     
+#                     draw_line(self.outImage, L1, L2)
+#                 # SE
+#                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
+#                     draw_line(self.outImage, L2, L3)
+#                 # SW
+#                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
+#                     draw_line(self.outImage, L3, L4)
+#                 # vertical
+#                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
+#                     draw_line(self.outImage, L1, L3)
+#                 # horizontal
+#                 if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
+#                     draw_line(self.outImage, L4, L2)
+#                 
+#                 cMid12r = find_mid_point(p1r,p2r)
+#                 cMid14r = find_mid_point(p1r,p4r)
+#                 cMid24r = find_mid_point(p2r,p4r)
+#                 cMid23r = find_mid_point(p2r,p3r)
+#                 cMid34r = find_mid_point(p3r,p4r)
+#                 
+#                 # case 1: interface crossing through L1 and L4
+#                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
+#                 #print "case 1"
+#                     vecCoord1 = case_NW_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L1,L4,self);
+#                     self.ishomog = 0
+#                     if ( vecCoord1[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) ):
+# 
+#                         draw_line(self.outImage,cMid12r,cMid34r);
+#                         draw_line(self.outImage,cMid14r,cMid23r);               
+#                         return True
+#                     elif vecCoord1[0] != -1:
+#                         self.enrichNodes = vecCoord1#[L1, L4]   
+#                 
+#                 # case 2: interface crossing through L1 and L2
+#                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE):
+#                     vecCoord2 = case_NE_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L1,L2);
+#                     self.ishomog = 0
+#                     if(vecCoord2[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) ):
+#                     #print "case 2"
+# 
+#                         draw_line(self.outImage,cMid12r,cMid34r);
+#                         draw_line(self.outImage,cMid14r,cMid23r);
+#                         return True
+#                     elif vecCoord2[0] != -1:
+#                         self.enrichNodes = vecCoord2
+# #                        self.mat = 'Fluid'
+#                     
+#                         
+#                 # case 3: interface crossing through L2 and L3
+#                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
+#                 #print "case 3"
+#                     vecCoord3 = case_SE_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L2,L3);
+#                     if(vecCoord3[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
+# 
+#                         draw_line(self.outImage,cMid12r,cMid34r);
+#                         draw_line(self.outImage,cMid14r,cMid23r);
+#                         return True
+#                     elif vecCoord3[0].x != -1:
+#                         self.enrichNodes = vecCoord3
+# #                        self.mat = 'Fluid'
+#                     self.ishomog = 0   
+#                         
+#                 # case 4: interface crossing through L4 and L3
+#                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
+#                 #print "case 4"
+#                     vecCoord4 = case_SW_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L3,L4);
+#                     if(vecCoord4[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
+#  
+#                         draw_line(self.outImage,cMid12r,cMid34r);
+#                         draw_line(self.outImage,cMid14r,cMid23r);
+#                         return True
+#                     elif vecCoord4[0].x != -1:
+#                         self.enrichNodes = vecCoord4
+# #                        self.mat = 'Fluid'
+#                     self.ishomog = 0
+# 
+#                 # case 5: interface crossing through L1 and L3
+#                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
+#                     #print "case 5"
+#                     vecCoord5 = case_vertical_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L1,L3);
+#                     if(vecCoord5[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
+# 
+#                         draw_line(self.outImage,cMid12r,cMid34r);
+#                         draw_line(self.outImage,cMid14r,cMid23r);
+#                         return True
+#                     elif vecCoord5[0].x != -1:
+#                         self.enrichNodes = vecCoord5
+# #                        self.mat = 'Fluid'
+#                     self.ishomog = 0   
+#                     
+#                 # case 6: interface crossing through L4 and L2
+#                 if (l1==True and l2==False and l3==True and l4==False) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
+#                 #print "case 6"
+#                     vecCoord6 = case_horizontal_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L2,L4);
+#                     if(vecCoord6[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
+# 
+#                         draw_line(self.outImage,cMid12r,cMid34r);
+#                         draw_line(self.outImage,cMid14r,cMid23r);
+#                         return True
+#                     elif vecCoord6[0].x != -1:
+#                         self.enrichNodes = vecCoord6
+#                     self.ishomog = 0    
+# #                        self.mat = 'Fluid'
+#                                             
+#                  # case 7: one line crossing through L1 and L4 and one line crossing through L2 and L3
+#                  # 2-2 non adjacent corners are the same color (diagonally opposed)
+#                  # the case of 3 consecutive-adjacent materials
+#                 if (l1==0 and l2==0 and l3==0 and l4==0) :
+# #                    print "case 7"
+#                     self.ishomog = 0
+#                     draw_line(self.outImage,cMid12r,cMid34r);
+#                     draw_line(self.outImage,cMid14r,cMid23r);
+#                     return True
+#                 
+#                 if (l1==1 and l2==1 and l3==0 and l4==1) or (l1==1 and l2==1 and l3==1 and l4==0) or (l1==0 and l2==1 and l3==1 and l4==1) or (l1==1 and l2==0 and l3==1 and l4==1) :
+#                     self.ishomog = 0
+#                     draw_line(self.outImage,cMid12r,cMid34r);
+#                     draw_line(self.outImage,cMid14r,cMid23r);
+#                     return True
+                
                 
         if ( self.children[0] != None and
              self.children[1] != None and
@@ -1377,23 +1511,23 @@ def set_graph(masterNode,llist):
                           'S': south_neigh_index,
                           'SE': south_east_neigh_index
                            }
-        graph_list = []
-        if north_west_neigh_index != ['-1']:
-            graph_list = graph_list + north_west_neigh_index
-        if north_neigh_index != ['-1']:
-            graph_list = graph_list + north_neigh_index
-        if north_east_neigh_index != ['-1']:
-            graph_list = graph_list +  north_east_neigh_index
-        if west_neigh_index != ['-1']:
-            graph_list = graph_list + west_neigh_index
-        if east_neigh_index != ['-1']:
-            graph_list = graph_list + east_neigh_index
-        if south_west_neigh_index != ['-1']:
-            graph_list = graph_list + south_west_neigh_index
-        if south_neigh_index != ['-1']:
-            graph_list = graph_list + south_neigh_index
-        if south_east_neigh_index != ['-1']:
-            graph_list = graph_list + south_east_neigh_index
+#         graph_list = []
+#         if north_west_neigh_index != ['-1']:
+#             graph_list = graph_list + north_west_neigh_index
+#         if north_neigh_index != ['-1']:
+#             graph_list = graph_list + north_neigh_index
+#         if north_east_neigh_index != ['-1']:
+#             graph_list = graph_list +  north_east_neigh_index
+#         if west_neigh_index != ['-1']:
+#             graph_list = graph_list + west_neigh_index
+#         if east_neigh_index != ['-1']:
+#             graph_list = graph_list + east_neigh_index
+#         if south_west_neigh_index != ['-1']:
+#             graph_list = graph_list + south_west_neigh_index
+#         if south_neigh_index != ['-1']:
+#             graph_list = graph_list + south_neigh_index
+#         if south_east_neigh_index != ['-1']:
+#             graph_list = graph_list + south_east_neigh_index
             
              
 #         simple_graph[str(root.index)] = { graph_list}
@@ -2299,15 +2433,10 @@ def find_nearest(array,value):
     idx = (numpy.abs(array-value)).argmin()
     return array[idx]
  
-def go_thru(tree_list, masterNode):
-    n = len(tree_list)
-    print tree_list
-    for i in range(0,n):
-        root_i = get_node_by_id(masterNode,tree_list[i])     
-        if len(root_i.enrichNodes) > 1:
-            print 'ex'
-            
-def eq_tan(pt1,pt2,node):
+                
+def element_normal_intersection(pt1,pt2,node):
+    
+    NoneINT = -9999
     midpt = find_mid_point(pt1,pt2)
     
     dx = pt1.x - pt2.x
@@ -2320,44 +2449,117 @@ def eq_tan(pt1,pt2,node):
     ptN2 = Coordinate( midpt.x + N2[0], midpt.y + N2[1])
 
     
-    dx_m = ptN1.x - midpt.x
-    dy_m = ptN1.y - midpt.y
+    if 0 <= ptN1.x and ptN1.x <= node.imsize[0] and 0 <= ptN1.y and ptN1.y <= node.imsize[1]:
+        ptN = Coordinate(ptN1.x, ptN1.y)
+    elif 0 <= ptN2.x and ptN2.x <= node.imsize[0] and 0 <= ptN2.y and ptN2.y <= node.imsize[1]:
+        ptN = Coordinate(ptN2.x, ptN2.y)
+        
+    dx_m = ptN.x - midpt.x
+    dy_m = ptN.y - midpt.y
 
     
     p1,p2,p3,p4 = node.rect
     
     #Compute the intersection of the normal with the 4 sides of an element
-    if dx_m == 0:
+    if dx_m == 0: #vertical
         side1 = Coordinate(midpt.x, p1.y)
-        side2 = Coordinate(None,None) # normal runs parallel with the edge
+        side2 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
         side3 = Coordinate(midpt.x, p4.y)
-        side4 = Coordinate(None,None) # normal runs parallel with the edge
-    elif dy_m == 0:
-        side1 = Coordinate(None, None) # normal runs parallel with the edge
+        side4 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
+    elif dy_m == 0: #horizontal
+        side1 = Coordinate(NoneINT, NoneINT) # normal runs parallel with the edge
         side2 = Coordinate(p2.x, midpt.y)
-        side3 = Coordinate(None,None) # normal runs parallel with the edge
+        side3 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
         side4 = Coordinate(p1.x, midpt.y)
     else:
         m_slope = float(dy_m) / dx_m
         b = midpt.y - m_slope * midpt.x
+        # SIDE 1
         if p1.x <= float(p1.y - b) / m_slope and float(p1.y - b) / m_slope <= p2.x:
             side1 = Coordinate( float(p1.y - b) / m_slope, p1.y)
-        else:
-            side1 = Coordinate(None, None)
+        else: # intersection happens outisde the element
+            side1 = Coordinate(NoneINT, NoneINT)
+        # SIDE 2    
         if p1.y <= m_slope * p2.x + b and  m_slope * p2.x + b <= p4.y:
             side2 = Coordinate( p2.x, m_slope * p2.x + b)
-        else:
-            side2 = Coordinate(None, None)
+        else: # intersection happens outisde the element
+            side2 = Coordinate(NoneINT, NoneINT)
+        # SIDE 3
         if p1.x <= float(p4.y - b) / m_slope and float(p4.y - b) / m_slope <= p2.x:
             side3 = Coordinate( float(p4.y - b) / m_slope, p4.y)
-        else:
-            side3 = Coordinate(None, None)
+        else: # intersection happens outisde the element
+            side3 = Coordinate(NoneINT, NoneINT)
+        # SIDE 4    
         if p1.y <= m_slope * p1.x + b and m_slope * p1.x + b <= p4.y:
             side4 = Coordinate( p1.x, m_slope * p1.x + b)
-        else:
-            side4 = Coordinate(None, None)
+        else: # intersection happens outisde the element
+            side4 = Coordinate(NoneINT, NoneINT)
 
-    return [side1,side2,side3,side4]
+    side1.x = int(side1.x)
+    side1.y = int(side1.y)
+    side2.x = int(side2.x)
+    side2.y = int(side2.y)
+    side3.x = int(side3.x)
+    side3.y = int(side3.y)
+    side4.x = int(side4.x)
+    side4.y = int(side4.y)
+    
+    N_edge = 0
+    S_edge = 0
+    W_edge = 0
+    E_edge = 0
+    NW_edge = 0
+    NE_edge = 0
+    SE_edge = 0
+    SW_edge = 0
+    direction_list = []
+    
+    if (side1.x != NoneINT and side1.x != p1.x and side1.x != p2.x and
+        side1.y != NoneINT and (side1.y == p1.y or side1.y == p2.y) ):
+#         print 'normal going through North edge' 
+        N_edge = 1
+        direction_list.append('U')
+        
+    if (side2.x != NoneINT and (side2.x == p3.x or side2.x == p2.x) and
+        side2.y != NoneINT and side2.y != p3.y and side2.y != p2.y):
+#         print 'normal going through East edge' 
+        E_edge = 1
+        direction_list.append('R')
+        
+    if (side3.x != NoneINT and side3.x != p3.x and side3.x != p4.x and
+        side3.y != NoneINT and (side3.y == p3.y or side3.y == p4.y) ):
+#         print 'normal going through South edge' 
+        S_edge = 1
+        direction_list.append('D')
+        
+    if (side4.x != NoneINT and (side4.x == p1.x or side4.x == p4.x) and
+        side4.y != NoneINT and side4.y != p1.y and side4.y != p4.y):
+#         print 'normal going through West edge' 
+        W_edge = 1
+        direction_list.append('L')
+        
+    if (side1.x == p2.x and side1.y == p2.y) or (side2.x == p2.x and side2.y == p2.y):
+#         print 'normal going through North East corner' 
+        NE_edge = 1
+        direction_list.append('RU')
+        
+    if (side1.x == p1.x and side1.y == p1.y) or (side4.x == p1.x and side4.y == p1.y):
+#         print 'normal going through North West corner'
+        NW_edge = 1
+        direction_list.append('LU')
+    
+    if (side2.x == p3.x and side2.y == p3.y) or (side3.x == p3.x and side3.y == p3.y):
+#         print 'normal going through South East corner' 
+        SE_edge = 1
+        direction_list.append('RD')
+        
+    if (side3.x == p4.x and side3.y == p4.y) or (side4.x == p4.x and side4.y == p4.y):
+#         print 'normal going through South West edge' 
+        SW_edge = 1
+        direction_list.append('LD')
+        
+    neigh_list = [NW_edge,N_edge,NE_edge,E_edge,SE_edge,S_edge,SW_edge,W_edge]
+    return [side1,side2,side3,side4,neigh_list, direction_list]
         
 def set_homog(masterNode,llist):
     n = len(llist)
@@ -2367,7 +2569,236 @@ def set_homog(masterNode,llist):
 
         if len(root.enrichNodes)>1:
             print root.index
-           
+            
+def find_neighbor_index_of(index,direction, masterNode, llist):
+    loc = str(index)
+    llist_str = list(loc)
+
+    
+    
+    
+    for i in range(len(loc)-1,-1,-1):
+    
+        new_quadrant =  D[str(loc[i])][direction]['Quadrant']
+        new_direction = D[str(loc[i])][direction]['Direction']
+        
+        
+        if new_direction != 'H':
+        
+            direction = new_direction
+            llist_str[i] = str(new_quadrant)
+        
+        else:
+            
+            llist_str[i] = str(new_quadrant)
+#             return str("".join(llist_str))
+            break
+
+    node = get_node_by_id(masterNode,[str(index)])
+    p1,p2,p3,p4 = node.rect
+    neigh_index = str("".join(llist_str))    
+    
+    lengthSize = node.imsize[1]-1
+    widthSize = node.imsize[0]-1
+    
+    if node_exists(neigh_index,llist):
+       
+        if direction == 'U' and p1.y != 0:
+            return [str(neigh_index)]
+        if direction == 'D' and p4.y != lengthSize:
+            return [str(neigh_index)]
+        if direction == 'L' and p1.x != 0:
+            return [str(neigh_index)]
+        if direction == 'R' and p3.x != widthSize:
+#             print 'tatatatatata??????'
+#             print p1.x, p3.x, widthSize
+            return [str(neigh_index)]
+        if direction == 'LU' and p1.x != 0 and p1.y != 0:
+            return [str(neigh_index)]
+        if direction == 'RU' and p2.x != widthSize and p1.y != 0:
+            return [str(neigh_index)]
+        if direction == 'LD' and p4.x != 0 and p4.y != lengthSize:
+            return [str(neigh_index)]
+        if direction == 'RD' and p3.x != widthSize and p3.y != lengthSize:
+            return [str(neigh_index)]
+        
+    else:
+        parent_of_neigh_index = neigh_index[:-1]
+        uncle_node = get_node_by_id(masterNode,[str(parent_of_neigh_index)])
+    
+        if uncle_node.has_children == False:
+            
+            if direction == 'U' and p1.y != 0:
+                return [str(parent_of_neigh_index)]
+            if direction == 'D' and p4.y != lengthSize:
+                return [str(parent_of_neigh_index)]
+            if direction == 'L' and p1.x != 0:
+                return [str(parent_of_neigh_index)]
+            if direction == 'R' and p3.x != widthSize:
+#                 print 'yayayayayayayayaydadadadad'
+                return [str(parent_of_neigh_index)]
+            if direction == 'LU' and p1.x != 0 and p1.y != 0:
+                return [str(parent_of_neigh_index)]
+            if direction == 'RU' and p2.x != widthSize and p1.y != 0:
+                return [str(parent_of_neigh_index)]
+            if direction == 'LD' and p4.x != 0 and p4.y != lengthSize:
+                return [str(parent_of_neigh_index)]
+            if direction == 'RD' and p3.x != widthSize and p3.y != lengthSize:
+                return [str(parent_of_neigh_index)]
+        else:
+            if direction == 'L' and p1.x != 0:
+                return [str(neigh_index) + '1', str(neigh_index) + '3']
+            if direction == 'R' and p3.x != widthSize:
+                return [str(neigh_index) + '0', str(neigh_index) + '2']
+            if direction == 'U' and p1.y != 0:
+                return [str(neigh_index) + '2', str(neigh_index) + '3']
+            if direction == 'D' and p4.y != lengthSize:
+                return [str(neigh_index) + '0', str(neigh_index) + '1']
+            if direction == 'LU' and p1.x != 0 and p1.y != 0:
+                return [str(neigh_index) + '3']
+            if direction == 'RU' and p2.x != widthSize and p1.y != 0:
+                return [str(neigh_index) + '2']
+            if direction == 'RD' and p3.x != widthSize and p3.y != lengthSize:
+                return [str(neigh_index) + '0']
+            if direction == 'LD' and p4.x != 0 and p4.y != lengthSize:
+                return [str(neigh_index) + '1']
+
+        
+    return []
+         
+def go_thru(tree_list, masterNode):
+
+    n = len(tree_list)
+
+    # for each node in the tree:
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,tree_list[i])    
+         
+        if len(root_i.enrichNodes) > 1: # for each non-hom node
+        # root_i.index=='312':
+            [side1,side2,side3,side4,neigh_list,dir_list] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], root_i)
+#             print '-----------------'
+#             print root_i.index
+#             print find_neighbor_index_of(root_i.index,dir_list[0], masterNode, tree_list)
+#             print find_neighbor_index_of(root_i.index,dir_list[1], masterNode, tree_list)
+#             print dir_list
+#             print '++++++++++++++++'
+
+#             print neigh_list
+            counter1 = 0
+            counter2 = 0
+            
+            list1 = []
+            list2 = []
+            
+            whichEdge1 = dir_list[0]
+            whichEdge2 = dir_list[1]
+            
+            currentIndex1 = root_i.index
+            currentIndex2 = root_i.index
+            list1.append(currentIndex1)
+
+            while counter1 <= 4:
+                neighs = find_neighbor_index_of(currentIndex1,whichEdge1, masterNode, tree_list)
+                
+                if len(neighs) == 2: # there are 2 neighbors sharing an edge with me
+                    neigh1 = get_node_by_id(masterNode,[str(neighs[0])]) 
+                    neigh2 = get_node_by_id(masterNode,[str(neighs[1])])
+
+                    p1n1,p2n1,p3n1,p4n1 = neigh1.rect
+                    
+                    if whichEdge1 == 'U':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side1.x >= p1n1.x and side1.x <= p2n1.x:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+
+                    if whichEdge1 == 'D':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side2.x >= p1n1.x and side2.x <= p2n1.x:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+
+                    if whichEdge1 == 'L':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side4.y >= p1n1.y and side4.y <= p4n1.y:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+                            
+                    if whichEdge1 == 'R':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
+                        if side3.y >= p1n1.y and side3.y <= p4n1.y:
+                            neighIndex = str(neighs[0])
+                        else:
+                            neighIndex = str(neighs[1])
+                    
+                else:
+                    if len(neighs) == 0: # there are no neighbors of mine, perhaps we are at the margins of the image
+                        break
+                    else:
+                        neighIndex = str(neighs[0])
+
+                neigh_node = get_node_by_id(masterNode,[str(neighIndex)])
+                if not(neigh_node.ishomog):
+                    #neighbor is non-homogeneous:                    
+#                     list1.append(neighIndex)
+                    break
+                else:
+                    counter1 += 1
+                    [side1,side2,side3,side4,neigh_listN,dir_listN] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], neigh_node)
+                    currentIndex1 = neighIndex
+                    whichEdge1 = swap_edges(whichEdge1, dir_listN)
+                    list1.append(neighIndex)
+                    
+                 
+            print root_i.index
+            print list1   
+                
+#             while counter2 <= 4:
+#                 neighs = find_neighbor_index_of(currentIndex2,whichEdge2, masterNode, tree_list)
+#                 if len(neighs) == 2:
+#                     print 'decide'
+#                 else:
+#                     if len(neighs) == 0:
+#                         list2.append(currentIndex2)
+#                         print 'nada'
+#                     else:
+#                         print len(neighs)
+#                         
+#                 counter2 += 1
+
+    
+def swap_edges(whichEdge1, dirlist):
+    
+    if whichEdge1 == 'U':
+        newEdge1 = 'D'
+        
+    if whichEdge1 == 'D':
+         newEdge1 = 'U'
+         
+    if whichEdge1 == 'L':
+         newEdge1 = 'R'
+         
+    if whichEdge1 == 'R':
+         newEdge1 = 'L'
+         
+    if whichEdge1 == 'LU':
+        newEdge1 = 'RD'
+        
+    if whichEdge1 == 'RU':
+         newEdge1 = 'LD'
+         
+    if whichEdge1 == 'LD':
+         newEdge1 = 'RU'
+         
+    if whichEdge1 == 'RD':
+         newEdge1 = 'LU'
+         
+    if newEdge1 == str(dirlist[0]):
+        return dirlist[1]
+    else:
+        return dirlist[0]
+    
+             
 if __name__ == "__main__":
     print "Reading image in..."
 #     inputImage = sitk.ReadImage("images/channels.png");
@@ -2440,13 +2871,15 @@ if __name__ == "__main__":
      
     masterNode = rootNode
 
-    stress_concentration_constraint(tree, rootNode, masterNode)
+#     stress_concentration_constraint(tree, rootNode, masterNode)
+#     masterNode = rootNode
 
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
 #     print tree_list_of_nodes
 #     set_homog(masterNode,llist)
     go_thru(tree_list_of_nodes, masterNode)
+    
 #     
 #     root_i = get_node_by_id(masterNode,['330'])
 #     print '======',root_i.ishomog

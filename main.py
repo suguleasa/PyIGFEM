@@ -256,6 +256,7 @@ class Node():
             self.has_children = True
         else:
             self.has_children = False
+            
     def divideOnce(self): 
     # this method divides once a given node
         
@@ -335,48 +336,11 @@ class QuadTree(Node):
     
     def __init__(self,rootnode):
         rootnode.subdivide() # constructs the network or nodes
-       # self.prune(rootnode)
-       # self.traverse(rootnode)
-##    #_______________________________________________________
-##    # Sets children of 'node' to None if they do not have any
-##    # LEAF nodes.        
-##    def prune(self, node):
-###        if node.type == Node.LEAF:
-###            return 1
-##        leafcount = 0
-##        removals = []
-##        for child in node.children:
-##            if child != None:
-##                leafcount += self.prune(child)
-##                if leafcount == 0:
-##                    removals.append(child)
-##        for item in removals:
-##            n = node.children.index(item)
-##            node.children[n] = None        
-##        return leafcount
-##    #_______________________________________________________
-##    # Appends all nodes to a "generic" list, but only LEAF 
-##    # nodes are appended to the list of leaves.
-##    def traverse(self, node):
-##        QuadTree.allnodes.append(node)
-##        print QuadTree.maxdepth,node.depth
-###        if node.type == Node.LEAF:
-###            QuadTree.leaves.append(node)
-##        if node.depth > QuadTree.maxdepth:
-##            QuadTree.maxdepth = node.depth
-##        for child in node.children:
-##            if child != None:
-##                self.traverse(child) # << recursion      
-##    
+
     def count_nodes(self,root):
         
-#    allnodes = allnodes + 4
         allnodes = 0
 
-#        for child in root.children:
-#            if child != None:
-#                allnodes += self.count_nodes(child)
-                
         if root.has_children == False:
             return 0 
         else:
@@ -398,20 +362,6 @@ class QuadTree(Node):
             h1 = self.leveling(root.children[0])
             h2 = self.leveling(root.children[1])
             
-#    def height(self,root):
-#
-#        if root.parent == 0:
-#            return 0
-#        h1 = self.height(root.children[0])
-#        h2 = self.height(root.children[1])
-## 
-#        if (h1 == -1 or h2 == -1 or h1 < h2-1 or h1 > h2+1):
-#            return -1
-#        if h1>h2:
-#            return h1 + 1
-#        else:
-#            return h2 + 1       
-#        
 
     def neighbors_of_SE(self,root,masterNode):
         p1,p2,p3,p4 = root.rect
@@ -637,9 +587,6 @@ class CNode(Node):
     def getinstance(self,rect,inImage,outImage,imageSize):
         return CNode(self,rect,inImage,outImage,imageSize)
 
-
-
-    
     def division_criterionOnce(self, rect, inImage, outImage):
         
         p1,p2,p3,p4 = self.rect
@@ -663,8 +610,6 @@ class CNode(Node):
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
         
-#         if self.index == '30100':
-#                             print ' -----------------------blah'     
 
         if abs(p1.x - p2.x) >= MAX_SIZE:               
             draw_line(self.outImage,cMid12,cMid34);

@@ -216,10 +216,10 @@ class Node():
                     self.children[n].index = '0'*diff_level + self.children[n].index
                 
                 p1r,p2r,p3r,p4r = rects[n]
-                L1 = linear_search(self.inImage,p1r,p2r);
-                L2 = linear_search(self.inImage,p2r,p3r);
-                L3 = linear_search(self.inImage,p4r,p3r);
-                L4 = linear_search(self.inImage,p1r,p4r);
+                L1 = search_in(LIST,p1r,p2r,self.inImage)
+                L2 = search_in(LIST,p2r,p3r,self.inImage)
+                L3 = search_in(LIST,p4r,p3r,self.inImage)
+                L4 = search_in(LIST,p1r,p4r,self.inImage)
         
  
                 if len(L1) == 1:
@@ -283,10 +283,14 @@ class Node():
         
                 p1r,p2r,p3r,p4r = rects[n]
                 
-                L1 = linear_search(self.inImage,p1r,p2r);
-                L2 = linear_search(self.inImage,p2r,p3r);
-                L3 = linear_search(self.inImage,p4r,p3r);
-                L4 = linear_search(self.inImage,p1r,p4r);
+#                L1 = linear_search(self.inImage,p1r,p2r);
+#                L2 = linear_search(self.inImage,p2r,p3r);
+#                L3 = linear_search(self.inImage,p4r,p3r);
+#                L4 = linear_search(self.inImage,p1r,p4r);
+                L1 = search_in(LIST,p1,p2,self.inImage)
+                L2 = search_in(LIST,p2,p3,self.inImage)
+                L3 = search_in(LIST,p4,p3,self.inImage)
+                L4 = search_in(LIST,p1,p4,self.inImage)
         
                 l1 = ends_in_same_bin(self.inImage,p1r,p2r);
                 l2 = ends_in_same_bin(self.inImage,p2r,p3r);
@@ -770,11 +774,14 @@ class CNode(Node):
                 l3 = ends_in_same_bin(self.inImage,p4,p3);
                 l4 = ends_in_same_bin(self.inImage,p1,p4);
             
-                L1 = linear_search(self.inImage,p1,p2);
-                L2 = linear_search(self.inImage,p2,p3);
-                L3 = linear_search(self.inImage,p4,p3);
-                L4 = linear_search(self.inImage,p1,p4);
-                
+#                L1 = linear_search(self.inImage,p1,p2);
+#                L2 = linear_search(self.inImage,p2,p3);
+#                L3 = linear_search(self.inImage,p4,p3);
+#                L4 = linear_search(self.inImage,p1,p4);
+                L1 = search_in(LIST,p1,p2,self.inImage)
+                L2 = search_in(LIST,p2,p3,self.inImage)
+                L3 = search_in(LIST,p4,p3,self.inImage)
+                L4 = search_in(LIST,p1,p4,self.inImage)                
                 
                 if ( 
                     len(L2) > 1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1 
@@ -2923,7 +2930,6 @@ def process_list(full_list, masterNode,image):
     # processing the list with elements in between interfaces
     
     extra_list = []
-#     print 'inside PROCESS LIST', len(full_list)
     for k in range(0, len(full_list)):
         llist = full_list[k]
         
@@ -3031,10 +3037,10 @@ def swap_edges(whichEdge, dirlist):
              
 if __name__ == "__main__":
     print "Reading image in..."
-    inputImage = sitk.ReadImage("images/channelsCircles.png");
-    outputImage = sitk.ReadImage("images/channelsCircles.png");
-#     inputImage = sitk.ReadImage("images/circles.png");
-#     outputImage = sitk.ReadImage("images/circles.png");
+#    inputImage = sitk.ReadImage("images/channelsCircles.png");
+#    outputImage = sitk.ReadImage("images/channelsCircles.png");
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
 #     inputImage = sitk.ReadImage("images/sin2pi.png");
 #     outputImage = sitk.ReadImage("images/sin2pi.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));

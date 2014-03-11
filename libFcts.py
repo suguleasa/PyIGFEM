@@ -7,6 +7,22 @@ class Coordinate(object):
     def __init__(self,x=-1,y=-1):
         self.x = x
         self.y = y
+            
+def search_in(my_list,pi,pj,inImage):
+    Lk_list1 = [[x[0],x[1]] in [[pi,pj],] for x in my_list] #[True, False, False, True, etc]
+    Lk_list2 = [[x[0],x[1]] in [[pj,pi],] for x in my_list] #[True, False, False, True, etc]
+    if True in Lk_list1: #if we found it in the list:
+        Lk_ind = Lk_list1.index(True)
+        Lk = my_list[Lk_ind][2]
+    else: 
+        if True in Lk_list2:
+            Lk_ind = Lk_list2.index(True)
+            Lk = my_list[Lk_ind][2]
+        else:
+            Lk = linear_search(inImage,pi,pj)
+            my_list.append([pi,pj,Lk])
+    return Lk
+
 
 ## This function draws a line between two points in space: pinit and pend
 def draw_line(image,pinit,pend):

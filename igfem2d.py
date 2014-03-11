@@ -1341,14 +1341,14 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         y0 = coords[0,1]
 #                         y1 = coords[2,1] 
 #                         print (p[nodes[5]])
-#                     if root.index == '232110':   
-#                         print ' ------=========----------blah'
-#                         print not(on_corners(enrich1,coords)), not(on_corners(enrich2,coords))
-#                         print 'coords', coords
-#                         print 'nodes', nodes
-#                         print 'enrich1', enrich1[0], enrich1[1]  
-#                         print 'enrich2', enrich2[0], enrich2[1]
-#                         print [x0,x1], [y0,y1]
+                    if root.index == '232110':   
+                        print ' ------=========----------blah'
+                        print not(on_corners(enrich1,coords)), not(on_corners(enrich2,coords))
+                        print 'coords', coords
+                        print 'nodes', nodes
+                        print 'enrich1', enrich1[0], enrich1[1]  
+                        print 'enrich2', enrich2[0], enrich2[1]
+                        print [x0,x1], [y0,y1]
                     # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
                     if ( ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and 
 #                         not(on_corners(enrich1,x0,y0,x1,y1)) and 

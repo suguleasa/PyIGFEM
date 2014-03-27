@@ -1,5 +1,5 @@
 Left to do for the meshing:
 
-1. Add the alternative minimum size remeshing constraint (high stress concentrations)
+1. ALT_MIN not considered
 
-2. Create double linked lists for each interface
+2. For the high-stress concentration constraint add up to 10 elements in between to be divided

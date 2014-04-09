@@ -23,10 +23,73 @@ def search_in(my_list,pi,pj,inImage):
             my_list.append([pi,pj,Lk])
     return Lk
 
+## This function draws a line between two points in space: pinit and pend
+def draw_line_normals(image,pinit,pend):
+    pix_col = 150
+    if (pinit.x == pend.x):
+        # print "vertical line"
+        if (pinit.y <= pend.y):
+            startLine = pinit.y;
+            endLine = pend.y;
+        else:
+            startLine = pend.y;
+            endLine = pinit.y;
+        # draw the line
+        for i in range(startLine,endLine+1):
+            image.SetPixel(pinit.x,i,0,pix_col);
 
+    elif pinit.y == pend.y:
+    #    print "horizontal line"
+        if (pinit.x <= pend.x):
+            startLine = pinit.x;
+            endLine = pend.x;
+        else:
+            startLine = pend.x;
+            endLine = pinit.x;
+        # draw the line
+        for i in range(startLine,endLine+1):
+            image.SetPixel(i,pinit.y,0,pix_col);
+    else:
+        #print "oblique line"
+        dx = pend.x - pinit.x;
+        dy = pend.y - pinit.y;
+
+        # line expressed as y = f(x)
+        if abs(dx) > abs(dy):
+        #    print 'y=f(x)'
+            slope = float(dy)/dx;
+            if (pinit.x < pend.x):
+                bbegin = pinit.x;
+                eend = pend.x;
+            else:
+                bbegin = pend.x;
+                eend = pinit.x;
+            for i in range(bbegin,eend+1):
+#                type(i) is int
+                yloc = slope * (i - pend.x) + pend.y;
+                yloc = int(yloc)
+#                type(yloc) is int
+                image.SetPixel(i,yloc,0,pix_col);
+
+        # line expressed as x = f(y)
+        else:
+        #    print 'x = f(y)'
+            slope = float(dx)/dy;
+            if (pinit.y < pend.y):
+                bbegin = pinit.y;
+                eend = pend.y;
+            else:
+                bbegin = pend.y;
+                eend = pinit.y;
+            for i in range(bbegin,eend+1):
+                xloc = slope * ( i - pinit.y) + pinit.x;
+                xloc = int(xloc);
+                image.SetPixel(xloc,i,0,pix_col);
+                
 ## This function draws a line between two points in space: pinit and pend
 def draw_line(image,pinit,pend):
-	if (pinit.x == pend.x):
+    pix_col = 1
+    if (pinit.x == pend.x):
 		# print "vertical line"
 		if (pinit.y <= pend.y):
 			startLine = pinit.y;
@@ -36,9 +99,9 @@ def draw_line(image,pinit,pend):
 			endLine = pinit.y;
 		# draw the line
 		for i in range(startLine,endLine+1):
-			image.SetPixel(pinit.x,i,0,1);
+			image.SetPixel(pinit.x,i,0,pix_col);
 
-	elif pinit.y == pend.y:
+    elif pinit.y == pend.y:
 	#	print "horizontal line"
 		if (pinit.x <= pend.x):
 			startLine = pinit.x;
@@ -48,8 +111,8 @@ def draw_line(image,pinit,pend):
 			endLine = pinit.x;
 		# draw the line
 		for i in range(startLine,endLine+1):
-			image.SetPixel(i,pinit.y,0,1);
-	else:
+			image.SetPixel(i,pinit.y,0,pix_col);
+    else:
 		#print "oblique line"
 		dx = pend.x - pinit.x;
 		dy = pend.y - pinit.y;
@@ -69,7 +132,7 @@ def draw_line(image,pinit,pend):
 				yloc = slope * (i - pend.x) + pend.y;
 				yloc = int(yloc)
 #				type(yloc) is int
-				image.SetPixel(i,yloc,0,1);
+				image.SetPixel(i,yloc,0,pix_col);
 
 		# line expressed as x = f(y)
 		else:
@@ -84,7 +147,7 @@ def draw_line(image,pinit,pend):
 			for i in range(bbegin,eend+1):
 				xloc = slope * ( i - pinit.y) + pinit.x;
 				xloc = int(xloc);
-				image.SetPixel(xloc,i,0,1);
+				image.SetPixel(xloc,i,0,pix_col);
 
 
 ## This function returns 1 if the pixel value is within a given
@@ -170,7 +233,7 @@ def draw_curve(image,p1,p2,d,x):
 	for i in range(p1.x,p2.x+1):
 		yloc = (newt_fct_eval(d,x,i)); 
 		yloc = int(yloc)
-		print [i,yloc]
+#		print [i,yloc]
 		image.SetPixel(i,yloc,0,1);
 
 

@@ -283,14 +283,14 @@ class Node():
         
                 p1r,p2r,p3r,p4r = rects[n]
                 
-#                L1 = linear_search(self.inImage,p1r,p2r);
-#                L2 = linear_search(self.inImage,p2r,p3r);
-#                L3 = linear_search(self.inImage,p4r,p3r);
-#                L4 = linear_search(self.inImage,p1r,p4r);
-                L1 = search_in(LIST,p1,p2,self.inImage)
-                L2 = search_in(LIST,p2,p3,self.inImage)
-                L3 = search_in(LIST,p4,p3,self.inImage)
-                L4 = search_in(LIST,p1,p4,self.inImage)
+                L1 = linear_search(self.inImage,p1r,p2r);
+                L2 = linear_search(self.inImage,p2r,p3r);
+                L3 = linear_search(self.inImage,p4r,p3r);
+                L4 = linear_search(self.inImage,p1r,p4r);
+#                L1 = search_in(LIST,p1,p2,self.inImage)
+#                L2 = search_in(LIST,p2,p3,self.inImage)
+#                L3 = search_in(LIST,p4,p3,self.inImage)
+#                L4 = search_in(LIST,p1,p4,self.inImage)
         
                 l1 = ends_in_same_bin(self.inImage,p1r,p2r);
                 l2 = ends_in_same_bin(self.inImage,p2r,p3r);
@@ -1138,6 +1138,7 @@ def three_neighbor_rule(tree, root, masterNode):
         south_has_children = False
         north_has_children = False
         
+        counter = 0
         # if root has no children look at his neighbors
         # if all of them do have children, 
         # root needs to be subdivided
@@ -1149,6 +1150,7 @@ def three_neighbor_rule(tree, root, masterNode):
                 west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children == True:
                     west_has_children = True
+                    counter += 1
                     
             east_neigh_index = str(find_neighbor_of(root.index,'R'))    
             # checking to see if the west neighbor exists or is a ghost
@@ -1156,6 +1158,7 @@ def three_neighbor_rule(tree, root, masterNode):
                 east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children == True:
                     east_has_children = True
+                    counter += 1
 
             south_neigh_index = str(find_neighbor_of(root.index,'D'))    
             # checking to see if the west neighbor exists or is a ghost
@@ -1163,6 +1166,7 @@ def three_neighbor_rule(tree, root, masterNode):
                 south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children == True:
                     south_has_children = True
+                    counter += 1
 
             north_neigh_index = str(find_neighbor_of(root.index,'U'))    
             # checking to see if the west neighbor exists or is a ghost
@@ -1170,9 +1174,11 @@ def three_neighbor_rule(tree, root, masterNode):
                 north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children == True:
                     north_has_children = True
-                    
-            if west_has_children == True and east_has_children == True and south_has_children == True and north_has_children == True:
-                print '3 neigh-rule - ', root.index
+                    counter += 1
+            
+            #if west_has_children == True and east_has_children == True and south_has_children == True and north_has_children == True:
+            if counter > 2:
+#                print '3 neigh-rule - ', root.index
                 root.divideOnce()      
 
                         
@@ -1185,18 +1191,18 @@ def three_neighbor_rule(tree, root, masterNode):
         if root.children[3] != None:
             three_neighbor_rule(tree,root.children[3],masterNode)
 
-def stress_concentration_constraint(tree, root, masterNode):
-
-    print 'graph'
-#         if root.children[0] != None:
-#             stress_concentration_constraint(tree,root.children[0],masterNode)
-#         if root.children[1] != None:
-#             stress_concentration_constraint(tree,root.children[1],masterNode)
-#         if root.children[2] != None:
-#             stress_concentration_constraint(tree,root.children[2],masterNode)
-#         if root.children[3] != None:
-#             stress_concentration_constraint(tree,root.children[3],masterNode)
-  
+#def stress_concentration_constraint(tree, root, masterNode):
+#
+#    print 'graph'
+##         if root.children[0] != None:
+##             stress_concentration_constraint(tree,root.children[0],masterNode)
+##         if root.children[1] != None:
+##             stress_concentration_constraint(tree,root.children[1],masterNode)
+##         if root.children[2] != None:
+##             stress_concentration_constraint(tree,root.children[2],masterNode)
+##         if root.children[3] != None:
+##             stress_concentration_constraint(tree,root.children[3],masterNode)
+#  
 def set_graph(masterNode,llist):
     # each node called ROOT has 8 neighbors: 
     #  NW   NC   NE 
@@ -1486,7 +1492,7 @@ def set_graph(masterNode,llist):
 def find_shortest_path(graph, start, end, path = []):
         start = '00'
         end = '11'
-        print [start, end]
+#        print [start, end]
         path = path + [start]
         if start == end:
             return path
@@ -1626,7 +1632,7 @@ def process_list_of_elements(llist,root):
     coordsList1 = [ key for key,_ in groupby(coordsList1)]
 
     lenClist1 = len(coordsList1)
-    print 'inside process list',lenClist1
+#    print 'inside process list',lenClist1
     
     coordsList2 = []
     #second, construct the pvec of the enrichment nodes
@@ -2111,12 +2117,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             ind1 = tl[4]
             ind2 = tl[5]
             
-            if ind2 == 1059:
-                print tl, tp
-                print enrich1
-                print enrich2
-                root.printRect()
-                print not(on_corners(enrich1,coords)) , not(on_corners(enrich2,coords))
+#            if ind2 == 1059:
+#                print tl, tp
+#                print enrich1
+#                print enrich2
+#                root.printRect()
+#                print not(on_corners(enrich1,coords)) , not(on_corners(enrich2,coords))
 #             if ind2 == 1059:
 #                 print p[1059]
 #                 print 'ce faci aici ba?', tl, root.printRect()
@@ -2373,7 +2379,7 @@ def set_homogOLD(masterNode,llist,pvecPx):
         else:
             root.ishomog = 1
 
-        print root.index, root.ishomog
+#        print root.index, root.ishomog
 
 def find_index(array,value):
     idx = (numpy.abs(array-value)) == 0
@@ -2410,6 +2416,11 @@ def element_normal_intersection(pt1,pt2,node,image):
     
     p1,p2,p3,p4 = node.rect
 
+#    print dx, dy, dx_m, dy_m
+#    print ptN.x, ptN.y
+#    print 'first pt',pt1.x, pt1.y
+#    print pt2.x, pt2.y
+#    print midpt.x, midpt.y
     
     #Compute the intersection of the normal with the 4 sides of an element
     if dx_m == 0: #vertical
@@ -2417,13 +2428,13 @@ def element_normal_intersection(pt1,pt2,node,image):
         side2 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
         side3 = Coordinate(midpt.x, p4.y)
         side4 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
-#         draw_line(image, side1,side3)
+#        draw_line_normals(image, side1,side3)
     elif dy_m == 0: #horizontal
         side1 = Coordinate(NoneINT, NoneINT) # normal runs parallel with the edge
         side2 = Coordinate(p2.x, midpt.y)
         side3 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
         side4 = Coordinate(p1.x, midpt.y)
-#         draw_line(image, side2,side4)
+#        draw_line_normals(image, side2,side4)
     else:
         m_slope = float(dy_m) / dx_m
         b = midpt.y - m_slope * midpt.x
@@ -2436,7 +2447,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side1 = Coordinate( float(p1.y - b) / m_slope, p1.y)
             side1.x = int(side1.x)
             side1.y = int(side1.y)
-#             draw_line(image, midpt, side1)
+#            draw_line_normals(image, midpt, side1)
         else: # intersection happens outisde the element
             side1 = Coordinate(NoneINT, NoneINT)
         
@@ -2445,7 +2456,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side2 = Coordinate( p2.x, m_slope * p2.x + b)
             side2.x = int(side2.x)
             side2.y = int(side2.y)
-#             draw_line(image, midpt, (side2))
+#            draw_line_normals(image, midpt, (side2))
         else: # intersection happens outisde the element
             side2 = Coordinate(NoneINT, NoneINT)
         
@@ -2454,7 +2465,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side3 = Coordinate( float(p4.y - b) / m_slope, p4.y)
             side3.x = int(side3.x)
             side3.y = int(side3.y)
-#             draw_line(image, midpt, side3)
+#            draw_line_normals(image, midpt, side3)
         else: # intersection happens outisde the element
             side3 = Coordinate(NoneINT, NoneINT)
         # SIDE 4    
@@ -2462,7 +2473,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side4 = Coordinate( p1.x, m_slope * p1.x + b)
             side4.x = int(side4.x)
             side4.y = int(side4.y)
-#             draw_line(image, midpt, side4)
+#            draw_line_normals(image, midpt, side4)
         else: # intersection happens outisde the element
             side4 = Coordinate(NoneINT, NoneINT)
 
@@ -2485,6 +2496,13 @@ def element_normal_intersection(pt1,pt2,node,image):
     SW_edge = 0
     direction_list = []
     whichSide = []
+    
+#    node.printRect()
+#    print side1.x, side1.y
+#    print side2.x, side2.y
+#    print side3.x, side3.y
+#    print side4.x, side4.y
+    
     
     if (side1.x != NoneINT and side1.x != p1.x and side1.x != p2.x and
         side1.y != NoneINT and (side1.y == p1.y or side1.y == p2.y) ):
@@ -2560,8 +2578,8 @@ def set_homog(masterNode,llist):
     for i in range(0,n):
         root = get_node_by_id(masterNode,llist[i])
 
-        if len(root.enrichNodes)>1:
-            print root.index
+#        if len(root.enrichNodes)>1:
+#            print root.index
             
 def find_neighbor_index_of(index,direction, masterNode, llist):
     loc = str(index)
@@ -2571,7 +2589,7 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
     
     
     for i in range(len(loc)-1,-1,-1):
-    
+#        print str(loc[i]), direction, loc
         new_quadrant =  D[str(loc[i])][direction]['Quadrant']
         new_direction = D[str(loc[i])][direction]['Direction']
         
@@ -2634,7 +2652,7 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
         if direction == 'RD' and p3.x == widthSize and p3.y == lengthSize:
             return []
                     
-        print str(index), neigh_index, parent_of_neigh_index
+#        print str(index), neigh_index, parent_of_neigh_index
         if uncle_node.has_children == False:
    
             if direction == 'U' and p1.y != 0:
@@ -2687,7 +2705,7 @@ def draw_interface(image, tree_list, masterNode):
             draw_line(image,root_i.enrichNodes[0], root_i.enrichNodes[1])
         
                  
-def go_thru(tree_list, masterNode, image):
+def stress_concentration_constraint(tree_list, masterNode, image):
 
     n = len(tree_list)
 
@@ -2700,15 +2718,15 @@ def go_thru(tree_list, masterNode, image):
         if len(root_i.enrichNodes) > 1: # for each non-hom node
         # root_i.index=='312':
             [side1,side2,side3,side4,neigh_list,dir_list,whichSide] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], root_i, image)
-            print '-----------------'
-            print root_i.index
-            root_i.printRect()
-            print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
-            print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
-            print find_neighbor_index_of(root_i.index,dir_list[0], masterNode, tree_list)
-            print find_neighbor_index_of(root_i.index,dir_list[1], masterNode, tree_list)
-            print dir_list
-            print '++++++++++++++++'
+#            print '-----------------'
+#            print root_i.index
+#            root_i.printRect()
+#            print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
+#            print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
+#            print find_neighbor_index_of(root_i.index,dir_list[0], masterNode, tree_list)
+#            print find_neighbor_index_of(root_i.index,dir_list[1], masterNode, tree_list)
+#            print dir_list
+#            print '++++++++++++++++'
 
 #             print neigh_list
             counter1 = 0
@@ -2725,11 +2743,10 @@ def go_thru(tree_list, masterNode, image):
             list1.append(currentIndex1)
             list2.append(currentIndex2)
 
-#             print 'original ',whichSide[0].x, whichSide[0].y, whichSide[1].x, whichSide[1].y
             whichSidePrev1 = copy_list_of_sides(whichSide)
 
             while counter1 <= 4:
-#                 print 'counter 1'
+                
                 neighs = find_neighbor_index_of(currentIndex1,whichEdge1, masterNode, tree_list)
                 
                 if len(neighs) == 2: # there are 2 neighbors sharing an edge with me
@@ -2781,11 +2798,23 @@ def go_thru(tree_list, masterNode, image):
 #                     print 'counter 1, whichEdge=', whichEdge1, 'neigh index = ', neighIndex
 #                     print 'dirlistN=', dir_listN, 'whichSideN=', whichSideN
 #                     print side1N.x, side1N.y, side2N.x,side2N.y, side3N.x, side3N.y, side4N.x,side4N.y
-
+                    
+                    # problem when channelsCircles is tested
+                    if len(dir_listN) < 1 or len(whichSideN)<2:
+                        list1.append(neighIndex)
+                        break
 #                     root_i.printRect()
 #                     neigh_node.printRect()
-                    
+#                    print dir_listN,whichSidePrev1,whichSideN
+#                    print whichEdge1
                     whichEdge1 = swap_directions(dir_listN,whichSidePrev1,whichSideN)
+#                    print whichEdge1
+                    
+                    # problem when channelsCircles is tested
+                    if whichEdge1 == None:
+                        list1.append(neighIndex)
+                        break
+                    
                     whichSidePrev1 = copy_list_of_sides(whichSideN)
                     list1.append(neighIndex)
                     side1.x = side1N.x
@@ -2811,36 +2840,12 @@ def go_thru(tree_list, masterNode, image):
             dir_listN = dir_list
             while counter2 <= 4:
                 
-#                 newpts = []
-#                 if side1.x != NoneINT and side1.y != NoneINT:
-#                     newpts.append(side1)
-#                 if side2.x != NoneINT and side2.y != NoneINT:
-#                     newpts.append(side2)
-#                 if side3.x != NoneINT and side3.y != NoneINT:
-#                     newpts.append(side3)
-#                 if side4.x != NoneINT and side4.y != NoneINT:
-#                     newpts.append(side4)
-#                     
-#                 draw_line(newpts[0], newpts[1])
-
-                
-                print 'counter 2'
-                print side1.x, side1.y, side2.x,side2.y, side3.x, side3.y, side4.x,side4.y
-                
                 neighs = find_neighbor_index_of(currentIndex2,whichEdge2, masterNode, tree_list)
-                
-                print neighs, currentIndex2, whichEdge2
                 
                 if len(neighs) == 2: # there are 2 neighbors sharing an edge with me
                     neigh1 = get_node_by_id(masterNode,[str(neighs[0])]) 
                     neigh2 = get_node_by_id(masterNode,[str(neighs[1])])
 
-#                     print 'blah, blah',str(neighs[0]), str(neighs[1])
-#                     print neigh2.index
-                    
-#                     print neigh1.index, neigh1.printRect()
-#                     print whichEdge2
-                    
                     p1n1,p2n1,p3n1,p4n1 = neigh1.rect
                     
                     if whichEdge2 == 'U':# or whichEdge1 == 'LU' or whichEdge1 ==  'RU':
@@ -2879,24 +2884,30 @@ def go_thru(tree_list, masterNode, image):
                     list2.append(neighIndex)
                     break
                 else:
-#                     print neighIndex, currentIndex2, neigh_node.ishomog,
                     counter2 += 1
                     [side1N,side2N,side3N,side4N,neigh_listN,dir_listN,whichSideN] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], neigh_node, image)
                     
-#                     if len(dir_listN) < 2:
-#                         list2.append(neighIndex)
-#                         break
-#                     else:
+                    # problem when channelsCircles is tested
+                    if len(dir_listN) < 1 or len(whichSideN)<2:
+                        list2.append(neighIndex)
+                        break
+                    
                     currentIndex2 = neighIndex
                     
-                    neigh_node.printRect()
-                    print 'dirlist', dir_listN, neighIndex
-                    print side1N.x, side1N.y, side2N.x,side2N.y, side3N.x, side3N.y, side4N.x,side4N.y
-                    print 'old edge:', whichEdge2
+#                    neigh_node.printRect()
+#                    print 'dirlist', dir_listN, neighIndex
+#                    print side1N.x, side1N.y, side2N.x,side2N.y, side3N.x, side3N.y, side4N.x,side4N.y
+#                    print 'old edge:', whichEdge2
+#                    print dir_listN,whichSidePrev2,whichSideN
 #                     whichEdge2 = swap_edges(whichEdge2, dir_listN)
                     whichEdge2 = swap_directions(dir_listN,whichSidePrev2,whichSideN)
+                    
+                    # problem when testing channelsCircles
+                    if whichEdge2 == None:
+                        list2.append(neighIndex)
+                        break
+                    
                     whichSidePrev2 = copy_list_of_sides(whichSideN)
-                    print 'new edge: ', whichEdge2
                     list2.append(neighIndex)
                     side1.x = side1N.x
                     side1.y = side1N.y
@@ -2914,6 +2925,7 @@ def go_thru(tree_list, masterNode, image):
             full_list.append(list2)
 
     return full_list
+
 def copy_list_of_sides(sides1):
     sides2 = [Coordinate(0,0), Coordinate(0,0)]
     
@@ -2977,11 +2989,11 @@ def process_list(full_list, masterNode,image):
 
 def swap_directions(dirlistN,sides,sidesN):
 #   
-    print 'inside swap_direction'
+#    print 'inside swap_direction'
     myTOL = 2
-#     print dirlistN
-#     print sides[0].x, sides[0].y, sides[1].x, sides[1].y
-#     print sidesN[0].x, sidesN[0].y, sidesN[1].x, sidesN[1].y
+#    print dirlistN
+#    print sides[0].x, sides[0].y, sides[1].x, sides[1].y
+#    print sidesN[0].x, sidesN[0].y, sidesN[1].x, sidesN[1].y
     
     if abs(sidesN[0].x - sidesN[1].x)<=1 and abs(sidesN[0].y - sidesN[1].y)<=1:
         if abs(sides[0].x - sidesN[0].x)<=1 and abs(sides[0].y - sidesN[0].y)<=1:
@@ -3001,7 +3013,7 @@ def swap_directions(dirlistN,sides,sidesN):
     if abs(sides[1].x - sidesN[1].x)<=myTOL and abs(sides[1].y - sidesN[1].y)<=myTOL:
         return dirlistN[0]
     
-    
+#    return swap_edges(dirlistN[0],dirlistN)
 def swap_edges(whichEdge, dirlist):
 # swapping whichEdge in dirlist with the other edge left in dirlist
 # dirlist always has two edges     
@@ -3037,16 +3049,16 @@ def swap_edges(whichEdge, dirlist):
              
 if __name__ == "__main__":
     print "Reading image in..."
-#    inputImage = sitk.ReadImage("images/channelsCircles.png");
-#    outputImage = sitk.ReadImage("images/channelsCircles.png");
-    inputImage = sitk.ReadImage("images/circles.png");
-    outputImage = sitk.ReadImage("images/circles.png");
-#     inputImage = sitk.ReadImage("images/sin2pi.png");
-#     outputImage = sitk.ReadImage("images/sin2pi.png");
+    inputImage = sitk.ReadImage("images/channelsCircles.png");
+    outputImage = sitk.ReadImage("images/channelsCircles.png");
+#    inputImage = sitk.ReadImage("images/circles.png");
+#    outputImage = sitk.ReadImage("images/circles.png");
+#    inputImage = sitk.ReadImage("images/channelsSharp.png");
+#    outputImage = sitk.ReadImage("images/channelsSharp.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
-    nameOutputImage = "outMesh.png"
+    nameOutputImage = "images/outChannelsCircles_AllConstr.png"
     
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
@@ -3102,22 +3114,20 @@ if __name__ == "__main__":
         masterNode = rootNode
         three_neighbor_rule(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-     
+#     
     print 'total number of element nodes', newTotalNumberOfNodes
-#     masterNode = rootNode
-#     stress_concentration_constraint(tree,rootNode,masterNode)
      
     masterNode = rootNode
     
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
     
-#     full_list = go_thru(tree_list_of_nodes, rootNode,outputImage)
-#     process_list(full_list,rootNode, outputImage)
-    
+    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+    process_list(full_list,rootNode, outputImage)
+#    
     masterNode = rootNode
-#     
-# 
+     
+ 
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
     
@@ -3181,36 +3191,36 @@ if __name__ == "__main__":
     
     sitk.WriteImage(outputImage,nameOutputImage);
 
-# Commenting out the solver 
-    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-      
-    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-      
-          
-    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
-      
-    set_nsew(llist,masterNode,full_vec)
-      
-    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
-    # material conductivities
-    k1 = 1
-    k2 = 10
-    # generate Legendre-Gauss nodes and weights:
-    ruleOrder = 4
-    [ui,wi] = lgwt(ruleOrder,-1,1)
-          
-    # get triangular mesh data
-    f = open("multipleinclusions.res", "r")
-    f2 = open("multipleinclusions.ele", "r")
-    [pTri,UTri] = read_p_U(f)
-    tTri = read_corners(f2)
-    f.close()
-    f2.close()
-          
-           
-    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
-    aa1 = numpy.array([UU])
-    ww1 = numpy.array(aa1[()])
-    UU = ww1[0].item()[:,:]
-      
-    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
+## Commenting out the solver 
+#    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
+#      
+#    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
+#      
+#          
+#    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
+#      
+#    set_nsew(llist,masterNode,full_vec)
+#      
+#    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+#    # material conductivities
+#    k1 = 1
+#    k2 = 10
+#    # generate Legendre-Gauss nodes and weights:
+#    ruleOrder = 4
+#    [ui,wi] = lgwt(ruleOrder,-1,1)
+#          
+#    # get triangular mesh data
+#    f = open("multipleinclusions.res", "r")
+#    f2 = open("multipleinclusions.ele", "r")
+#    [pTri,UTri] = read_p_U(f)
+#    tTri = read_corners(f2)
+#    f.close()
+#    f2.close()
+#          
+#           
+#    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
+#    aa1 = numpy.array([UU])
+#    ww1 = numpy.array(aa1[()])
+#    UU = ww1[0].item()[:,:]
+#      
+#    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

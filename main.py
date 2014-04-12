@@ -735,10 +735,13 @@ class CNode(Node):
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
 
-        draw_line(self.outImage,cMid12,cMid34)
-        draw_line(self.outImage,cMid14,cMid23)
-        
-        return True
+        if abs(p1.x-p2.x) >= ALT_MIN_SIZE:
+            draw_line(self.outImage,cMid12,cMid34)
+            draw_line(self.outImage,cMid14,cMid23)
+            
+            return True
+    
+        return False
     
     def division_criterion(self, rect, inImage, outImage):
 
@@ -2701,8 +2704,37 @@ def draw_interface(image, tree_list, masterNode):
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,tree_list[i])    
          
+        
+        
         if len(root_i.enrichNodes) > 1:
-            draw_line(image,root_i.enrichNodes[0], root_i.enrichNodes[1])
+            if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
+                P1 = root_i.enrichNodes[0]
+                P2 = root_i.enrichNodes[1]
+            else:
+                P1 = root_i.enrichNodes[1]
+                P2 = root_i.enrichNodes[0]
+            
+            if len(root_i.enrichNodes) == 2:
+                draw_line(image,P1, P2)
+                
+            if len(root_i.enrichNodes) == 3:
+                draw_line(image,P1, root_i.enrichNodes[2])
+                draw_line(image,root_i.enrichNodes[2], P2)
+#                 draw_line(image,root_i.enrichNodes[1], root_i.enrichNodes[2])
+#                 draw_line(image,root_i.enrichNodes[2], root_i.enrichNodes[0])
+                print ' quadratics!!!!'
+            if len(root_i.enrichNodes) == 4:
+                print ' cubics!!!!'
+                if root_i.enrichNodes[2].x <= root_i.enrichNodes[3].x:
+                    E = root_i.enrichNodes[2]
+                    F = root_i.enrichNodes[3]
+                else:
+                    E = root_i.enrichNodes[3]
+                    F = root_i.enrichNodes[2]
+                draw_line(image,P1,E)
+                draw_line(image,E,F)
+                draw_line(image,F,P2)
+                    
         
                  
 def stress_concentration_constraint(tree_list, masterNode, image):
@@ -3049,16 +3081,16 @@ def swap_edges(whichEdge, dirlist):
              
 if __name__ == "__main__":
     print "Reading image in..."
-    inputImage = sitk.ReadImage("images/channelsCircles.png");
-    outputImage = sitk.ReadImage("images/channelsCircles.png");
-#    inputImage = sitk.ReadImage("images/circles.png");
-#    outputImage = sitk.ReadImage("images/circles.png");
+#     inputImage = sitk.ReadImage("images/channelsCircles.png");
+#     outputImage = sitk.ReadImage("images/channelsCircles.png");
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
 #    inputImage = sitk.ReadImage("images/channelsSharp.png");
 #    outputImage = sitk.ReadImage("images/channelsSharp.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
-    nameOutputImage = "images/outChannelsCircles_AllConstr.png"
+    nameOutputImage = "images/outCircles_AllConstr.png"
     
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
@@ -3087,70 +3119,9 @@ if __name__ == "__main__":
         masterNode = rootNode
         ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-        
+          
     masterNode = rootNode
-    
       
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-     
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print 'Rebalancing tree by multiple passes '
-        masterNode = rootNode
-        totalNumberOfNodes = newTotalNumberOfNodes
-        tree_balance(tree,rootNode,masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
- 
-    
-    masterNode = rootNode
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-
-    
-          
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print '3 neighbor rule'
-        totalNumberOfNodes = newTotalNumberOfNodes
-        masterNode = rootNode
-        three_neighbor_rule(tree, rootNode, masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#     
-    print 'total number of element nodes', newTotalNumberOfNodes
-     
-    masterNode = rootNode
-    
-    llist = []
-    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-    
-    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-    process_list(full_list,rootNode, outputImage)
-#    
-    masterNode = rootNode
-     
- 
-    llist = []
-    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-    
-#     print full_list[0]
-#     root_i = get_node_by_id(masterNode,['032'])
-#     print root_i.children[0].has_children
-#     if node_exists('0320',llist):
-#         print 'NODE EXISTS!!!!!'
-#     root_i = get_node_by_id(masterNode,['211'])
-#     print root_i.children[0].has_children
-
-
-
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print 'No enrichment nodes and hanging nodes in the same element '
-        totalNumberOfNodes = newTotalNumberOfNodes
-        masterNode = rootNode
-        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-          
-    masterNode = rootNode
         
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
@@ -3162,7 +3133,6 @@ if __name__ == "__main__":
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
    
-      
       
     masterNode = rootNode
     totalNumberOfNodes = tree.count_nodes(rootNode)
@@ -3176,7 +3146,60 @@ if __name__ == "__main__":
         masterNode = rootNode
         three_neighbor_rule(tree, rootNode, masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
+     
+    print 'total number of element nodes', newTotalNumberOfNodes
+     
+    masterNode = rootNode
+    
+    llist = []
+    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+    
+    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+    process_list(full_list,rootNode, outputImage)
+    
+    masterNode = rootNode
        
+   
+    llist = []
+    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+  
+  
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'No enrichment nodes and hanging nodes in the same element '
+        totalNumberOfNodes = newTotalNumberOfNodes
+        masterNode = rootNode
+        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+            
+    masterNode = rootNode
+          
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+         
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'Rebalancing tree by multiple passes '
+        masterNode = rootNode
+        totalNumberOfNodes = newTotalNumberOfNodes
+        tree_balance(tree,rootNode,masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+     
+        
+        
+    masterNode = rootNode
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+    
+        
+              
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print '3 neighbor rule'
+        totalNumberOfNodes = newTotalNumberOfNodes
+        masterNode = rootNode
+        three_neighbor_rule(tree, rootNode, masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+         
     print 'total number of element nodes', newTotalNumberOfNodes
      
     llist = []

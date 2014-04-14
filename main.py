@@ -735,6 +735,17 @@ class CNode(Node):
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
 
+        l1 = ends_in_same_bin(self.inImage,p1,p2)
+        l2 = ends_in_same_bin(self.inImage,p2,p3)
+        l3 = ends_in_same_bin(self.inImage,p4,p3)
+        l4 = ends_in_same_bin(self.inImage,p1,p4)
+        
+#         if self.index == '2201':
+#             print 'whyyyy'
+#         if (l1 == 0 and l2 == 0 and l3==0 and l4==0):
+#             print self.index
+#             return True
+        
         if abs(p1.x-p2.x) >= ALT_MIN_SIZE:
             draw_line(self.outImage,cMid12,cMid34)
             draw_line(self.outImage,cMid14,cMid23)
@@ -753,6 +764,7 @@ class CNode(Node):
         cMid34 = find_mid_point(p3,p4)
         
 
+        
         if abs(p1.x - p2.x) >= MAX_SIZE:               
             draw_line(self.outImage,cMid12,cMid34);
             draw_line(self.outImage,cMid14,cMid23);
@@ -764,28 +776,39 @@ class CNode(Node):
             pxVal3 = self.inImage.GetPixel(p3.x,p3.y,0)
             pxVal4 = self.inImage.GetPixel(p4.x,p4.y,0)
             
-
+                
             # are the 4 corners of the element in the same bin? i.e. homogeneous?
             isHomogeneous = four_corners_test(pxVal1,pxVal2,pxVal3,pxVal4);
 
+            # the four corners test fails, but is has inclusions
+            if ( isHomogeneous == 1) and has_inclusions(self.inImage,p1,p2,p3,p4):
+                draw_line(self.outImage,cMid12,cMid34);
+                draw_line(self.outImage,cMid14,cMid23);
+                return True
+            
             # if the four corners test fails
             if ( isHomogeneous == 0) and has_inclusions(self.inImage,p1,p2,p3,p4):
                 
-                
+                if self.index == '22':
+                    print 'index is ', self.index
+                    
                 l1 = ends_in_same_bin(self.inImage,p1,p2);
                 l2 = ends_in_same_bin(self.inImage,p2,p3);
                 l3 = ends_in_same_bin(self.inImage,p4,p3);
                 l4 = ends_in_same_bin(self.inImage,p1,p4);
             
-#                L1 = linear_search(self.inImage,p1,p2);
-#                L2 = linear_search(self.inImage,p2,p3);
-#                L3 = linear_search(self.inImage,p4,p3);
-#                L4 = linear_search(self.inImage,p1,p4);
+#                 L1 = linear_search(self.inImage,p1,p2);
+#                 L2 = linear_search(self.inImage,p2,p3);
+#                 L3 = linear_search(self.inImage,p4,p3);
+#                 L4 = linear_search(self.inImage,p1,p4);
                 L1 = search_in(LIST,p1,p2,self.inImage)
                 L2 = search_in(LIST,p2,p3,self.inImage)
                 L3 = search_in(LIST,p4,p3,self.inImage)
                 L4 = search_in(LIST,p1,p4,self.inImage)                
                 
+                if self.index == '22':
+                    print len(L1), len(L2)
+                    
                 if ( 
                     len(L2) > 1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1 
                     # or len(L2) < 1 or len(L4) < 1 or len(L1) < 1 or len(L3) < 1
@@ -2704,7 +2727,10 @@ def draw_interface(image, tree_list, masterNode):
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,tree_list[i])    
          
-        
+        if root_i.index == '2201':
+            print 'why?'
+            print len(root_i.enrichNodes)
+#             root_i.divideOnce()
         
         if len(root_i.enrichNodes) > 1:
             if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
@@ -3083,14 +3109,14 @@ if __name__ == "__main__":
     print "Reading image in..."
 #     inputImage = sitk.ReadImage("images/channelsCircles.png");
 #     outputImage = sitk.ReadImage("images/channelsCircles.png");
-    inputImage = sitk.ReadImage("images/circles.png");
-    outputImage = sitk.ReadImage("images/circles.png");
-#    inputImage = sitk.ReadImage("images/channelsSharp.png");
-#    outputImage = sitk.ReadImage("images/channelsSharp.png");
+#     inputImage = sitk.ReadImage("images/circles.png");
+#     outputImage = sitk.ReadImage("images/circles.png");
+    inputImage = sitk.ReadImage("images/channelsSharp.png");
+    outputImage = sitk.ReadImage("images/channelsSharp.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
-    nameOutputImage = "images/outCircles_AllConstr.png"
+    nameOutputImage = "images/outChannelsSharp.png"
     
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
@@ -3122,24 +3148,27 @@ if __name__ == "__main__":
           
     masterNode = rootNode
       
-        
+    
+       
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
-       
+         
     while totalNumberOfNodes != newTotalNumberOfNodes:
         print 'Rebalancing tree by multiple passes '
         masterNode = rootNode
         totalNumberOfNodes = newTotalNumberOfNodes
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
-   
+    
       
     masterNode = rootNode
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
   
       
-            
+#     y_n = get_node_by_id(masterNode,['2201'])
+#     print '==========',len(y_n.enrichNodes) 
+           
     while totalNumberOfNodes != newTotalNumberOfNodes:
         print '3 neighbor rule'
         totalNumberOfNodes = newTotalNumberOfNodes
@@ -3154,53 +3183,53 @@ if __name__ == "__main__":
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
     
-    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-    process_list(full_list,rootNode, outputImage)
-    
-    masterNode = rootNode
-       
-   
-    llist = []
-    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-  
-  
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print 'No enrichment nodes and hanging nodes in the same element '
-        totalNumberOfNodes = newTotalNumberOfNodes
-        masterNode = rootNode
-        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-            
-    masterNode = rootNode
-          
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-         
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print 'Rebalancing tree by multiple passes '
-        masterNode = rootNode
-        totalNumberOfNodes = newTotalNumberOfNodes
-        tree_balance(tree,rootNode,masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-     
-        
-        
-    masterNode = rootNode
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-    
-        
-              
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print '3 neighbor rule'
-        totalNumberOfNodes = newTotalNumberOfNodes
-        masterNode = rootNode
-        three_neighbor_rule(tree, rootNode, masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-         
-    print 'total number of element nodes', newTotalNumberOfNodes
+#     full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+#     process_list(full_list,rootNode, outputImage)
+#     
+#     masterNode = rootNode
+#        
+#    
+#     llist = []
+#     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+#   
+#   
+#     totalNumberOfNodes = tree.count_nodes(rootNode)
+#     newTotalNumberOfNodes = -1
+#     while totalNumberOfNodes != newTotalNumberOfNodes:
+#         print 'No enrichment nodes and hanging nodes in the same element '
+#         totalNumberOfNodes = newTotalNumberOfNodes
+#         masterNode = rootNode
+#         ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
+#         newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#             
+#     masterNode = rootNode
+#           
+#     totalNumberOfNodes = tree.count_nodes(rootNode)
+#     newTotalNumberOfNodes = -1
+#          
+#     while totalNumberOfNodes != newTotalNumberOfNodes:
+#         print 'Rebalancing tree by multiple passes '
+#         masterNode = rootNode
+#         totalNumberOfNodes = newTotalNumberOfNodes
+#         tree_balance(tree,rootNode,masterNode)
+#         newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#      
+#         
+#         
+#     masterNode = rootNode
+#     totalNumberOfNodes = tree.count_nodes(rootNode)
+#     newTotalNumberOfNodes = -1
+#     
+#         
+#               
+#     while totalNumberOfNodes != newTotalNumberOfNodes:
+#         print '3 neighbor rule'
+#         totalNumberOfNodes = newTotalNumberOfNodes
+#         masterNode = rootNode
+#         three_neighbor_rule(tree, rootNode, masterNode)
+#         newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#          
+#     print 'total number of element nodes', newTotalNumberOfNodes
      
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)

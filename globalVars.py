@@ -8,12 +8,13 @@ PROB = 0.05
 #MIN_SIZE = 20#6
 
 # fake data
-MAX_SIZE = 512     
+MAX_SIZE = 512    
 MIN_SIZE = 128
 
 ALT_MIN_SIZE = 64
-TOL_LINEARS = -1.0
-TOL_QUADRATICS = 120.0 # cancel the cubic approximation by making a negative number
-TOL_CUBICS = 120.0 # cancel the cubic approximation by making a negative number
+TOL_LINEARS = 2.0
+TOL_QUADRATICS = 2.0 # cancel the cubic approximation by making a negative number
+TOL_CUBICS = 2.0 # cancel the cubic approximation by making a negative number
+
 STRESS_MIN = 4 # minimum number of elements between interfaces
 TOL_error = 3

@@ -2757,56 +2757,56 @@ def draw_interface(image, inImage, tree_list, masterNode):
                 P1 = root_i.enrichNodes[1]
                 P2 = root_i.enrichNodes[0]
             
-            p1,p2,p3,p4 = root_i.rect
-            
-            l1 = ends_in_same_bin(inImage,p1,p2);
-            l2 = ends_in_same_bin(inImage,p2,p3);
-            l3 = ends_in_same_bin(inImage,p4,p3);
-            l4 = ends_in_same_bin(inImage,p1,p4);
-                
-
-            # if no linear, quadratic or cubic polynomial could approximate the interface
-            # re-do the polynomial approximation for higher order polynomials
-            
-            # horizontal case 
-            if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2:   
-                vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
-                root_i.enrichNodes = vecCoord
-                    
-            # vertical case
-            if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2:
-                vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
-                root_i.enrichNodes = vecCoord   
-                    
-            # NW case
-            if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2 :
-                vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
-                root_i.enrichNodes = vecCoord
-                
-            # NE case
-            if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2 :
-                vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
-                root_i.enrichNodes = vecCoord
-                    
-            # SE case                        
-            if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2:
-                vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
-                root_i.enrichNodes = vecCoord
-                        
-            # SW case
-            if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2:
-                vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
-                root_i.enrichNodes = vecCoord
-
-
-#            print len(root_i.enrichNodes)
-            
-            if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
-                P1 = root_i.enrichNodes[0]
-                P2 = root_i.enrichNodes[1]
-            else:
-                P1 = root_i.enrichNodes[1]
-                P2 = root_i.enrichNodes[0]
+#            p1,p2,p3,p4 = root_i.rect
+#            
+#            l1 = ends_in_same_bin(inImage,p1,p2);
+#            l2 = ends_in_same_bin(inImage,p2,p3);
+#            l3 = ends_in_same_bin(inImage,p4,p3);
+#            l4 = ends_in_same_bin(inImage,p1,p4);
+#                
+#
+#            # if no linear, quadratic or cubic polynomial could approximate the interface
+#            # re-do the polynomial approximation for higher order polynomials
+#            
+#            # horizontal case 
+#            if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2:   
+#                vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
+#                root_i.enrichNodes = vecCoord
+#                    
+#            # vertical case
+#            if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2:
+#                vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
+#                root_i.enrichNodes = vecCoord   
+#                    
+#            # NW case
+#            if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2 :
+#                vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
+#                root_i.enrichNodes = vecCoord
+#                
+#            # NE case
+#            if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2 :
+#                vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
+#                root_i.enrichNodes = vecCoord
+#                    
+#            # SE case                        
+#            if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2:
+#                vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
+#                root_i.enrichNodes = vecCoord
+#                        
+#            # SW case
+#            if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2:
+#                vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
+#                root_i.enrichNodes = vecCoord
+#
+#
+##            print len(root_i.enrichNodes)
+#            
+#            if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
+#                P1 = root_i.enrichNodes[0]
+#                P2 = root_i.enrichNodes[1]
+#            else:
+#                P1 = root_i.enrichNodes[1]
+#                P2 = root_i.enrichNodes[0]
                                 
             if len(root_i.enrichNodes) == 2:
                 draw_line(image,P1, P2)
@@ -3179,14 +3179,14 @@ if __name__ == "__main__":
     print "Reading image in..."
 #     inputImage = sitk.ReadImage("images/channelsCircles.png");
 #     outputImage = sitk.ReadImage("images/channelsCircles.png");
-#     inputImage = sitk.ReadImage("images/circles.png");
-#     outputImage = sitk.ReadImage("images/circles.png");
-    inputImage = sitk.ReadImage("images/channelsSharp.png");
-    outputImage = sitk.ReadImage("images/channelsSharp.png");
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
+#    inputImage = sitk.ReadImage("images/channelsSharp.png");
+#    outputImage = sitk.ReadImage("images/channelsSharp.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
-    nameOutputImage = "images/outChannelsSharp.png"
+    nameOutputImage = "images/outCircs.png"
     
     imageSize = inputImage.GetSize();
     print "Image size:", imageSize
@@ -3246,54 +3246,54 @@ if __name__ == "__main__":
      
     masterNode = rootNode
     
-#    llist = []
-#    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-#    
-#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-#    process_list(full_list,rootNode, outputImage)
-#     
-#    masterNode = rootNode
-#        
-#    
-#    llist = []
-#    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-#   
-#   
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#        print 'No enrichment nodes and hanging nodes in the same element '
-#        totalNumberOfNodes = newTotalNumberOfNodes
-#        masterNode = rootNode
-#        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
-#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#            
-#    masterNode = rootNode
-#          
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#         
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#        print 'Rebalancing tree by multiple passes '
-#        masterNode = rootNode
-#        totalNumberOfNodes = newTotalNumberOfNodes
-#        tree_balance(tree,rootNode,masterNode)
-#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#     
-#        
-#    masterNode = rootNode
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#    
-#        
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#        print '3 neighbor rule'
-#        totalNumberOfNodes = newTotalNumberOfNodes
-#        masterNode = rootNode
-#        three_neighbor_rule(tree, rootNode, masterNode)
-#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#         
-#    print 'total number of element nodes', newTotalNumberOfNodes
+    llist = []
+    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+    
+    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+    process_list(full_list,rootNode, outputImage)
+     
+    masterNode = rootNode
+        
+    
+    llist = []
+    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+   
+   
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'No enrichment nodes and hanging nodes in the same element '
+        totalNumberOfNodes = newTotalNumberOfNodes
+        masterNode = rootNode
+        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+            
+    masterNode = rootNode
+          
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+         
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print 'Rebalancing tree by multiple passes '
+        masterNode = rootNode
+        totalNumberOfNodes = newTotalNumberOfNodes
+        tree_balance(tree,rootNode,masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+     
+        
+    masterNode = rootNode
+    totalNumberOfNodes = tree.count_nodes(rootNode)
+    newTotalNumberOfNodes = -1
+    
+        
+    while totalNumberOfNodes != newTotalNumberOfNodes:
+        print '3 neighbor rule'
+        totalNumberOfNodes = newTotalNumberOfNodes
+        masterNode = rootNode
+        three_neighbor_rule(tree, rootNode, masterNode)
+        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+         
+    print 'total number of element nodes', newTotalNumberOfNodes
     
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)

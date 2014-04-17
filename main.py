@@ -809,9 +809,6 @@ class CNode(Node):
             # if the four corners test fails
             if ( isHomogeneous == 0) and has_inclusions(self.inImage,p1,p2,p3,p4):
                 
-                if self.index == '22':
-                    print 'index is ', self.index
-                    
                 l1 = ends_in_same_bin(self.inImage,p1,p2);
                 l2 = ends_in_same_bin(self.inImage,p2,p3);
                 l3 = ends_in_same_bin(self.inImage,p4,p3);
@@ -2757,60 +2754,68 @@ def draw_interface(image, inImage, tree_list, masterNode):
                 P1 = root_i.enrichNodes[1]
                 P2 = root_i.enrichNodes[0]
             
-#            p1,p2,p3,p4 = root_i.rect
-#            
-#            l1 = ends_in_same_bin(inImage,p1,p2);
-#            l2 = ends_in_same_bin(inImage,p2,p3);
-#            l3 = ends_in_same_bin(inImage,p4,p3);
-#            l4 = ends_in_same_bin(inImage,p1,p4);
-#                
-#
-#            # if no linear, quadratic or cubic polynomial could approximate the interface
-#            # re-do the polynomial approximation for higher order polynomials
-#            
-#            # horizontal case 
-#            if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2:   
-#                vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
-#                root_i.enrichNodes = vecCoord
-#                    
-#            # vertical case
-#            if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2:
-#                vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
-#                root_i.enrichNodes = vecCoord   
-#                    
-#            # NW case
-#            if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2 :
-#                vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
-#                root_i.enrichNodes = vecCoord
-#                
-#            # NE case
-#            if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2 :
-#                vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=0);
-#                root_i.enrichNodes = vecCoord
-#                    
-#            # SE case                        
-#            if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2:
-#                vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
-#                root_i.enrichNodes = vecCoord
-#                        
-#            # SW case
-#            if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2:
-#                vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=0);
-#                root_i.enrichNodes = vecCoord
-#
-#
-##            print len(root_i.enrichNodes)
-#            
-#            if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
-#                P1 = root_i.enrichNodes[0]
-#                P2 = root_i.enrichNodes[1]
-#            else:
-#                P1 = root_i.enrichNodes[1]
-#                P2 = root_i.enrichNodes[0]
+            p1,p2,p3,p4 = root_i.rect
+           
+            if POL_APPROX > 0: # choosing whether or not to activate higher order polynomial approximations at the end 
+                l1 = ends_in_same_bin(inImage,p1,p2);
+                l2 = ends_in_same_bin(inImage,p2,p3);
+                l3 = ends_in_same_bin(inImage,p4,p3);
+                l4 = ends_in_same_bin(inImage,p1,p4);
+                    
+    #            print 'before all', len(root_i.enrichNodes)
+    
+                # if no linear, quadratic or cubic polynomial could approximate the interface
+                # re-do the polynomial approximation for higher order polynomials
+                
+                # horizontal case 
+                if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
+                    vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX);
+                    if len(vecCoord) > 1: 
+                            root_i.enrichNodes = vecCoord
+                
+                # vertical case
+                if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX);
+                    if len(vecCoord) > 1 :
+                        root_i.enrichNodes = vecCoord
+                
+                # NW case
+                if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                    vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX);
+                    if len(vecCoord) > 1:
+                        root_i.enrichNodes = vecCoord
+                        
+                # NE case
+                if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                    vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX);
+                    if len(vecCoord) > 1:
+                        root_i.enrichNodes = vecCoord
+                        
+                # SE case                        
+                if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX);
+                    if len(vecCoord) > 1 :
+                        root_i.enrichNodes = vecCoord
+                        
+                # SW case
+                if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX);
+                    if len(vecCoord) > 1 :
+                        root_i.enrichNodes = vecCoord
+    
+    
+    #            print len(root_i.enrichNodes)
+                
+                if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
+                    P1 = root_i.enrichNodes[0]
+                    P2 = root_i.enrichNodes[1]
+                else:
+                    P1 = root_i.enrichNodes[1]
+                    P2 = root_i.enrichNodes[0]
                                 
             if len(root_i.enrichNodes) == 2:
                 draw_line(image,P1, P2)
-#                print 'linears'
+                print 'linears'
                 
             if len(root_i.enrichNodes) == 3:
                 draw_line(image,P1, root_i.enrichNodes[2])
@@ -3299,8 +3304,6 @@ if __name__ == "__main__":
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
     draw_interface(outputImage, inputImage, tree_list, masterNode)  
     
-    
-
     
     print 'writing the image out'
  

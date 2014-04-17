@@ -9,12 +9,20 @@ PROB = 0.05
 
 # fake data
 MAX_SIZE = 256    
-MIN_SIZE = 16
+MIN_SIZE = 64
 
-ALT_MIN_SIZE = 16
+ALT_MIN_SIZE = 8
 TOL_LINEARS = 2.0
 TOL_QUADRATICS = -2.0 # cancel the cubic approximation by making a negative number
 TOL_CUBICS = -2.0 # cancel the cubic approximation by making a negative number
 
 STRESS_MIN = 4 # minimum number of elements between interfaces
-TOL_error = 3
+TOL_error = 3 # tolerance error for pixel distances
+
+# in elements where no linear, quadratic or cubic polynomial could approximate
+# choose the polynomial 
+# 0 for linears
+# 1 for quadratics
+# 2 for cubics
+# 3 for NURBS - not yet implemented
+POL_APPROX = 1

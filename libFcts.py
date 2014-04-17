@@ -394,7 +394,7 @@ def log_search(image,bbegin,eend):
 		return mid
 
 ## case 1: 3:1 -- P1 the outsider
-def case_NW_polynomial_test(image,p1,p2,p3,p4,L1,L4, poly_opt = 1):
+def case_NW_polynomial_test(image,p1,p2,p3,p4,L1,L4, poly_opt = 0):
     x_is_F_of_y = False;
 	
 # 	if len(L1)>1 or len(L4) > 1:
@@ -540,13 +540,22 @@ def case_NW_polynomial_test(image,p1,p2,p3,p4,L1,L4, poly_opt = 1):
     		vecCoord = [L4, L1, E, F];
     		return vecCoord;
 
-    if poly_opt == 0:
-        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-        vec_list = [ [L4,L1,A], [L4,L1,E,F] ]
-        M = min(dist_list)
-        min_index_dist = dist_list.index(M)
-        return vec_list[min_index_dist]
+#    if poly_opt == 0:
+#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+#        vec_list = [ [L4,L1,A], [L4,L1,E,F] ]
+#        M = min(dist_list)
+#        min_index_dist = dist_list.index(M)
+#        return vec_list[min_index_dist]
 
+    if poly_opt == 1:
+        vec_list =  [L4,L1,A]
+        return vec_list
+    
+    if poly_opt == 2:
+        vec_list = [L4,L1,E,F] 
+        return vec_list
+    
+        
     pt = Coordinate(-1,-1);
     vecCoord = [];
     vecCoord.append(pt);
@@ -555,7 +564,7 @@ def case_NW_polynomial_test(image,p1,p2,p3,p4,L1,L4, poly_opt = 1):
 
 
 # case 2: 3:1 -- P2 the outsider
-def case_NE_polynomial_test(image,p1,p2,p3,p4,L1,L2, poly_opt = 1):
+def case_NE_polynomial_test(image,p1,p2,p3,p4,L1,L2, poly_opt = 0):
     x_is_F_of_y = False;
 
 	
@@ -710,13 +719,20 @@ def case_NE_polynomial_test(image,p1,p2,p3,p4,L1,L2, poly_opt = 1):
     		vecCoord = [L1, L2, E, F];
     		return vecCoord;
     
-    if poly_opt == 0:
-        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-        vec_list = [ [L1,L2,A], [L1,L2,E,F] ]
-        M = min(dist_list)
-        min_index_dist = dist_list.index(M)
-        return vec_list[min_index_dist]
+#    if poly_opt == 0:
+#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+#        vec_list = [ [L1,L2,A], [L1,L2,E,F] ]
+#        M = min(dist_list)
+#        min_index_dist = dist_list.index(M)
+#        return vec_list[min_index_dist]
+    if poly_opt == 1:
+        vec_list = [L1,L2,A]
+        return vec_list
     
+    if poly_opt == 2:
+        vec_list = [L1,L2,E,F] 
+        return vec_list
+        
 #	print "case 2: ever after cubics?"
 
     pt = Coordinate(-1,-1);
@@ -726,7 +742,7 @@ def case_NE_polynomial_test(image,p1,p2,p3,p4,L1,L2, poly_opt = 1):
 
 
 ## case 3: 3:1 - P3 is the outsider
-def case_SE_polynomial_test(image,p1,p2,p3,p4,L2,L3, poly_opt = 1):
+def case_SE_polynomial_test(image,p1,p2,p3,p4,L2,L3, poly_opt = 0):
     is_x_F_of_y = False;
 
 # 	if len(L3)>1 or len(L2) > 1:
@@ -755,8 +771,8 @@ def case_SE_polynomial_test(image,p1,p2,p3,p4,L2,L3, poly_opt = 1):
 		is_x_F_of_y = True;
 
     else:
-		B = line_line_intersection_y(image,p1,p3,L2,L3);
-		is_x_F_of_y = False;
+        B = line_line_intersection_y(image,p1,p3,L2,L3);
+        is_x_F_of_y = False;
 
 #     print find_distance(A,B)
 	# Step 3. If a linear is close enough, return coordinates.
@@ -874,13 +890,21 @@ def case_SE_polynomial_test(image,p1,p2,p3,p4,L2,L3, poly_opt = 1):
     		vecCoord = [L3, L2, E, F]
     		return vecCoord;
     
-    if poly_opt == 0:
-        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-        vec_list = [ [L3,L2,A], [L3,L2,E,F] ]
-        M = min(dist_list)
-        min_index_dist = dist_list.index(M)
-        return vec_list[min_index_dist]
+#    if poly_opt == 0:
+#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+#        vec_list = [ [L3,L2,A], [L3,L2,E,F] ]
+#        M = min(dist_list)
+#        min_index_dist = dist_list.index(M)
+#        return vec_list[min_index_dist]
+
+    if poly_opt == 1:
+        vec_list = [L3,L2,A]
+        return vec_list
     
+    if poly_opt == 2:
+        vec_list = [L3,L2,E,F] 
+        return vec_list
+            
 #	print "case 3: ever after cubics?"
     pt = Coordinate(-1,-1);
     vecCoord = [];
@@ -889,7 +913,7 @@ def case_SE_polynomial_test(image,p1,p2,p3,p4,L2,L3, poly_opt = 1):
 
 
 # case 4: 3:1 -- P4 the outsider
-def case_SW_polynomial_test(image, p1, p2, p3, p4,L3,L4, poly_opt = 1):
+def case_SW_polynomial_test(image, p1, p2, p3, p4,L3,L4, poly_opt = 0):
     is_x_F_of_y = False;
 
 # 	if len(L3)>1 or len(L4) > 1:
@@ -1036,13 +1060,20 @@ def case_SW_polynomial_test(image, p1, p2, p3, p4,L3,L4, poly_opt = 1):
     		vecCoord = [L4, L3, E, F];
     		return vecCoord;
 
-    if poly_opt == 0:
-        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-        vec_list = [ [L4,L3,A], [L4,L3,E,F] ]
-        M = min(dist_list)
-        min_index_dist = dist_list.index(M)
-        return vec_list[min_index_dist]
+#    if poly_opt == 0:
+#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+#        vec_list = [ [L4,L3,A], [L4,L3,E,F] ]
+#        M = min(dist_list)
+#        min_index_dist = dist_list.index(M)
+#        return vec_list[min_index_dist]
+    if poly_opt == 1:
+        vec_list = [L4,L3,A]
+        return vec_list
     
+    if poly_opt == 2:
+        vec_list = [L4,L3,E,F] 
+        return vec_list
+            
 #	print "case 4: ever after cubics?"
     pt = Coordinate(-1,-1);
     vecCoord = [];
@@ -1051,7 +1082,7 @@ def case_SW_polynomial_test(image, p1, p2, p3, p4,L3,L4, poly_opt = 1):
 		
 
 # case 5: 2:2 vertical crossing
-def case_vertical_polynomial_test(image, p1, p2, p3, p4,L1,L3, poly_opt = 1):
+def case_vertical_polynomial_test(image, p1, p2, p3, p4,L1,L3, poly_opt = 0):
 
 # 	if len(L3)>1 or len(L1) > 1:
 # 		pt = Coordinate(-1,-1);
@@ -1063,15 +1094,14 @@ def case_vertical_polynomial_test(image, p1, p2, p3, p4,L1,L3, poly_opt = 1):
 # 		L1 = L1[0]
 
     if ( find_distance(L1,L3) <= 2):
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
+        pt = Coordinate(-1,-1);
+        vecCoord = [];
+        vecCoord.append(pt);
+        return vecCoord;
 
     p14mid = find_mid_point(p1,p4)
     p23mid = find_mid_point(p2,p3)
 	
-
 	# LINEAR POLYNOMIAL
 	# Step 1. Search for the interface along the 45 degree line
 #	A = log_search(image, p1, p3);
@@ -1164,12 +1194,20 @@ def case_vertical_polynomial_test(image, p1, p2, p3, p4,L1,L3, poly_opt = 1):
     		vecCoord = [L1, L3, E, F]
     		return vecCoord;	
     
-    if poly_opt == 0:
-        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-        vec_list = [ [L1,L3,A], [L1,L3,E,F] ]
-        M = min(dist_list)
-        min_index_dist = dist_list.index(M)
-        return vec_list[min_index_dist]
+#    if poly_opt == 0:
+#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+#        vec_list = [ [L1,L3,A], [L1,L3,E,F] ]
+#        M = min(dist_list)
+#        min_index_dist = dist_list.index(M)
+#        return vec_list[min_index_dist]
+    
+    if poly_opt == 1:
+        vec_list = [L1,L3,A]
+        return vec_list
+    
+    if poly_opt == 2:
+        vec_list = [L1,L3,E,F]
+        return vec_list
     
 	#print "case 5: ever after cubics?"
     pt = Coordinate(-1,-1);
@@ -1178,7 +1216,7 @@ def case_vertical_polynomial_test(image, p1, p2, p3, p4,L1,L3, poly_opt = 1):
     return vecCoord;
 
 # case 6: 2:2 horizontal crossing
-def case_horizontal_polynomial_test(image,p1,p2,p3,p4,L2,L4, poly_opt = 1):
+def case_horizontal_polynomial_test(image,p1,p2,p3,p4,L2,L4, poly_opt = 0):
 	
 # 	if len(L2)>1 or len(L4) > 1:
 # 		pt = Coordinate(-1,-1);
@@ -1286,12 +1324,21 @@ def case_horizontal_polynomial_test(image,p1,p2,p3,p4,L2,L4, poly_opt = 1):
     		vecCoord = [L2, L4, E, F]
     		return vecCoord;
 
-    if poly_opt == 0:
-        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-        vec_list = [ [L2,L4,A], [L2,L4,E,F] ]
-        M = min(dist_list)
-        min_index_dist = dist_list.index(M)
-        return vec_list[min_index_dist]
+#    if poly_opt == 1:
+#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+#        vec_list = [ [L2,L4,A], [L2,L4,E,F] ]
+#        M = min(dist_list)
+#        min_index_dist = dist_list.index(M)
+#        return vec_list[min_index_dist]
+    
+    if poly_opt == 1:
+        vec_list = [L2,L4,A]
+        return vec_list
+    
+    if poly_opt == 2:
+        vec_list = [L2,L4,E,F]
+        return vec_list
+
         
 #	print "case 6: ever after cubics?"
     pt = Coordinate(-1,-1)

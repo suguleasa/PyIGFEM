@@ -1682,8 +1682,10 @@ def process_list_of_elements(llist,root):
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
         l = len(root_i.enrichNodes)
+        
         if l > 0:
-            for j in range(0,l):
+            NR_ENRICH_NODES = 2
+            for j in range(0,NR_ENRICH_NODES):
                 enrN = root_i.enrichNodes[j]
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
@@ -1903,7 +1905,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
                     t = t + [[c1,c2,c3,c4,c5]]
 #                 t = t + [[c4,c3,c2,c1, c5]]
                   
-            if l == 2:
+            if l == 2 or l>2:
 
                 enrN1 = root_i.enrichNodes[0]
                 b5 = [enrN1.x, enrN1.y]
@@ -2736,7 +2738,7 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
         
     return []
   
-def draw_interface(image, inImage, tree_list, masterNode):
+def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
     
     n = len(tree_list)
 
@@ -2769,37 +2771,37 @@ def draw_interface(image, inImage, tree_list, masterNode):
                 
                 # horizontal case 
                 if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
-                    vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX);
+                    vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
                     if len(vecCoord) > 1: 
                             root_i.enrichNodes = vecCoord
                 
                 # vertical case
                 if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX);
+                    vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
                     if len(vecCoord) > 1 :
                         root_i.enrichNodes = vecCoord
                 
                 # NW case
                 if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX);
+                    vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
                     if len(vecCoord) > 1:
                         root_i.enrichNodes = vecCoord
                         
                 # NE case
                 if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX);
+                    vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
                     if len(vecCoord) > 1:
                         root_i.enrichNodes = vecCoord
                         
                 # SE case                        
                 if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX);
+                    vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
                     if len(vecCoord) > 1 :
                         root_i.enrichNodes = vecCoord
                         
                 # SW case
                 if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX);
+                    vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
                     if len(vecCoord) > 1 :
                         root_i.enrichNodes = vecCoord
     
@@ -3253,93 +3255,115 @@ if __name__ == "__main__":
     
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-    
-    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-    process_list(full_list,rootNode, outputImage)
-     
-    masterNode = rootNode
-        
-    
-    llist = []
-    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-   
-   
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print 'No enrichment nodes and hanging nodes in the same element '
-        totalNumberOfNodes = newTotalNumberOfNodes
-        masterNode = rootNode
-        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-            
-    masterNode = rootNode
-          
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-         
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print 'Rebalancing tree by multiple passes '
-        masterNode = rootNode
-        totalNumberOfNodes = newTotalNumberOfNodes
-        tree_balance(tree,rootNode,masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-     
-        
-    masterNode = rootNode
-    totalNumberOfNodes = tree.count_nodes(rootNode)
-    newTotalNumberOfNodes = -1
-    
-        
-    while totalNumberOfNodes != newTotalNumberOfNodes:
-        print '3 neighbor rule'
-        totalNumberOfNodes = newTotalNumberOfNodes
-        masterNode = rootNode
-        three_neighbor_rule(tree, rootNode, masterNode)
-        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+
+##    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
+#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+#    process_list(full_list,rootNode, outputImage)
+#     
+#    masterNode = rootNode
+#        
+#    
+#    llist = []
+#    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+#   
+#   
+#    totalNumberOfNodes = tree.count_nodes(rootNode)
+#    newTotalNumberOfNodes = -1
+#    while totalNumberOfNodes != newTotalNumberOfNodes:
+#        print 'No enrichment nodes and hanging nodes in the same element '
+#        totalNumberOfNodes = newTotalNumberOfNodes
+#        masterNode = rootNode
+#        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
+#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#            
+#    masterNode = rootNode
+#          
+#    totalNumberOfNodes = tree.count_nodes(rootNode)
+#    newTotalNumberOfNodes = -1
+#         
+#    while totalNumberOfNodes != newTotalNumberOfNodes:
+#        print 'Rebalancing tree by multiple passes '
+#        masterNode = rootNode
+#        totalNumberOfNodes = newTotalNumberOfNodes
+#        tree_balance(tree,rootNode,masterNode)
+#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#     
+#        
+#    masterNode = rootNode
+#    totalNumberOfNodes = tree.count_nodes(rootNode)
+#    newTotalNumberOfNodes = -1
+#    
+#        
+#    while totalNumberOfNodes != newTotalNumberOfNodes:
+#        print '3 neighbor rule'
+#        totalNumberOfNodes = newTotalNumberOfNodes
+#        masterNode = rootNode
+#        three_neighbor_rule(tree, rootNode, masterNode)
+#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
          
     print 'total number of element nodes', newTotalNumberOfNodes
     
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
-    draw_interface(outputImage, inputImage, tree_list, masterNode)  
+
+    draw_interface(outputImage, inputImage, tree_list, masterNode, POL_APPROX)  
+    
+#    llist = []
+#    tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
+#    draw_interface(outputImage, inputImage, tree_list, masterNode, 0)  
     
     
+    print len(llist)
     print 'writing the image out'
  
     
     sitk.WriteImage(outputImage,nameOutputImage);
 
-## Commenting out the solver 
-#    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-#      
-#    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-#      
-#          
-#    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
-#      
-#    set_nsew(llist,masterNode,full_vec)
-#      
-#    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
-#    # material conductivities
-#    k1 = 1
-#    k2 = 10
-#    # generate Legendre-Gauss nodes and weights:
-#    ruleOrder = 4
-#    [ui,wi] = lgwt(ruleOrder,-1,1)
-#          
-#    # get triangular mesh data
-#    f = open("multipleinclusions.res", "r")
-#    f2 = open("multipleinclusions.ele", "r")
-#    [pTri,UTri] = read_p_U(f)
-#    tTri = read_corners(f2)
-#    f.close()
-#    f2.close()
-#          
-#           
-#    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
-#    aa1 = numpy.array([UU])
-#    ww1 = numpy.array(aa1[()])
-#    UU = ww1[0].item()[:,:]
-#      
-#    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
+
+#    n = len(tree_list)
+#
+#    # for each node in the tree:
+#    for i in range(0,n):
+#        root_i = get_node_by_id(masterNode,tree_list[i])    
+#         
+#        if len(root_i.enrichNodes) > 1:
+#            print '# of enrich Nodes:', len(root_i.enrichNodes)
+            
+            
+# Commenting out the solver 
+    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
+      
+    print len(p_reg)
+    print len(p_regCList)
+    print lenClist1
+    
+    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
+      
+          
+    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
+      
+    set_nsew(llist,masterNode,full_vec)
+      
+    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+    # material conductivities
+    k1 = 1
+    k2 = 10
+    # generate Legendre-Gauss nodes and weights:
+    ruleOrder = 4
+    [ui,wi] = lgwt(ruleOrder,-1,1)
+          
+    # get triangular mesh data
+    f = open("multipleinclusions.res", "r")
+    f2 = open("multipleinclusions.ele", "r")
+    [pTri,UTri] = read_p_U(f)
+    tTri = read_corners(f2)
+    f.close()
+    f2.close()
+          
+           
+    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
+    aa1 = numpy.array([UU])
+    ww1 = numpy.array(aa1[()])
+    UU = ww1[0].item()[:,:]
+      
+    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

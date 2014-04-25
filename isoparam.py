@@ -69,6 +69,18 @@ def tri_iso_basis_fct():
 
 	return [N1,N2,N3]
 
+def tri_iso_basis_fct_quadratic():
+	# defining basis functions for an isoparametri TRIANGLE
+	N1 = lambda e,n: 2 * (1 - e - n) * (1.0/2.0 - e - n)
+	N2 = lambda e,n: 2 * e * (e - 1.0/2.0) 
+	N3 = lambda e,n: 2 * n * (n - 1.0/2.0)
+	N4 = lambda e,n: 4 * (1 - e - n) * e
+	N5 = lambda e,n: 4 * e * n
+	N6 = lambda e,n: 4 * n * (1 - e - n) 
+
+	return [N1,N2,N3,N4,N5,N6]
+
+
 def iso_deriv_wrt_to_e():
 	# defining the derivatives with respect to eta of the isoparametric basis functions
 
@@ -253,6 +265,13 @@ def tri_xy_fct(x,y):
 	x_fct = lambda e,n: N_e[0](e,n) * x[0] + N_e[1](e,n) * x[1] + N_e[2](e,n) * x[2]
 	y_fct = lambda e,n: N_e[0](e,n) * y[0] + N_e[1](e,n) * y[1] + N_e[2](e,n) * y[2]
 	return [x_fct,y_fct]
+
+def tri_xy_fct_quadratic(x,y):
+	N_e = tri_iso_basis_fct()
+	x_fct = lambda e,n: N_e[0](e,n) * x[0] + N_e[1](e,n) * x[1] + N_e[2](e,n) * x[2] + N_e[3](e,n) * x[3] + N_e[4](e,n) * x[4] + N_e[5](e,n) * x[5]
+	y_fct = lambda e,n: N_e[0](e,n) * y[0] + N_e[1](e,n) * y[1] + N_e[2](e,n) * y[2] + N_e[3](e,n) * y[3] + N_e[4](e,n) * y[4] + N_e[5](e,n) * y[5]
+	return [x_fct,y_fct]
+
 
 def jacobian_mat(x,y):
 	# defining the Jacobian matrix for the transformation from a quadrilateral element 

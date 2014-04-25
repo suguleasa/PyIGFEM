@@ -492,6 +492,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         
         root = get_node_by_id(masterNode,llist[e])
+        
+        
         p1,p2,p3,p4 = root.rect
     
         pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
@@ -499,10 +501,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
         pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-#         if p1.x == 686 and p1.y == 905:
-#             print 'Elementtttt --- ',e
-
-
 
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
@@ -524,15 +522,15 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         y0 = coords[0,1]
         y1 = coords[2,1]
 
-        if root.index == '30100':#'210333':
-            print '-----------------------------------'
-            print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-            enrN1 = root.enrichNodes[0]
-            enrN2 = root.enrichNodes[1]
-            print 'nodes', nodes, 'e =',e
-            print enrN1.x,enrN1.y, enrN2.x,enrN2.y
-            print root.ishomog
-            print '-----------------------------------'
+#        if root.index == '30100':#'210333':
+#            print '-----------------------------------'
+#            print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
+#            enrN1 = root.enrichNodes[0]
+#            enrN2 = root.enrichNodes[1]
+#            print 'nodes', nodes, 'e =',e
+#            print enrN1.x,enrN1.y, enrN2.x,enrN2.y
+#            print root.ishomog
+#            print '-----------------------------------'
               
 #         root_i = get_node_by_id(masterNode,['30100'])
 #         root_i.printRect()
@@ -618,25 +616,12 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     thru_corner = True
                     which_corner = 4   
                      
-#         if thru_corner == True:
-#             print root.index, which_index
-            
-#         if len(nodes) == 4 and root.ishomog == 1:        # elements need no enrichment
         if (len(nodes) == 4  or root.ishomog == 1) or thru_corner == True:        # elements need no enrichment
                       
-#             print 'element number: ',e, len(nodes)
-#             if len(nodes)>4:
-#                 print 'QQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQQ'
                   
             Ke = np.zeros((4,4))
             Fe = np.zeros((4,1))
             
-#             if root.index == '323210':#'210333':
-#                 print '-----------------------------------'
-#     #             print p1.x,p1.y,p2.x,p2.y,p3.x,p3.y, p4.x,p4.y
-#                 enrN1 = root.enrichNodes[0]
-#                 enrN2 = root.enrichNodes[1]
-#                 print nodes,e, enrN1.x,enrN1.y, enrN2.x,enrN2.y
 
             # slanted interface
             # set the coefficient of the conductivity
@@ -680,10 +665,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 elif root.ishomog == 1:
                     if pxValMed > binBnd[1]:
                         K_cst = k2
-#                         print root.index, 'k2 =================== ', k2
                     else:
                         K_cst = k1
-#                         print root.index,'================k1', k1
         
             if thru_corner == True:
                 if which_corner == 1: 
@@ -852,7 +835,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
            
         else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
             enrich1 = np.array(p[nodes[4]])
-
+            
+            if len(root.enrichNodes) >2:
+                print 'in hereeee------------------------------------'
             if len(nodes) == 5:
                 
                 corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
@@ -1341,14 +1326,14 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         y0 = coords[0,1]
 #                         y1 = coords[2,1] 
 #                         print (p[nodes[5]])
-                    if root.index == '232110':   
-                        print ' ------=========----------blah'
-                        print not(on_corners(enrich1,coords)), not(on_corners(enrich2,coords))
-                        print 'coords', coords
-                        print 'nodes', nodes
-                        print 'enrich1', enrich1[0], enrich1[1]  
-                        print 'enrich2', enrich2[0], enrich2[1]
-                        print [x0,x1], [y0,y1]
+##                    if root.index == '232110':   
+##                        print ' ------=========----------blah'
+##                        print not(on_corners(enrich1,coords)), not(on_corners(enrich2,coords))
+##                        print 'coords', coords
+##                        print 'nodes', nodes
+##                        print 'enrich1', enrich1[0], enrich1[1]  
+##                        print 'enrich2', enrich2[0], enrich2[1]
+##                        print [x0,x1], [y0,y1]
                     # interface cuts the element horizontally into two quads, 0-4-3, 1-5-2 
                     if ( ((enrich1[0] == x0  and enrich2[0] == x1) or (enrich1[0] == x1 and enrich2[0] == x0)) and 
 #                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
@@ -1356,8 +1341,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         not(on_corners(enrich1,coords)) and 
                         not(on_corners(enrich2,coords)) ):
 
-#                         if root.index == '203300':
-#                             print 'are we inside here?', e   
 
                         print "horizontal slide: quad-quad"
                         [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
@@ -1392,6 +1375,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     # Dirichlet: b,c = 0, homogeneous Dirichlet: b,c = 0, d = 0
     # Neumann: a = 0, and b or c may be 0, but not both
 
+    print N
     U = sparse.lil_matrix((N,1))
 
     # Setting Dirichlet BCs
@@ -3858,6 +3842,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     y0 = coords[0,1]
     y1 = coords[2,1]
 
+    
 #    cornerA = f_circle(x0,y0)
 #    cornerB = f_circle(x1,y0)
 #    cornerC = f_circle(x1,y1)
@@ -4519,6 +4504,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
     y0 = coords[0,1]
     y1 = coords[2,1]
 
+    
 #    cornerA = f_circle(x0,y0)
 #    cornerB = f_circle(x1,y0)
 #    cornerC = f_circle(x1,y1)
@@ -4564,19 +4550,34 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
     #    K_cst = [k2,k2,k2,k1]
 
 
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-    [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
-
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-    J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
-    det_J1 = lambda e,n: determinant(J1)(e,n)
-    det_J2 = lambda e,n: determinant(J2)(e,n)
-    det_J3 = lambda e,n: determinant(J3)(e,n)
-    det_J4 = lambda e,n: determinant(J4)(e,n)
+    if len(root.enrichNodes) >2:
+        print len(root.enrichNodes)
+        print 'in  SE SE SE SE SE SE-----------------------------------'
+        root.printRect() 
+        print coords
+        print coords4
+        print root.enrichNodes[0].x,root.enrichNodes[0].y
+        print root.enrichNodes[1].x,root.enrichNodes[1].y 
+        print root.enrichNodes[2].x,root.enrichNodes[2].y
+    if len(root.enrichNodes) == 3:
+        print 'quadratic polynomial!!!'
+        
+    if len(root.enrichNodes) == 2:
+        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+        [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
+    
+        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+        J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
+        
+        
+        det_J1 = lambda e,n: determinant(J1)(e,n)
+        det_J2 = lambda e,n: determinant(J2)(e,n)
+        det_J3 = lambda e,n: determinant(J3)(e,n)
+        det_J4 = lambda e,n: determinant(J4)(e,n)
 
     # parent element
     Pe = numpy.zeros((4,4))
@@ -4709,7 +4710,6 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         fv4 = lambda e,n:  rhs(e,n) * Nbasis_4[i](x_fct_4(e,n),y_fct_4(e,n)) * det_J4(e,n)
 
         Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) + simpson_rule(fv4)
-        #print simpson_rule(fv1)+simpson_rule(fv2)+simpson_rule(fv3) + simpson_rule(fv4)
 
             #NEUMANN BCS are zero - code not inserted here
 

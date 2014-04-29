@@ -3887,15 +3887,56 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     #    K_cst = [k2,k2,k2,k1]
 
 
+    #ISOPARAMETRIC linear, quadratic, cubic
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-    [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
-
     J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-    J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
+            
+    if len(root.enrichNodes) == 2:
+        
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        
+        [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
+        J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
+           
+    if len(root.enrichNodes) == 3:
+       
+        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        d = newt_coef(xx,yy)
+        
+        lOrd = [1,2,0] # local order 
+
+        midPoint = Coordinate((root.enrichNodes[0].x +root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        
+        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
+        
+        coord_enrich.x =  coord_enrich.x / 1000.0
+        if coord_enrich.x != 0.0:
+            coord_enrich.x += 0.001
+        coord_enrich.y =  coord_enrich.y / 1000.0
+        if coord_enrich.y != 0.0:
+            coord_enrich.y += 0.001
+        
+        coord_enrich.y = 1 - coord_enrich.y
+        
+        vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+        vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+
+        [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+        J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+        
+        lOrd = [2,0,1]
+        vec4_x = [ coords4[ lOrd[0],0], coords4[lOrd[1],0], coords4[lOrd[2],0], (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/2.0, coord_enrich.x, (coords4[lOrd[0],0] + coords4[lOrd[2],0])/2.0  ]
+        vec4_y = [ coords4[ lOrd[0],1], coords4[lOrd[1],1], coords4[lOrd[2],1], (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/2.0, coord_enrich.y, (coords4[lOrd[0],1] + coords4[lOrd[2],1])/2.0  ]
+
+        [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
+        J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
+        
+        
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -4109,16 +4150,61 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         K_cst = [k1,k2,k2,k2]
         
              
-             
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+    #ISOPARAMETRIC linear, quadratic, cubic triangles         
     [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-    [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
-
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
     J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+
+    [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
     J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
+            
+    if len(root.enrichNodes) == 2:
+        
+        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+        
+        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+           
+    if len(root.enrichNodes) == 3:
+       
+        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        d = newt_coef(xx,yy)
+        
+        lOrd = [0,1,2] # local order 
+
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+
+        # Could IMPROVE THIS ONE!!!!        
+        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
+        
+        coord_enrich.x =  coord_enrich.x / 1000.0
+        if coord_enrich.x != 0.0:
+            coord_enrich.x += 0.001
+        coord_enrich.y =  coord_enrich.y / 1000.0
+        if coord_enrich.y != 0.0:
+            coord_enrich.y += 0.001
+        
+        coord_enrich.y = 1 - coord_enrich.y
+        
+         
+           
+        vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
+        vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
+
+        [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+        J1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+        
+        lOrd = [1,2,0]
+        vec3_x = [ coords3[ lOrd[0],0], coords3[lOrd[1],0], coords3[lOrd[2],0], (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/2.0, coord_enrich.x, (coords3[lOrd[0],0] + coords3[lOrd[2],0])/2.0  ]
+        vec3_y = [ coords3[ lOrd[0],1], coords3[lOrd[1],1], coords3[lOrd[2],1], (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/2.0, coord_enrich.y, (coords3[lOrd[0],1] + coords3[lOrd[2],1])/2.0  ]
+
+        [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+        J3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+        
+        
+    
+    
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -4331,16 +4417,60 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
     #    K_cst = [k1,k1,k1,k2]
     #else:
     #    K_cst = [k2,k2,k2,k1]
-        
+       
+       
+    #ISOPARAMETRIC linear, quadratic, cubic triangles   
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-    [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
-
     J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
-    J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
+            
+    if len(root.enrichNodes) == 2:
+        
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        
+        [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
+        J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
+           
+    if len(root.enrichNodes) == 3:
+       
+        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        d = newt_coef(xx,yy)
+        
+        lOrd = [0,1,2] # local order 
+        
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+
+        # Could IMPROVE THIS ONE!!!!        
+        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
+
+
+        coord_enrich.x =  coord_enrich.x / 1000.0
+        if coord_enrich.x != 0.0:
+            coord_enrich.x += 0.001
+        coord_enrich.y =  coord_enrich.y / 1000.0
+        if coord_enrich.y != 0.0:
+            coord_enrich.y += 0.001
+        
+        coord_enrich.y = 1 - coord_enrich.y
+           
+        vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+        vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+
+        [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+        J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+        
+        lOrd = [1,2,0]
+        vec4_x = [ coords4[ lOrd[0],0], coords4[lOrd[1],0], coords4[lOrd[2],0], (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/2.0, coord_enrich.x, (coords4[lOrd[0],0] + coords4[lOrd[2],0])/2.0  ]
+        vec4_y = [ coords4[ lOrd[0],1], coords4[lOrd[1],1], coords4[lOrd[2],1], (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/2.0, coord_enrich.y, (coords4[lOrd[0],1] + coords4[lOrd[2],1])/2.0  ]
+
+        [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
+        J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
+        
+
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -4550,34 +4680,74 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
     #    K_cst = [k2,k2,k2,k1]
 
 
-    if len(root.enrichNodes) >2:
-        print len(root.enrichNodes)
-        print 'in  SE SE SE SE SE SE-----------------------------------'
-        root.printRect() 
-        print coords
-        print coords4
-        print root.enrichNodes[0].x,root.enrichNodes[0].y
-        print root.enrichNodes[1].x,root.enrichNodes[1].y 
-        print root.enrichNodes[2].x,root.enrichNodes[2].y
-    if len(root.enrichNodes) == 3:
-        print 'quadratic polynomial!!!'
+#    if len(root.enrichNodes) >2:
+#        print len(root.enrichNodes)
+#        print 'in  SE SE SE SE SE SE-----------------------------------'
+#        root.printRect() 
+#        print coords
+#        print coords4
+#        print root.enrichNodes[0].x,root.enrichNodes[0].y
+#        print root.enrichNodes[1].x,root.enrichNodes[1].y 
+#        print root.enrichNodes[2].x,root.enrichNodes[2].y
         
+    #ISOPARAMETRIC linear, quadratic, cubic triangles    
+    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+
+    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
     if len(root.enrichNodes) == 2:
-        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
-        [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
-    
-        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+           
+        [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
         J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
         
+    if len(root.enrichNodes) == 3:
+       
+        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        d = newt_coef(xx,yy)
         
-        det_J1 = lambda e,n: determinant(J1)(e,n)
-        det_J2 = lambda e,n: determinant(J2)(e,n)
-        det_J3 = lambda e,n: determinant(J3)(e,n)
-        det_J4 = lambda e,n: determinant(J4)(e,n)
+        
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+
+        # Could IMPROVE THIS ONE!!!!        
+        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
+
+        coord_enrich.x =  coord_enrich.x / 1000.0
+        if coord_enrich.x != 0.0:
+            coord_enrich.x += 0.001
+        coord_enrich.y =  coord_enrich.y / 1000.0
+        if coord_enrich.y != 0.0:
+            coord_enrich.y += 0.001
+        
+        coord_enrich.y = 1 - coord_enrich.y
+        
+        print root.enrichNodes[2].x, root.enrichNodes[2].y 
+        print 'aqui'
+         
+        lOrd = [2,0,1] # local order    
+        vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+        vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+
+        [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+        J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+        
+        lOrd = [1,2,0]
+        vec4_x = [ coords4[ lOrd[0],0], coords4[lOrd[1],0], coords4[lOrd[2],0], (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/2.0, coord_enrich.x, (coords4[lOrd[0],0] + coords4[lOrd[2],0])/2.0  ]
+        vec4_y = [ coords4[ lOrd[0],1], coords4[lOrd[1],1], coords4[lOrd[2],1], (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/2.0, coord_enrich.y, (coords4[lOrd[0],1] + coords4[lOrd[2],1])/2.0  ]
+
+        [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
+        J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
+        
+    
+    det_J1 = lambda e,n: determinant(J1)(e,n)
+    det_J2 = lambda e,n: determinant(J2)(e,n)
+    det_J3 = lambda e,n: determinant(J3)(e,n)
+    det_J4 = lambda e,n: determinant(J4)(e,n)
 
     # parent element
     Pe = numpy.zeros((4,4))
@@ -5816,44 +5986,6 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
     return [Ke_Horiz,Fe_Horiz]
 
-def on_corners(enrich,coords):
-    x0 = coords[0,0]
-    y0 = coords[0,1]
-    x1 = coords[1,0]
-    y1 = coords[1,1]
-    x2 = coords[2,0]
-    y2 = coords[2,1]
-    x3 = coords[3,0]
-    y3 = coords[3,1]
-    
-    if enrich[0] == x0 and enrich[1] == y0:
-        return True
-
-    if enrich[0] == x1 and enrich[1] == y1:
-        return True
-    
-    if enrich[0] == x2 and enrich[1] == y2:
-        return True
-
-    if enrich[0] == x3 and enrich[1] == y3:
-        return True
-
-    return False
-
-def on_corners1(enrich,x0,y0,x1,y1):
-    if enrich[0] == x0 and enrich[1] == y0:
-        return True
-
-    if enrich[0] == x1 and enrich[1] == y0:
-        return True
-    
-    if enrich[0] == x0 and enrich[1] == y1:
-        return True
-
-    if enrich[0] == x1 and enrich[1] == y1:
-        return True
-
-    return False
 
 def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     enrich1 = np.array(p[nodes[4]])
@@ -6151,6 +6283,45 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
 # the top part of the domain for HORIZONTAL line splitting the domain in half
 #polygonDef = domainInclusion#[(0.0,0.57),(1.0,0.6),(1.0,1.0),(0.0,1.0)]
 #polygonDef = hexagon
+
+def on_corners(enrich,coords):
+    x0 = coords[0,0]
+    y0 = coords[0,1]
+    x1 = coords[1,0]
+    y1 = coords[1,1]
+    x2 = coords[2,0]
+    y2 = coords[2,1]
+    x3 = coords[3,0]
+    y3 = coords[3,1]
+    
+    if enrich[0] == x0 and enrich[1] == y0:
+        return True
+
+    if enrich[0] == x1 and enrich[1] == y1:
+        return True
+    
+    if enrich[0] == x2 and enrich[1] == y2:
+        return True
+
+    if enrich[0] == x3 and enrich[1] == y3:
+        return True
+
+    return False
+
+def on_corners1(enrich,x0,y0,x1,y1):
+    if enrich[0] == x0 and enrich[1] == y0:
+        return True
+
+    if enrich[0] == x1 and enrich[1] == y0:
+        return True
+    
+    if enrich[0] == x0 and enrich[1] == y1:
+        return True
+
+    if enrich[0] == x1 and enrich[1] == y1:
+        return True
+
+    return False
 
 def simpson_rule(f):
 

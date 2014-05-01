@@ -194,18 +194,25 @@ def newt_fct_eval(a,xData,x):
  
 # Compute the coefficients in the Newton polynomial in the a vector
 def newt_coef(xData,yData):
-	m = len(xData)  # Number of data points
-	a = yData[:]
+    m = len(xData)  # Number of data points
+    a = yData[:]
 	#print xData,yData
 	#for k in range(1,m):
 	#	a[k:m] = (a[k:m] - a[k-1]) / (xData[k:m] - xData[k-1])
 	#return a
 
-	for k in range(1,m):
-		for i in range(m-1,k-1,-1):
-			a[i] = (a[i] - a[i-1]) / (xData[i] - xData[i-k]);
+    for k in range(1,m):
+        for i in range(m-1,k-1,-1):
+            a[i] = (a[i] - a[i-1]) / (xData[i] - xData[i-k]);
 
-	return a
+
+#     yData = array(yData)
+#     xData = array(xData)
+#     a = yData.copy()
+#     for k in range(1,m):
+#         a[k: m] = (a[k:m] - a[k-1]) / (xData[k:m] - xData[k-1])
+
+    return a
 
 ## This function finds the midpoint between two points in space: p1 and p2
 def find_mid_point(p1, p2):

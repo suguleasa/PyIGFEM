@@ -20,6 +20,7 @@ import scipy.io
 from libFcts import *
 
 from main import *
+from scipy import interpolate
 
 import __builtin__
 sum = __builtin__.sum
@@ -793,8 +794,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                 fv = lambda ee,nn: rhs(x_fct(ee,nn),y_fct(ee,nn)) * Nbasis[i](x_fct(ee,nn),y_fct(ee,nn)) * det_Jac(ee,nn)
 #                 Fe[i] = quad2d(fv,-1,1,-1,1,ui,wi)
 #===============================================================================
-#             print 'element e = ', e, " K = ", K_cst
-#             print 'nodes =', nodes
             
             # Method 1
             # construct the local matrix and local components of the load vector    
@@ -808,21 +807,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
                 Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
 
-#             if e == 3800:
-#                 nodes = [169, 171, 187, 186, 170, 178]
-#                 [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k1,nodes,root,image)
-# 
-#                 # add the local stiffness matrix and local load vector to the global K and F
-#                 for i in range(0,6):
-#                     for j in range(0,6):
-#                         if nodes[i] >= nodes[j]:
-#                             K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
-#                             K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                     F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
-#             else:                    
-                #print e,Ke#.todense() 
-#             print Ke, Fe
-#             print K, F
+
             # add the local stiffness matrix and local load vector to the global K and F
             for i in range(0,4):
                 for j in range(0,4):
@@ -836,8 +821,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
             enrich1 = np.array(p[nodes[4]])
             
-            if len(root.enrichNodes) >2:
-                print 'in hereeee------------------------------------'
             if len(nodes) == 5:
                 
                 corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
@@ -856,7 +839,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     
                     pxValMid = image.GetPixel(int(midInside.x), int(midInside.y))
                     if pxValMid > binBnd[1]:
-#                    if point_in_on_poly(midInside.x,midInside.y,polygonDef):
                         K_cst = k2
                     else:
                         K_cst = k1
@@ -867,7 +849,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # construct the local matrix and local components of the load vector    
                     for i in range(0,4):
                         for j in range(0,4):
-#                             if nodes[i] >=  nodes[j]:
                                 Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
                                 Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
 
@@ -879,9 +860,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # add the local stiffness matrix and local load vector to the global K and F
                     for i in range(0,4):
                         for j in range(0,4):
-#                             if nodes[i] >= nodes[j]:
                                 K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-#                                 K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
                         F[nodes[i],0] = F[nodes[i],0] + Fe[i]
             
 
@@ -905,7 +884,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # construct the local matrix and local components of the load vector    
                     for i in range(0,4):
                         for j in range(0,4):
-#                             if nodes[i] >=  nodes[j]:
                                 Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
                                 Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
 
@@ -917,68 +895,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # add the local stiffness matrix and local load vector to the global K and F
                     for i in range(0,4):
                         for j in range(0,4):
-#                             if nodes[i] >= nodes[j]:
                                 K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-#                                 K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
                         F[nodes[i],0] = F[nodes[i],0] + Fe[i]
 
 
-#                # the South edge has the enrichment: 0-4-1
-#                if enrich1[1] == y0 and elCorner==False: 
-#                    print 'South edge'
-#                    [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_South[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_South[i]
-
-
-#                # the East edge has the enrichment: 1-4-2
-#                if enrich1[0] == x1 and elCorner==False:
-#                    print 'East edge, element: ', e
-#                    [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_East[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_East[i]
-
-#                # the West edge has the enrichment 0-4-3
-#                if enrich1[0] == x0 and elCorner==False:
-#                    print 'West edge'
-#                    [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_West[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_West[i]
-
-#                # the North edge has the enrichment: 3-4-2
-#                if enrich1[1] == y1 and elCorner==False :
-#                    print "North edge"
-#                    [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,nodes)
-#
-#                    # add the local stiffness matrix and local load vector to the global K and F
-#                    for i in range(0,5):
-#                        for j in range(0,5):
-#                            if nodes[i] >= nodes[j]:
-#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_North[i,j]
-#                                K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-#                        F[nodes[i],0] = F[nodes[i],0] + Fe_North[i]
-
-
             else: # or (len(nodes) == 6)
-                
                 
                 # enrichment nodes: enrichmentNode = [x y], x = enrichmentNode[0], y = enrichmentNode[1]
                 enrich1 = np.array(p[nodes[4]])
@@ -1002,12 +923,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         nodes_trid1 = [nodes[0], nodes[1], nodes[2]]
                         nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
             
-#                        if point_in_on_poly(x0,y1,polygonDef) and not(point_in_on_poly(x1,y0,polygonDef)):
-#                            K_cst_trid2 = k2 
-#                            K_cst_trid1 = k1
-#                        else:
-#                            K_cst_trid2 = k1
-#                            K_cst_trid1 = k2
                         if pxVal1 > binBnd[1] and pxVal3 <= binBnd[1]:
                             K_cst_trid2 = k2 
                             K_cst_trid1 = k1
@@ -1020,14 +935,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         nodes_trid1 = [nodes[0], nodes[1], nodes[3]]
                         nodes_trid2 = [nodes[1], nodes[2], nodes[3]]
 
-#                        if point_in_on_poly(x1,y1,polygonDef) and not(point_in_on_poly(x0,y0,polygonDef)):
-#                            K_cst_trid2 = k2 
-#                            K_cst_trid1 = k1
-#                        else:
-#                            K_cst_trid2 = k1
-#                            K_cst_trid1 = k2
-
-    
                         if pxVal2 > binBnd[1] and pxVal4 <= binBnd[1]:
                             K_cst_trid2 = k2 
                             K_cst_trid1 = k1
@@ -1035,13 +942,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                             K_cst_trid2 = k1
                             K_cst_trid1 = k2
 
-#                     print nodes
-#                     print nodes_trid1, nodes_trid2
-#                     print [p1.x,p2.x], [p1.y,p4.y]
-#                     print 'inside myquad', e
-#                     print K_cst_trid1, K_cst_trid2
-#                     print nodes_trid1, nodes_trid2
-                    
                     coords_trid1 = p[nodes_trid1]
                     coords_trid2 = p[nodes_trid2]
 
@@ -1068,12 +968,55 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     Nx_trid2 = triderivX(C_trid2)
                     Ny_trid2 = triderivY(C_trid2)
 
+                    if len(root.enrichNodes) == 2:
+                        print 'DIAGONAL WITH QUADRATIC!!!!!!!!!'
+                    
+                        [x_fct_1, y_fct_1] = tri_xy_fct( coords_trid1[:,0], coords_trid1[:,1] )
+                        [x_fct_2, y_fct_2] = tri_xy_fct( coords_trid2[:,0], coords_trid2[:,1] )
+        
+                        J1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
+                        J2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
+                    
+                    if len(root.enrichNodes) == 3:
+                                
+                        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+                
+                        coord_enrich = coord_enrich_comp(root, midPoint)
+                               
+                        if(corner0 == True and corner2 == True): 
+                        # even diagonal: SW - NE
+                            lOrd = [1,2,0] # local order
+                        else:
+                            lOrd = [0,1,2] 
+                          
+                        vec1_x = [ coords_trid1[ lOrd[0],0], coords_trid1[lOrd[1],0], coords_trid1[lOrd[2],0], (coords_trid1[ lOrd[0],0] + coords_trid1[lOrd[1],0])/2.0, coord_enrich.x, (coords_trid1[lOrd[0],0] + coords_trid1[lOrd[2],0])/2.0  ]
+                        vec1_y = [ coords_trid1[ lOrd[0],1], coords_trid1[lOrd[1],1], coords_trid1[lOrd[2],1], (coords_trid1[ lOrd[0],1] + coords_trid1[lOrd[1],1])/2.0, coord_enrich.y, (coords_trid1[lOrd[0],1] + coords_trid1[lOrd[2],1])/2.0  ]
+                
+                        [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+                        J1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                        
+                        
+                        if(corner0 == True and corner2 == True): 
+                        # even diagonal: SW - NE
+                            lOrd = [2,0,1] # local order
+                        else:
+                            lOrd = [1,2,0] 
+                            
+                        vec2_x = [ coords_trid2[ lOrd[0],0], coords_trid2[lOrd[1],0], coords_trid2[lOrd[2],0], (coords_trid2[ lOrd[0],0] + coords_trid2[lOrd[1],0])/2.0, coord_enrich.x, (coords_trid2[lOrd[0],0] + coords_trid2[lOrd[2],0])/2.0  ]
+                        vec2_y = [ coords_trid2[ lOrd[0],1], coords_trid2[lOrd[1],1], coords_trid2[lOrd[2],1], (coords_trid2[ lOrd[0],1] + coords_trid2[lOrd[1],1])/2.0, coord_enrich.y, (coords_trid2[lOrd[0],1] + coords_trid2[lOrd[2],1])/2.0  ]
+                
+                        [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                        J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                        
+                    det_J1 = lambda e,n: determinant(J1)(e,n)
+                    det_J2 = lambda e,n: determinant(J2)(e,n)
+                        
                     ## FIRST TRIANGLE
                     # construct the local matrix and local components of the load vector    
                     for i in range(0,3):
                         for j in range(0,3):
 #                             if nodes_trid1[i] >=  nodes_trid1[j]:
-                                Kefunc_trid1 = lambda x,y: K_cst_trid1 * ( Nx_trid1[i](x,y) * Nx_trid1[j](x,y) + Ny_trid1[i](x,y) * Ny_trid1[j](x,y) )
+                                Kefunc_trid1 = lambda e,n: K_cst_trid1 * ( Nx_trid1[i](x_fct_1(e,n), y_fct_1(e,n)) * Nx_trid1[j](x_fct_1(e,n), y_fct_1(e,n)) + Ny_trid1[i](x_fct_1(e,n), y_fct_1(e,n)) * Ny_trid1[j](x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
                                 Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
 
                         # construct the local load vector
@@ -1094,7 +1037,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     for i in range(0,3):
                         for j in range(0,3):
 #                             if nodes_trid2[i] >=  nodes_trid2[j]:
-                                Kefunc_trid2 = lambda x,y: K_cst_trid2 * ( Nx_trid2[i](x,y) * Nx_trid2[j](x,y) + Ny_trid2[i](x,y) * Ny_trid2[j](x,y) )
+                                Kefunc_trid2 = lambda e,n: K_cst_trid2 * ( Nx_trid2[i](x_fct_2(e,n), y_fct_2(e,n)) * Nx_trid2[j](x_fct_2(e,n), y_fct_2(e,n)) + Ny_trid2[i](x_fct_2(e,n), y_fct_2(e,n)) * Ny_trid2[j](x_fct_2(e,n), y_fct_2(e,n)) )* det_J2(e,n)
                                 Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
 
                         # construct the local load vector
@@ -1114,18 +1057,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 else:
 
                     # the North-West corner is cut, 0-4-3, 2-5-3
-#                     enrich1 = np.array(p[nodes[4]])
-#                     enrich2 = np.array(p[nodes[5]])
-#                     coords = p[nodes]
-#                     print coords
-#                     x0 = coords[0,0]
-#                     x1 = coords[2,0]
-#                     y0 = coords[0,1]
-#                     y1 = coords[2,1]
-#                     print p[508], 'nodes', nodes
-#                     print enrich1[0], enrich1[1]
-#                     print [x0,x1], [y0,y1]
-#                     print enrich2[0],enrich2[1]
 
                     if (
                         ((enrich1[0] == x0 and enrich2[1] == y1) or
@@ -1158,17 +1089,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         not(on_corners(enrich2,coords))                        
                         ):
                         print 'SE corner'
-                        
-#                         print x1,y1, enrich1
-#                         print not(on_corners(enrich1,x0,y0,x1,y1))
-#                         print not(on_corners(enrich2,x0,y0,x1,y1))
-#                         print 'elem:', e, root.tlist
-#                         print 'coords ', [x0,x1],[y0,y1]
-#                         print 'pixels ',[p1.x,p3.x],[p1.y,p3.y]
-#                         print 'enrich1 ',enrich1
-# #                         print 'enrich2 ',enrich2
-#                         print root.enrichNodes[0].x, root.enrichNodes[0].y
-# #                         print root.enrichNodes[1].x, root.enrichNodes[1].y
                         
                         [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image)
     
@@ -3820,6 +3740,50 @@ def print_vtk_file(p,Usolution,plist):
 
     target.close()
 
+def coord_enrich_comp(root, midPoint):
+    if root.enrichNodes[0].x != root.enrichNodes[1].x:
+        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        x_n = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        yy = [0,0,0]
+        y_n = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        xx.sort()
+        for i in range(0,3):
+            indx = x_n.index(xx[i])
+            yy[i] = y_n[indx]  
+            
+        
+        f = interpolate.interp1d(np.array(xx), np.array(yy))
+        coord_enrich = Coordinate(0,0)
+        coord_enrich.x = midPoint.x
+        coord_enrich.y = f(midPoint.x)
+    else:
+        xx = [0,0,0]
+        x_n = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        y_n = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+        yy.sort()
+        for i in range(0,3):
+            indx = y_n.index(yy[i])
+            xx[i] = x_n[indx]  
+            
+        
+        f = interpolate.interp1d(np.array(yy), np.array(xx))
+        coord_enrich = Coordinate(0,0)
+        coord_enrich.x = f(midPoint.y)
+        coord_enrich.y = midPoint.y
+    
+    coord_enrich.x =  coord_enrich.x / 1000.0
+    if coord_enrich.x != 0.0:
+        coord_enrich.x += 0.001
+    coord_enrich.y =  coord_enrich.y / 1000.0
+    if coord_enrich.y != 0.0:
+        coord_enrich.y += 0.001
+    
+    coord_enrich.y = 1 - coord_enrich.y
+    
+    return coord_enrich
+        
+        
 def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
@@ -3903,25 +3867,12 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
         J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
            
     if len(root.enrichNodes) == 3:
-       
-        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        d = newt_coef(xx,yy)
-        
-        lOrd = [1,2,0] # local order 
 
         midPoint = Coordinate((root.enrichNodes[0].x +root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
         
-        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
+        coord_enrich = coord_enrich_comp(root, midPoint)
         
-        coord_enrich.x =  coord_enrich.x / 1000.0
-        if coord_enrich.x != 0.0:
-            coord_enrich.x += 0.001
-        coord_enrich.y =  coord_enrich.y / 1000.0
-        if coord_enrich.y != 0.0:
-            coord_enrich.y += 0.001
-        
-        coord_enrich.y = 1 - coord_enrich.y
+        lOrd = [1,2,0] # local order 
         
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
         vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
@@ -4166,29 +4117,13 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
            
     if len(root.enrichNodes) == 3:
-       
-        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        d = newt_coef(xx,yy)
         
-        lOrd = [0,1,2] # local order 
-
         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        # Could IMPROVE THIS ONE!!!!        
-        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
-        
-        coord_enrich.x =  coord_enrich.x / 1000.0
-        if coord_enrich.x != 0.0:
-            coord_enrich.x += 0.001
-        coord_enrich.y =  coord_enrich.y / 1000.0
-        if coord_enrich.y != 0.0:
-            coord_enrich.y += 0.001
-        
-        coord_enrich.y = 1 - coord_enrich.y
-        
-         
-           
+        coord_enrich = coord_enrich_comp(root, midPoint)
+                
+        lOrd = [0,1,2] # local order 
+          
         vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
         vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
 
@@ -4435,28 +4370,12 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
         J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
            
     if len(root.enrichNodes) == 3:
-       
-        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        d = newt_coef(xx,yy)
-        
-        lOrd = [0,1,2] # local order 
         
         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        # Could IMPROVE THIS ONE!!!!        
-        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
-
-
-        coord_enrich.x =  coord_enrich.x / 1000.0
-        if coord_enrich.x != 0.0:
-            coord_enrich.x += 0.001
-        coord_enrich.y =  coord_enrich.y / 1000.0
-        if coord_enrich.y != 0.0:
-            coord_enrich.y += 0.001
-        
-        coord_enrich.y = 1 - coord_enrich.y
-           
+        coord_enrich = coord_enrich_comp(root, midPoint)
+                   
+        lOrd = [0,1,2] # local order 
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
         vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
 
@@ -4707,28 +4626,10 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         
     if len(root.enrichNodes) == 3:
        
-        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        d = newt_coef(xx,yy)
-        
-        
         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        # Could IMPROVE THIS ONE!!!!        
-        coord_enrich = Coordinate( midPoint.x, floor( newt_fct_eval(d,xx,midPoint.x)) )
-
-        coord_enrich.x =  coord_enrich.x / 1000.0
-        if coord_enrich.x != 0.0:
-            coord_enrich.x += 0.001
-        coord_enrich.y =  coord_enrich.y / 1000.0
-        if coord_enrich.y != 0.0:
-            coord_enrich.y += 0.001
+        coord_enrich = coord_enrich_comp(root, midPoint)
         
-        coord_enrich.y = 1 - coord_enrich.y
-        
-        print root.enrichNodes[2].x, root.enrichNodes[2].y 
-        print 'aqui'
-         
         lOrd = [2,0,1] # local order    
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
         vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
@@ -4963,16 +4864,63 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
         is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
 
-    print 'East edge: K = ', K_cst
+    print 'East edge: K = ', K_cst, len(root.enrichNodes)
 
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 2:
+        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    
+        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
 
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 3:
 
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_comp(root, midPoint)
+        
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [0,1,2] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
+            lOrd = [1,2,0]
+            vec3_x = [ coords3[ lOrd[0],0], coords3[lOrd[1],0], coords3[lOrd[2],0], (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/2.0, coord_enrich.x, (coords3[lOrd[0],0] + coords3[lOrd[2],0])/2.0  ]
+            vec3_y = [ coords3[ lOrd[0],1], coords3[lOrd[1],1], coords3[lOrd[2],1], (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/2.0, coord_enrich.y, (coords3[lOrd[0],1] + coords3[lOrd[2],1])/2.0  ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            
+            lOrd = [0,1,2]
+            vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
+            vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
+
+            [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                        
+            lOrd = [2,0,1] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+
+        
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -5171,17 +5119,60 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 #     print 'South edge: K = ', K_cst
 
     
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 2:
+        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    
+        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
 
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 3:
+
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_comp(root, midPoint)
+        
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [2,0,1] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
+            lOrd = [1,2,0]
+            vec3_x = [ coords3[ lOrd[0],0], coords3[lOrd[1],0], coords3[lOrd[2],0], (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/2.0, coord_enrich.x, (coords3[lOrd[0],0] + coords3[lOrd[2],0])/2.0  ]
+            vec3_y = [ coords3[ lOrd[0],1], coords3[lOrd[1],1], coords3[lOrd[2],1], (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/2.0, coord_enrich.y, (coords3[lOrd[0],1] + coords3[lOrd[2],1])/2.0  ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            lOrd = [0,1,2]
+            vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
+            vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
+
+            [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                        
+            lOrd = [1,2,0] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
 
     det_J1 = lambda e,n: determinant(J1)(e,n)
-#     det_J1 = lambda e,n: (-coords1[0,0] + coords1[1,0]) * (-coords1[0,1]+coords1[2,1]) - (-coords1[0,1]+coords1[1,1])*(-coords1[0,0]+coords1[2,0])
-#     print (-coords1[0,0] + coords1[1,0]) * (-coords1[0,1]+coords1[2,1]) - (-coords1[0,1]+coords1[1,1])*(-coords1[0,0]+coords1[2,0])
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
 
@@ -5412,15 +5403,60 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
         is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
     
-    print "North Edge: K =", K_cst
             
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 2:
+        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    
+        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
 
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 3:
+
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_comp(root, midPoint)
+        
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [0,1,2] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
+            lOrd = [1,2,0]
+            vec3_x = [ coords3[ lOrd[0],0], coords3[lOrd[1],0], coords3[lOrd[2],0], (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/2.0, coord_enrich.x, (coords3[lOrd[0],0] + coords3[lOrd[2],0])/2.0  ]
+            vec3_y = [ coords3[ lOrd[0],1], coords3[lOrd[1],1], coords3[lOrd[2],1], (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/2.0, coord_enrich.y, (coords3[lOrd[0],1] + coords3[lOrd[2],1])/2.0  ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            lOrd = [2,0,1]
+            vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
+            vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
+
+            [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                        
+            lOrd = [1,2,0] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -5632,13 +5668,59 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 #    else:
 #        K_cst = [k2,k2,k2,k1]
         
-    [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
-    [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
-    [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 2:
+        [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+        [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+        [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+    
+        J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+        J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+        J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
 
-    J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
-    J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
-    J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+    if len(root.enrichNodes) == 3:
+
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_comp(root, midPoint)
+        
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [0,1,2] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
+            lOrd = [2,0,1]
+            vec3_x = [ coords3[ lOrd[0],0], coords3[lOrd[1],0], coords3[lOrd[2],0], (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/2.0, coord_enrich.x, (coords3[lOrd[0],0] + coords3[lOrd[2],0])/2.0  ]
+            vec3_y = [ coords3[ lOrd[0],1], coords3[lOrd[1],1], coords3[lOrd[2],1], (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/2.0, coord_enrich.y, (coords3[lOrd[0],1] + coords3[lOrd[2],1])/2.0  ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            lOrd = [0,1,2]
+            vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
+            vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
+
+            [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                        
+            lOrd = [1,2,0] # local order    
+            vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
+            vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -5947,15 +6029,70 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
     # coordinates of the corners of the child element
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
-    [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
-    [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
+    
+    if len(root.enrichNodes) == 2:
+        
+        [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
+        [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
+    
+        # computing the Jacobian and the determinant of the left and right children of the parent element
+        J_top = jacobian_mat( top_coords[:,0], top_coords[:,1] )
+        J_bottom = jacobian_mat( bottom_coords[:,0], bottom_coords[:,1] )
+        
+    if len(root.enrichNodes) == 3:
+       
+        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-    # computing the Jacobian and the determinant of the left and right children of the parent element
-    J_top = jacobian_mat( top_coords[:,0], top_coords[:,1] )
-    J_bottom = jacobian_mat( bottom_coords[:,0], bottom_coords[:,1] )
+        coord_enrich = coord_enrich_comp(root, midPoint)
+        
+        lOrd = [0,1,2,3] # local order    
+        vecB_x = [ bottom_coords[ lOrd[0],0], 
+                  (bottom_coords[ lOrd[0],0] + bottom_coords[lOrd[1],0])/2.0,
+                  bottom_coords[lOrd[1],0],
+                  (bottom_coords[lOrd[1],0] + bottom_coords[lOrd[2],0])/2.0,
+                  bottom_coords[lOrd[2],0], 
+                  coord_enrich.x, 
+                  bottom_coords[lOrd[3],0],
+                  (bottom_coords[lOrd[3],0] + bottom_coords[lOrd[0],0])/2.0
+                 ]
+        vecB_y = [ bottom_coords[ lOrd[0],1], 
+                  (bottom_coords[ lOrd[0],1] + bottom_coords[lOrd[1],1])/2.0,
+                  bottom_coords[lOrd[1],1],
+                  (bottom_coords[lOrd[1],1] + bottom_coords[lOrd[2],1])/2.0,
+                  bottom_coords[lOrd[2],1], 
+                  coord_enrich.y, 
+                  bottom_coords[lOrd[3],1],
+                  (bottom_coords[lOrd[3],1] + bottom_coords[lOrd[0],1])/2.0
+                 ]
+
+        [x_fct_B, y_fct_B] = quad_xy_fct_bi_quadratic( vecB_x, vecB_y )
+        J_bottom = quad_jacobian_mat_bi_quadratic( vecB_x, vecB_y )
+        
+        lOrd = [2,3,0,1]
+        vecT_x = [ top_coords[ lOrd[0],0], 
+                  (top_coords[ lOrd[0],0] + top_coords[lOrd[1],0])/2.0,
+                  top_coords[lOrd[1],0],
+                  (top_coords[lOrd[1],0] + top_coords[lOrd[2],0])/2.0,
+                  top_coords[lOrd[2],0], 
+                  coord_enrich.x, 
+                  top_coords[lOrd[3],0],
+                  (top_coords[lOrd[3],0] + top_coords[lOrd[0],0])/2.0
+                 ]
+        vecT_y = [ top_coords[ lOrd[0],1], 
+                  (top_coords[ lOrd[0],1] + top_coords[lOrd[1],1])/2.0,
+                  top_coords[lOrd[1],1],
+                  (top_coords[lOrd[1],1] + top_coords[lOrd[2],1])/2.0,
+                  top_coords[lOrd[2],1], 
+                  coord_enrich.y, 
+                  top_coords[lOrd[3],1],
+                  (top_coords[lOrd[3],1] + top_coords[lOrd[0],1])/2.0
+                 ]
+
+        [x_fct_T, y_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
+        J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )
+        
     detJ_top = lambda e,n: determinant(J_top)(e,n)
     detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)
-    
     
     Ke_Horiz = np.zeros((6,6))
     Fe_Horiz = np.zeros((6,1))

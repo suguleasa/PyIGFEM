@@ -713,33 +713,35 @@ def quad_jacobian_mat_bi_quadratic(x,y):
 # QUADRILATERAL Bi-Cubic
 def quad_iso_basis_fct_bi_cubic():
 	# defining basis functions for an isoparametri TRIANGLE
-	N0 = lambda e,n: 1.0/32.0 * (1 - e) * (1 - n) * ( -10 + 9( e * e + n * n) )
-	N3 = lambda e,n: 1.0/32.0 * (1 + e) * (1 - n) * ( -10 + 9( e * e + n * n) )
-	N6 = lambda e,n: 1.0/32.0 * (1 + e) * (1 + n) * ( -10 + 9( e * e + n * n) )
-	N9 = lambda e,n: 1.0/32.0 * (1 - e) * (1 + n) * ( -10 + 9( e * e + n * n) )
+	N1 = lambda e,n: 1.0/32.0 * (1 - e) * (1 - n) * ( -10 + 9 * ( e * e + n * n) )
+	N4 = lambda e,n: 1.0/32.0 * (1 + e) * (1 - n) * ( -10 + 9 * ( e * e + n * n) )
+	N7 = lambda e,n: 1.0/32.0 * (1 + e) * (1 + n) * ( -10 + 9 * ( e * e + n * n) )
+	N10 = lambda e,n: 1.0/32.0 * (1 - e) * (1 + n) * ( -10 + 9 * ( e * e + n * n) )
 	
-	N1 = lambda e,n: 9.0/32.0 * (1 - n) * (1 - e*e) * (1 - 3 * e)
-	N2 = lambda e,n: 9.0/32.0 * (1 - n) * (1 - e*e) * (1 + 3 * e)
+	N2 = lambda e,n: 9.0/32.0 * (1 - n) * (1 - e*e) * (1 - 3 * e)
+	N3 = lambda e,n: 9.0/32.0 * (1 - n) * (1 - e*e) * (1 + 3 * e)
 	
-	N4 = lambda e,n: 9.0/32.0 * (1 + e) * (1 - n*n) * (1 - 3 * n)
-	N5 = lambda e,n: 9.0/32.0 * (1 + e) * (1 - n*n) * (1 + 3 * n)
+	N5 = lambda e,n: 9.0/32.0 * (1 + e) * (1 - n*n) * (1 - 3 * n)
+	N6 = lambda e,n: 9.0/32.0 * (1 + e) * (1 - n*n) * (1 + 3 * n)
 	
-	N7 = lambda e,n: 9.0/32.0 * (1 + n) * (1 - e*e) * (1 + 3 * e)
-	N8 = lambda e,n: 9.0/32.0 * (1 + n) * (1 - e*e) * (1 - 3 * e)
+	N8 = lambda e,n: 9.0/32.0 * (1 + n) * (1 - e*e) * (1 + 3 * e)
+	N9 = lambda e,n: 9.0/32.0 * (1 + n) * (1 - e*e) * (1 - 3 * e)
 
-	N10 = lambda e,n: 9.0/32.0 * (1 - e) * (1 - n*n) * (1 + 3 * n)
-	N11 = lambda e,n: 9.0/32.0 * (1 - e) * (1 - n*n) * (1 - 3 * n)
+	N11 = lambda e,n: 9.0/32.0 * (1 - e) * (1 - n*n) * (1 + 3 * n)
+	N12 = lambda e,n: 9.0/32.0 * (1 - e) * (1 - n*n) * (1 - 3 * n)
 	
-	return [N0,N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11]
+	return [N1,N2,N3,N4,N5,N6,N7,N8,N9,N10,N11,N12]
 
 def quad_xy_fct_bi_cubic(x,y):
 	N_e = quad_iso_basis_fct_bi_cubic()
 	x_fct = lambda e,n: ( N_e[0](e,n) * x[0] + N_e[1](e,n) * x[1] + N_e[2](e,n) * x[2] + N_e[3](e,n) * x[3] + 
 						N_e[4](e,n) * x[4] + N_e[5](e,n) * x[5] + N_e[6](e,n) * x[6] + N_e[7](e,n) * x[7] +
 						N_e[8](e,n) * x[8] + N_e[9](e,n) * x[9] + N_e[10](e,n) * x[10] + N_e[11](e,n) * x[11])
-	y_fct = lambda e,n: (N_e[0](e,n) * y[0] + N_e[1](e,n) * y[1] + N_e[2](e,n) * y[2] + N_e[3](e,n) * y[3] + 
+	y_fct = lambda e,n: (
+						N_e[0](e,n) * y[0] + N_e[1](e,n) * y[1] + N_e[2](e,n) * y[2] + N_e[3](e,n) * y[3] + 
 						N_e[4](e,n) * y[4] + N_e[5](e,n) * y[5] + N_e[6](e,n) * y[6] + N_e[7](e,n) * y[7] +
-						N_e[8](e,n) * y[8] + N_e[9](e,n) * y[9] + N_e[10](e,n) * y[10] + N_e[11](e,n) * y[11])
+						N_e[8](e,n) * y[8] + N_e[9](e,n) * y[9] + N_e[10](e,n) * y[10] + N_e[11](e,n) * y[11]
+						)
 	return [x_fct,y_fct]
 
 def quad_iso_deriv_wrt_to_e_bi_cubic():

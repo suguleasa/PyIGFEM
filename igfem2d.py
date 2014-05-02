@@ -3880,7 +3880,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -3908,6 +3908,69 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
 
         [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
         J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
+        
+
+    if len(root.enrichNodes) == 4:
+        
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        lOrd = [1,2,0] # local order 
+        vec2_x = [ coords2[ lOrd[0],0], 
+                  coords2[lOrd[1],0],
+                  coords2[lOrd[2],0],
+                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0, 
+                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0,
+                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0  
+                  ]
+        vec2_y = [ coords2[ lOrd[0],1], 
+                  coords2[lOrd[1],1], 
+                  coords2[lOrd[2],1], 
+                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0, 
+                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0,
+                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0  
+                  ]
+        
+        [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+        J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+        
+        lOrd = [2,0,1]
+        vec4_x = [ coords4[ lOrd[0],0], 
+                  coords4[lOrd[1],0],
+                  coords4[lOrd[2],0],
+                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0, 
+                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0,
+                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0  
+                  ]
+        vec4_y = [ coords4[ lOrd[0],1], 
+                  coords4[lOrd[1],1], 
+                  coords4[lOrd[2],1], 
+                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0, 
+                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0,
+                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0  
+                  ]
+        
+        [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
+        J4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
         
         
     det_J1 = lambda e,n: determinant(J1)(e,n)
@@ -4130,7 +4193,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
     J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
             
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
@@ -4160,8 +4223,69 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         J3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
         
         
-    
-    
+    if len(root.enrichNodes) == 4:
+        
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        lOrd = [0,1,2] # local order 
+          
+        vec1_x = [coords1[lOrd[0],0], 
+                  coords1[lOrd[1],0], 
+                  coords1[lOrd[2],0], 
+                  min(coords1[ lOrd[0],0], coords1[lOrd[1],0]) + (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/3.0, 
+                  min(coords1[ lOrd[0],0], coords1[lOrd[1],0]) + 2.0 * (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords1[lOrd[0],0], coords1[lOrd[2],0]) + (coords1[lOrd[0],0] + coords1[lOrd[2],0])/3.0,
+                  min(coords1[lOrd[0],0], coords1[lOrd[2],0]) + 2.0 * (coords1[lOrd[0],0] + coords1[lOrd[2],0])/3.0  
+                  ]
+        vec1_y = [coords1[lOrd[0],1], 
+                  coords1[lOrd[1],1], 
+                  coords1[lOrd[2],1], 
+                  min(coords1[ lOrd[0],1], coords1[lOrd[1],1]) + (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/3.0, 
+                  min(coords1[ lOrd[0],1], coords1[lOrd[1],1]) + 2.0 * (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords1[lOrd[0],1], coords1[lOrd[2],1]) + (coords1[lOrd[0],1] + coords1[lOrd[2],1])/3.0,
+                  min(coords1[lOrd[0],1], coords1[lOrd[2],1]) + 2.0 * (coords1[lOrd[0],1] + coords1[lOrd[2],1])/3.0  
+                  ]
+
+        [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+        J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+        
+        lOrd = [1,2,0]
+        vec3_x = [ coords3[ lOrd[0],0], 
+                  coords3[lOrd[1],0],
+                  coords3[lOrd[2],0],
+                  min(coords3[ lOrd[0],0], coords3[lOrd[1],0]) + (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/3.0, 
+                  min(coords3[ lOrd[0],0], coords3[lOrd[1],0]) + 2.0 * (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords3[lOrd[0],0], coords3[lOrd[2],0]) + (coords3[lOrd[0],0] + coords3[lOrd[2],0])/3.0,
+                  min(coords3[lOrd[0],0], coords3[lOrd[2],0]) + 2.0 * (coords3[lOrd[0],0] + coords3[lOrd[2],0])/3.0  
+                  ]
+        vec3_y = [ coords3[ lOrd[0],1], 
+                  coords3[lOrd[1],1], 
+                  coords3[lOrd[2],1], 
+                  min(coords3[ lOrd[0],1], coords3[lOrd[1],1]) + (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/3.0, 
+                  min(coords3[ lOrd[0],1], coords3[lOrd[1],1]) + 2.0 * (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords3[lOrd[0],1], coords3[lOrd[2],1]) + (coords3[lOrd[0],1] + coords3[lOrd[2],1])/3.0,
+                  min(coords3[lOrd[0],1], coords3[lOrd[2],1]) + 2.0 * (coords3[lOrd[0],1] + coords3[lOrd[2],1])/3.0  
+                  ]
+
+        [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+        J3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+        
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -4383,7 +4507,7 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -4411,7 +4535,70 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
         [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
         J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
-
+        
+        
+    if len(root.enrichNodes) == 4:
+        
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+        
+        lOrd = [0,1,2] # local order 
+        vec2_x = [ coords2[ lOrd[0],0], 
+                  coords2[lOrd[1],0],
+                  coords2[lOrd[2],0],
+                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0, 
+                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0,
+                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0  
+                  ]
+        vec2_y = [ coords2[ lOrd[0],1], 
+                  coords2[lOrd[1],1], 
+                  coords2[lOrd[2],1], 
+                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0, 
+                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0,
+                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0  
+                  ]
+        
+        [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+        J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+        
+        lOrd = [1,2,0]
+        vec4_x = [ coords4[ lOrd[0],0], 
+                  coords4[lOrd[1],0],
+                  coords4[lOrd[2],0],
+                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0, 
+                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0,
+                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0  
+                  ]
+        vec4_y = [ coords4[ lOrd[0],1], 
+                  coords4[lOrd[1],1], 
+                  coords4[lOrd[2],1], 
+                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0, 
+                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0,
+                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0  
+                  ]
+        
+        [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
+        J4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
+        
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -4638,7 +4825,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -4667,11 +4854,66 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
     if len(root.enrichNodes) == 4:
-        print 'cubics SE SE SE SE SE'
-        # one third point
-        oTPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/3.0 + min(root.enrichNodes[0].x, root.enrichNodes[1].x), (root.enrichNodes[0].y + root.enrichNodes[1].y)/3.0 + min(root.enrichNodes[0].y, root.enrichNodes[1].y))
-        # two third point
-        tTPoint = Coordinate(2.0 * (root.enrichNodes[0].x + root.enrichNodes[1].x)/3.0 + min(root.enrichNodes[0].x, root.enrichNodes[1].x), 2.0 * (root.enrichNodes[0].y + root.enrichNodes[1].y)/3.0 + min(root.enrichNodes[0].y, root.enrichNodes[1].y))
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        lOrd = [2,0,1] # local order    
+        vec2_x = [ coords2[ lOrd[0],0], 
+                  coords2[lOrd[1],0],
+                  coords2[lOrd[2],0],
+                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0, 
+                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0,
+                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0  
+                  ]
+        vec2_y = [ coords2[ lOrd[0],1], 
+                  coords2[lOrd[1],1], 
+                  coords2[lOrd[2],1], 
+                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0, 
+                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0,
+                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0  
+                  ]
+
+        [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+        J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+        
+        lOrd = [1,2,0]
+        vec4_x = [ coords4[ lOrd[0],0], 
+                  coords4[lOrd[1],0],
+                  coords4[lOrd[2],0],
+                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0, 
+                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0,
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0,
+                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0  
+                  ]
+        vec4_y = [ coords4[ lOrd[0],1], 
+                  coords4[lOrd[1],1], 
+                  coords4[lOrd[2],1], 
+                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0, 
+                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0,
+                  coord_enrich1.y, 
+                  coord_enrich2.y,
+                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0,
+                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0  
+                  ]
+        
+        [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
+        J4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
+        
         
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
@@ -4894,7 +5136,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     print 'East edge: K = ', K_cst, len(root.enrichNodes)
 
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5147,7 +5389,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 #     print 'South edge: K = ', K_cst
 
     
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5432,7 +5674,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
              K_cst = [k2,k2,k1]
     
             
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5696,7 +5938,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 #    else:
 #        K_cst = [k2,k2,k2,k1]
         
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -6058,7 +6300,7 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
     
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
         [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
@@ -6118,6 +6360,82 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
         [x_fct_T, y_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
         J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )
+        
+    if len(root.enrichNodes) == 4:
+        
+        if root.enrichNodes[2].x <= root.enrichNodes[3].x:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+
+        lOrd = [0,1,2,3] # local order    
+        vecB_x = [ bottom_coords[ lOrd[0],0], 
+                  min(bottom_coords[ lOrd[0],0], bottom_coords[lOrd[1],0]) + (bottom_coords[ lOrd[0],0] + bottom_coords[lOrd[1],0])/3.0,
+                  min(bottom_coords[ lOrd[0],0], bottom_coords[lOrd[1],0]) + 2.0 * (bottom_coords[ lOrd[0],0] + bottom_coords[lOrd[1],0])/3.0,
+                  bottom_coords[lOrd[1],0],
+                  min(bottom_coords[lOrd[1],0] , bottom_coords[lOrd[2],0]) + (bottom_coords[lOrd[1],0] + bottom_coords[lOrd[2],0])/3.0,
+                  min(bottom_coords[lOrd[1],0] , bottom_coords[lOrd[2],0]) + 2.0 * (bottom_coords[lOrd[1],0] + bottom_coords[lOrd[2],0])/3.0,
+                  bottom_coords[lOrd[2],0], 
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  bottom_coords[lOrd[3],0],
+                  min(bottom_coords[lOrd[3],0], bottom_coords[lOrd[0],0]) + (bottom_coords[lOrd[3],0] + bottom_coords[lOrd[0],0])/3.0,
+                  min(bottom_coords[lOrd[3],0], bottom_coords[lOrd[0],0]) + 2.0 * (bottom_coords[lOrd[3],0] + bottom_coords[lOrd[0],0])/3.0
+                 ]
+        vecB_y = [ bottom_coords[ lOrd[0],1], 
+                  min(bottom_coords[ lOrd[0],1], bottom_coords[lOrd[1],1]) + (bottom_coords[ lOrd[0],1] + bottom_coords[lOrd[1],1])/3.0,
+                  min(bottom_coords[ lOrd[0],1], bottom_coords[lOrd[1],1]) + 2.0 * (bottom_coords[ lOrd[0],1] + bottom_coords[lOrd[1],1])/3.0,
+                  bottom_coords[lOrd[1],1],
+                  min(bottom_coords[lOrd[1],1] , bottom_coords[lOrd[2],1]) + (bottom_coords[lOrd[1],1] + bottom_coords[lOrd[2],1])/3.0,
+                  min(bottom_coords[lOrd[1],1] , bottom_coords[lOrd[2],1]) + 2.0 * (bottom_coords[lOrd[1],1] + bottom_coords[lOrd[2],1])/3.0,
+                  bottom_coords[lOrd[2],1], 
+                  coord_enrich1.y,
+                  coord_enrich2.y,
+                  bottom_coords[lOrd[3],1],
+                  min(bottom_coords[lOrd[3],1], bottom_coords[lOrd[0],1]) + (bottom_coords[lOrd[3],1] + bottom_coords[lOrd[0],1])/3.0,
+                  min(bottom_coords[lOrd[3],1], bottom_coords[lOrd[0],1]) + 2.0 * (bottom_coords[lOrd[3],1] + bottom_coords[lOrd[0],1])/3.0
+                 ]
+
+        [x_fct_B, y_fct_B] = quad_xy_fct_bi_cubic( vecB_x, vecB_y )
+        J_bottom = quad_jacobian_mat_bi_cubic( vecB_x, vecB_y )
+        
+        lOrd = [2,3,0,1]
+        vecT_x = [ top_coords[ lOrd[0],0], 
+                  min(top_coords[ lOrd[0],0], top_coords[lOrd[1],0]) + (top_coords[ lOrd[0],0] + topoprds[lOrd[1],0])/3.0,
+                  min(top_coords[ lOrd[0],0], top_coords[lOrd[1],0]) + 2.0 * (top_coords[ lOrd[0],0] + top_coords[lOrd[1],0])/3.0,
+                  top_coords[lOrd[1],0],
+                  min(top_coords[lOrd[1],0] , top_coords[lOrd[2],0]) + (top_coords[lOrd[1],0] + top_coords[lOrd[2],0])/3.0,
+                  min(top_coords[lOrd[1],0] , top_coords[lOrd[2],0]) + 2.0 * (top_coords[lOrd[1],0] + top_coords[lOrd[2],0])/3.0,
+                  top_coords[lOrd[2],0], 
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  top_coords[lOrd[3],0],
+                  min(top_coords[lOrd[3],0], top_coords[lOrd[0],0]) + (top_coords[lOrd[3],0] + top_coords[lOrd[0],0])/3.0,
+                  min(top_coords[lOrd[3],0], top_coords[lOrd[0],0]) + 2.0 * (top_coords[lOrd[3],0] + top_coords[lOrd[0],0])/3.0
+                 ]
+        vecT_y = [ top_coords[ lOrd[0],1], 
+                  min(top_coords[ lOrd[0],1], top_coords[lOrd[1],1]) + (top_coords[ lOrd[0],1] + top_coords[lOrd[1],1])/3.0,
+                  min(top_coords[ lOrd[0],1], top_coords[lOrd[1],1]) + 2.0 * (top_coords[ lOrd[0],1] + top_coords[lOrd[1],1])/3.0,
+                  top_coords[lOrd[1],1],
+                  min(top_coords[lOrd[1],1] , top_coords[lOrd[2],1]) + (top_coords[lOrd[1],1] + top_coords[lOrd[2],1])/3.0,
+                  min(top_coords[lOrd[1],1] , top_coords[lOrd[2],1]) + 2.0 * (top_coords[lOrd[1],1] + top_coords[lOrd[2],1])/3.0,
+                  top_coords[lOrd[2],1], 
+                  coord_enrich1.y,
+                  coord_enrich2.y,
+                  top_coords[lOrd[3],1],
+                  min(top_coords[lOrd[3],1], top_coords[lOrd[0],1]) + (top_coords[lOrd[3],1] + top_coords[lOrd[0],1])/3.0,
+                  min(top_coords[lOrd[3],1], top_coords[lOrd[0],1]) + 2.0 * (top_coords[lOrd[3],1] + top_coords[lOrd[0],1])/3.0
+                 ]
+
+        [x_fct_T, y_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
+        J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )        
+        
         
     detJ_top = lambda e,n: determinant(J_top)(e,n)
     detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)
@@ -6346,7 +6664,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
     
-    if len(root.enrichNodes) != 3:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
         [x_fct_R, y_fct_R] = xy_fct( right_coords[:,0], right_coords[:,1] )
@@ -6408,17 +6726,17 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
         J_right = quad_jacobian_mat_bi_quadratic( vecR_x, vecR_y )
 
     if len(root.enrichNodes) == 4:
-        print 'cubics in vertical cut case'
         
         if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root_i.enrichNodes[2]
-            F = root_i.enrichNodes[3]
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
         else:
-            E = root_i.enrichNodes[3]
-            F = root_i.enrichNodes[2]
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
             
-        coord_enrich1 = coord_enrich_computation_cubic(E)
-        coord_enrich2 = coord_enrich_computation_cubic(F)
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+        
         
         lOrd = [3,0,1,2] # local order    
         vecL_x = [ left_coords[ lOrd[0],0], 
@@ -6448,6 +6766,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
                   min(left_coords[lOrd[3],1], left_coords[lOrd[0],1]) + 2.0 * (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/3.0
                  ]
 
+        
         [x_fct_L, y_fct_L] = quad_xy_fct_bi_cubic( vecL_x, vecL_y )
         J_left = quad_jacobian_mat_bi_cubic( vecL_x, vecL_y )
         

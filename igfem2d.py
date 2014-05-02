@@ -968,8 +968,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     Nx_trid2 = triderivX(C_trid2)
                     Ny_trid2 = triderivY(C_trid2)
 
-                    if len(root.enrichNodes) == 2:
-                        print 'DIAGONAL WITH QUADRATIC!!!!!!!!!'
+                    if len(root.enrichNodes) != 3:
                     
                         [x_fct_1, y_fct_1] = tri_xy_fct( coords_trid1[:,0], coords_trid1[:,1] )
                         [x_fct_2, y_fct_2] = tri_xy_fct( coords_trid2[:,0], coords_trid2[:,1] )
@@ -981,11 +980,11 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                                 
                         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
                 
-                        coord_enrich = coord_enrich_comp(root, midPoint)
+                        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
                                
                         if(corner0 == True and corner2 == True): 
                         # even diagonal: SW - NE
-                            lOrd = [1,2,0] # local order
+                            lOrd = [1,2,0] 
                         else:
                             lOrd = [0,1,2] 
                           
@@ -998,7 +997,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         
                         if(corner0 == True and corner2 == True): 
                         # even diagonal: SW - NE
-                            lOrd = [2,0,1] # local order
+                            lOrd = [2,0,1] 
                         else:
                             lOrd = [1,2,0] 
                             
@@ -3740,50 +3739,73 @@ def print_vtk_file(p,Usolution,plist):
 
     target.close()
 
-def coord_enrich_comp(root, midPoint):
-    if root.enrichNodes[0].x != root.enrichNodes[1].x:
-        xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        x_n = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        yy = [0,0,0]
-        y_n = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        xx.sort()
-        for i in range(0,3):
-            indx = x_n.index(xx[i])
-            yy[i] = y_n[indx]  
-            
-        
-        f = interpolate.interp1d(np.array(xx), np.array(yy))
-        coord_enrich = Coordinate(0,0)
-        coord_enrich.x = midPoint.x
-        coord_enrich.y = f(midPoint.x)
-    else:
-        xx = [0,0,0]
-        x_n = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
-        yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        y_n = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
-        yy.sort()
-        for i in range(0,3):
-            indx = y_n.index(yy[i])
-            xx[i] = x_n[indx]  
-            
-        
-        f = interpolate.interp1d(np.array(yy), np.array(xx))
-        coord_enrich = Coordinate(0,0)
-        coord_enrich.x = f(midPoint.y)
-        coord_enrich.y = midPoint.y
+def coord_enrich_comp_quad(root):
     
+#     if root.enrichNodes[0].x != root.enrichNodes[1].x:
+#         xx = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+#         x_n = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+#         yy = [0,0,0]
+#         y_n = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+#         xx.sort()
+#         for i in range(0,3):
+#             indx = x_n.index(xx[i])
+#             yy[i] = y_n[indx]  
+#         
+#         # quadratic interpolation
+#         f = interpolate.interp1d(np.array(xx), np.array(yy))
+#         coord_enrich = Coordinate(0,0)
+#         coord_enrich.x = midPoint.x
+#         coord_enrich.y = f(midPoint.x)
+# 
+#     else:
+#         xx = [0,0,0]
+#         x_n = [root.enrichNodes[0].x, root.enrichNodes[1].x, root.enrichNodes[2].x]
+#         yy = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+#         y_n = [root.enrichNodes[0].y, root.enrichNodes[1].y, root.enrichNodes[2].y]
+#         yy.sort()
+#         for i in range(0,3):
+#             indx = y_n.index(yy[i])
+#             xx[i] = x_n[indx]  
+#             
+#         
+#         f = interpolate.interp1d(np.array(yy), np.array(xx))
+#         coord_enrich = Coordinate(0,0)
+#         coord_enrich.x = f(midPoint.y)
+#         coord_enrich.y = midPoint.y
+    coord_enrich = Coordinate(root.enrichNodes[2].x, root.enrichNodes[2].y)
     coord_enrich.x =  coord_enrich.x / 1000.0
     if coord_enrich.x != 0.0:
         coord_enrich.x += 0.001
     coord_enrich.y =  coord_enrich.y / 1000.0
     if coord_enrich.y != 0.0:
         coord_enrich.y += 0.001
-    
     coord_enrich.y = 1 - coord_enrich.y
-    
+        
+
     return coord_enrich
+
+def coord_enrich_computation(E):        
         
-        
+    coord_enrich1 = Coordinate(E.x, E.y)
+    coord_enrich1.x =  coord_enrich1.x / 1000.0
+    if coord_enrich1.x != 0.0:
+        coord_enrich1.x += 0.001
+    coord_enrich1.y =  coord_enrich1.y / 1000.0
+    if coord_enrich1.y != 0.0:
+        coord_enrich1.y += 0.001
+    coord_enrich1.y = 1 - coord_enrich1.y
+    
+#     coord_enrich2 = Coordinate(F.x, F.y)
+#     coord_enrich2.x =  coord_enrich2.x / 1000.0
+#     if coord_enrich2.x != 0.0:
+#         coord_enrich2.x += 0.001
+#     coord_enrich2.y =  coord_enrich2.y / 1000.0
+#     if coord_enrich2.y != 0.0:
+#         coord_enrich2.y += 0.001
+#     coord_enrich2.y = 1 - coord_enrich2.y
+    
+    return coord_enrich1
+    
 def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
@@ -3858,7 +3880,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -3868,9 +3890,9 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
            
     if len(root.enrichNodes) == 3:
 
-        midPoint = Coordinate((root.enrichNodes[0].x +root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+#         midPoint = Coordinate((root.enrichNodes[0].x +root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
         
-        coord_enrich = coord_enrich_comp(root, midPoint)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         lOrd = [1,2,0] # local order 
         
@@ -4108,7 +4130,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
     J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
             
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
@@ -4118,9 +4140,9 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
            
     if len(root.enrichNodes) == 3:
         
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_comp(root, midPoint)
+        coord_enrich = coord_enrich_computation_quad(root.enrichNodes[2])
                 
         lOrd = [0,1,2] # local order 
           
@@ -4361,7 +4383,7 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -4371,9 +4393,9 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
            
     if len(root.enrichNodes) == 3:
         
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_comp(root, midPoint)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
                    
         lOrd = [0,1,2] # local order 
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
@@ -4616,7 +4638,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -4626,9 +4648,9 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         
     if len(root.enrichNodes) == 3:
        
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_comp(root, midPoint)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         lOrd = [2,0,1] # local order    
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
@@ -4644,7 +4666,13 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
         J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
-    
+    if len(root.enrichNodes) == 4:
+        print 'cubics SE SE SE SE SE'
+        # one third point
+        oTPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/3.0 + min(root.enrichNodes[0].x, root.enrichNodes[1].x), (root.enrichNodes[0].y + root.enrichNodes[1].y)/3.0 + min(root.enrichNodes[0].y, root.enrichNodes[1].y))
+        # two third point
+        tTPoint = Coordinate(2.0 * (root.enrichNodes[0].x + root.enrichNodes[1].x)/3.0 + min(root.enrichNodes[0].x, root.enrichNodes[1].x), 2.0 * (root.enrichNodes[0].y + root.enrichNodes[1].y)/3.0 + min(root.enrichNodes[0].y, root.enrichNodes[1].y))
+        
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -4866,7 +4894,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     print 'East edge: K = ', K_cst, len(root.enrichNodes)
 
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -4877,8 +4905,8 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     if len(root.enrichNodes) == 3:
 
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_comp(root, midPoint)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -5119,7 +5147,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 #     print 'South edge: K = ', K_cst
 
     
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5130,8 +5158,8 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     if len(root.enrichNodes) == 3:
 
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_comp(root, midPoint)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -5404,7 +5432,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
              K_cst = [k2,k2,k1]
     
             
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5415,8 +5443,8 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     if len(root.enrichNodes) == 3:
 
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_comp(root, midPoint)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -5668,7 +5696,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 #    else:
 #        K_cst = [k2,k2,k2,k1]
         
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5679,8 +5707,8 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     if len(root.enrichNodes) == 3:
 
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_comp(root, midPoint)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -6030,7 +6058,7 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
     
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) != 3:
         
         [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
         [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
@@ -6041,9 +6069,9 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
         
     if len(root.enrichNodes) == 3:
        
-        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_comp(root, midPoint)
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         lOrd = [0,1,2,3] # local order    
         vecB_x = [ bottom_coords[ lOrd[0],0], 
@@ -6317,12 +6345,143 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     # coordinates of the corners of the child element
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
-    [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
-    [x_fct_R, y_fct_R] = xy_fct( right_coords[:,0], right_coords[:,1] )
     
-    # computing the Jacobian and the determinant of the left and right children of the parent element
-    J_left = jacobian_mat( left_coords[:,0], left_coords[:,1] )
-    J_right = jacobian_mat( right_coords[:,0], right_coords[:,1] )
+    if len(root.enrichNodes) != 3:
+        
+        [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
+        [x_fct_R, y_fct_R] = xy_fct( right_coords[:,0], right_coords[:,1] )
+        
+        # computing the Jacobian and the determinant of the left and right children of the parent element
+        J_left = jacobian_mat( left_coords[:,0], left_coords[:,1] )
+        J_right = jacobian_mat( right_coords[:,0], right_coords[:,1] )
+        
+    if len(root.enrichNodes) == 3:
+       
+#         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        
+        lOrd = [3,0,1,2] # local order    
+        vecL_x = [ left_coords[ lOrd[0],0], 
+                  (left_coords[ lOrd[0],0] + left_coords[lOrd[1],0])/2.0,
+                  left_coords[lOrd[1],0],
+                  (left_coords[lOrd[1],0] + left_coords[lOrd[2],0])/2.0,
+                  left_coords[lOrd[2],0], 
+                  coord_enrich.x, 
+                  left_coords[lOrd[3],0],
+                  (left_coords[lOrd[3],0] + left_coords[lOrd[0],0])/2.0
+                 ]
+        vecL_y = [ left_coords[ lOrd[0],1], 
+                  (left_coords[ lOrd[0],1] + left_coords[lOrd[1],1])/2.0,
+                  left_coords[lOrd[1],1],
+                  (left_coords[lOrd[1],1] + left_coords[lOrd[2],1])/2.0,
+                  left_coords[lOrd[2],1], 
+                  coord_enrich.y, 
+                  left_coords[lOrd[3],1],
+                  (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/2.0
+                 ]
+
+        [x_fct_L, y_fct_L] = quad_xy_fct_bi_quadratic( vecL_x, vecL_y )
+        J_left = quad_jacobian_mat_bi_quadratic( vecL_x, vecL_y )
+        
+        lOrd = [1,2,3,0]
+        vecR_x = [ right_coords[ lOrd[0],0], 
+                  (right_coords[ lOrd[0],0] + right_coords[lOrd[1],0])/2.0,
+                  right_coords[lOrd[1],0],
+                  (right_coords[lOrd[1],0] + right_coords[lOrd[2],0])/2.0,
+                  right_coords[lOrd[2],0], 
+                  coord_enrich.x, 
+                  right_coords[lOrd[3],0],
+                  (right_coords[lOrd[3],0] + right_coords[lOrd[0],0])/2.0
+                 ]
+        vecR_y = [ right_coords[ lOrd[0],1], 
+                  (right_coords[ lOrd[0],1] + right_coords[lOrd[1],1])/2.0,
+                  right_coords[lOrd[1],1],
+                  (right_coords[lOrd[1],1] + right_coords[lOrd[2],1])/2.0,
+                  right_coords[lOrd[2],1], 
+                  coord_enrich.y, 
+                  right_coords[lOrd[3],1],
+                  (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/2.0
+                 ]
+
+        [x_fct_R, y_fct_R] = quad_xy_fct_bi_quadratic( vecR_x, vecR_y )
+        J_right = quad_jacobian_mat_bi_quadratic( vecR_x, vecR_y )
+
+    if len(root.enrichNodes) == 4:
+        print 'cubics in vertical cut case'
+        
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root_i.enrichNodes[2]
+            F = root_i.enrichNodes[3]
+        else:
+            E = root_i.enrichNodes[3]
+            F = root_i.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation_cubic(E)
+        coord_enrich2 = coord_enrich_computation_cubic(F)
+        
+        lOrd = [3,0,1,2] # local order    
+        vecL_x = [ left_coords[ lOrd[0],0], 
+                  min(left_coords[ lOrd[0],0], left_coords[lOrd[1],0]) + (left_coords[ lOrd[0],0] + left_coords[lOrd[1],0])/3.0,
+                  min(left_coords[ lOrd[0],0], left_coords[lOrd[1],0]) + 2.0 * (left_coords[ lOrd[0],0] + left_coords[lOrd[1],0])/3.0,
+                  left_coords[lOrd[1],0],
+                  min(left_coords[lOrd[1],0] , left_coords[lOrd[2],0]) + (left_coords[lOrd[1],0] + left_coords[lOrd[2],0])/3.0,
+                  min(left_coords[lOrd[1],0] , left_coords[lOrd[2],0]) + 2.0 * (left_coords[lOrd[1],0] + left_coords[lOrd[2],0])/3.0,
+                  left_coords[lOrd[2],0], 
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  left_coords[lOrd[3],0],
+                  min(left_coords[lOrd[3],0], left_coords[lOrd[0],0]) + (left_coords[lOrd[3],0] + left_coords[lOrd[0],0])/3.0,
+                  min(left_coords[lOrd[3],0], left_coords[lOrd[0],0]) + 2.0 * (left_coords[lOrd[3],0] + left_coords[lOrd[0],0])/3.0
+                 ]
+        vecL_y = [ left_coords[ lOrd[0],1], 
+                  min(left_coords[ lOrd[0],1], left_coords[lOrd[1],1]) + (left_coords[ lOrd[0],1] + left_coords[lOrd[1],1])/3.0,
+                  min(left_coords[ lOrd[0],1], left_coords[lOrd[1],1]) + 2.0 * (left_coords[ lOrd[0],1] + left_coords[lOrd[1],1])/3.0,
+                  left_coords[lOrd[1],1],
+                  min(left_coords[lOrd[1],1] , left_coords[lOrd[2],1]) + (left_coords[lOrd[1],1] + left_coords[lOrd[2],1])/3.0,
+                  min(left_coords[lOrd[1],1] , left_coords[lOrd[2],1]) + 2.0 * (left_coords[lOrd[1],1] + left_coords[lOrd[2],1])/3.0,
+                  left_coords[lOrd[2],1], 
+                  coord_enrich1.y,
+                  coord_enrich2.y,
+                  left_coords[lOrd[3],1],
+                  min(left_coords[lOrd[3],1], left_coords[lOrd[0],1]) + (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/3.0,
+                  min(left_coords[lOrd[3],1], left_coords[lOrd[0],1]) + 2.0 * (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/3.0
+                 ]
+
+        [x_fct_L, y_fct_L] = quad_xy_fct_bi_cubic( vecL_x, vecL_y )
+        J_left = quad_jacobian_mat_bi_cubic( vecL_x, vecL_y )
+        
+        lOrd = [1,2,3,0]
+        vecR_x = [ right_coords[ lOrd[0],0], 
+                  min(right_coords[ lOrd[0],0], right_coords[lOrd[1],0]) + (right_coords[ lOrd[0],0] + right_coords[lOrd[1],0])/3.0,
+                  min(right_coords[ lOrd[0],0], right_coords[lOrd[1],0]) + 2.0 * (right_coords[ lOrd[0],0] + right_coords[lOrd[1],0])/3.0,
+                  right_coords[lOrd[1],0],
+                  min(right_coords[lOrd[1],0] , right_coords[lOrd[2],0]) + (right_coords[lOrd[1],0] + right_coords[lOrd[2],0])/3.0,
+                  min(right_coords[lOrd[1],0] , right_coords[lOrd[2],0]) + 2.0 * (right_coords[lOrd[1],0] + right_coords[lOrd[2],0])/3.0,
+                  right_coords[lOrd[2],0], 
+                  coord_enrich1.x,
+                  coord_enrich2.x,
+                  right_coords[lOrd[3],0],
+                  min(right_coords[lOrd[3],0], right_coords[lOrd[0],0]) + (right_coords[lOrd[3],0] + right_coords[lOrd[0],0])/3.0,
+                  min(right_coords[lOrd[3],0], right_coords[lOrd[0],0]) + 2.0 * (right_coords[lOrd[3],0] + right_coords[lOrd[0],0])/3.0
+                 ]
+        vecR_y = [ right_coords[ lOrd[0],1], 
+                  min(right_coords[ lOrd[0],1], right_coords[lOrd[1],1]) + (right_coords[ lOrd[0],1] + right_coords[lOrd[1],1])/3.0,
+                  min(right_coords[ lOrd[0],1], right_coords[lOrd[1],1]) + 2.0 * (right_coords[ lOrd[0],1] + right_coords[lOrd[1],1])/3.0,
+                  right_coords[lOrd[1],1],
+                  min(right_coords[lOrd[1],1] , right_coords[lOrd[2],1]) + (right_coords[lOrd[1],1] + right_coords[lOrd[2],1])/3.0,
+                  min(right_coords[lOrd[1],1] , right_coords[lOrd[2],1]) + 2.0 * (right_coords[lOrd[1],1] + right_coords[lOrd[2],1])/3.0,
+                  right_coords[lOrd[2],1], 
+                  coord_enrich1.y,
+                  coord_enrich2.y,
+                  right_coords[lOrd[3],1],
+                  min(right_coords[lOrd[3],1], right_coords[lOrd[0],1]) + (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/3.0,
+                  min(right_coords[lOrd[3],1], right_coords[lOrd[0],1]) + 2.0 * (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/3.0
+                 ]
+        
+        [x_fct_R, y_fct_R] = quad_xy_fct_bi_cubic( vecR_x, vecR_y )
+        J_right = quad_jacobian_mat_bi_cubic( vecR_x, vecR_y )
+
     detJ_left = lambda e,n: determinant(J_left)(e,n)
     detJ_right = lambda e,n: determinant(J_right)(e,n)
     

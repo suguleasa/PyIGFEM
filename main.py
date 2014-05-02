@@ -2473,26 +2473,22 @@ def element_normal_intersection(pt1,pt2,node,image):
         side2 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
         side3 = Coordinate(midpt.x, p4.y)
         side4 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
-#        draw_line_normals(image, side1,side3)
+        draw_line_normals(image, side1,side3)
     elif dy_m == 0: #horizontal
         side1 = Coordinate(NoneINT, NoneINT) # normal runs parallel with the edge
         side2 = Coordinate(p2.x, midpt.y)
         side3 = Coordinate(NoneINT,NoneINT) # normal runs parallel with the edge
         side4 = Coordinate(p1.x, midpt.y)
-#        draw_line_normals(image, side2,side4)
+        draw_line_normals(image, side2,side4)
     else:
         m_slope = float(dy_m) / dx_m
         b = midpt.y - m_slope * midpt.x
-#         print 'suntem aici!!!!', m_slope, b
-#         node.printRect()
-#         print 'side1', float(p1.y - b) / m_slope
-#         print 'side4', float(p4.y - b) / m_slope 
         # SIDE 1
         if p1.x <= float(p1.y - b) / m_slope and float(p1.y - b) / m_slope <= p2.x:
             side1 = Coordinate( float(p1.y - b) / m_slope, p1.y)
             side1.x = int(side1.x)
             side1.y = int(side1.y)
-#            draw_line_normals(image, midpt, side1)
+            draw_line_normals(image, midpt, side1)
         else: # intersection happens outisde the element
             side1 = Coordinate(NoneINT, NoneINT)
         
@@ -2501,7 +2497,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side2 = Coordinate( p2.x, m_slope * p2.x + b)
             side2.x = int(side2.x)
             side2.y = int(side2.y)
-#            draw_line_normals(image, midpt, (side2))
+            draw_line_normals(image, midpt, (side2))
         else: # intersection happens outisde the element
             side2 = Coordinate(NoneINT, NoneINT)
         
@@ -2510,7 +2506,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side3 = Coordinate( float(p4.y - b) / m_slope, p4.y)
             side3.x = int(side3.x)
             side3.y = int(side3.y)
-#            draw_line_normals(image, midpt, side3)
+            draw_line_normals(image, midpt, side3)
         else: # intersection happens outisde the element
             side3 = Coordinate(NoneINT, NoneINT)
         # SIDE 4    
@@ -2518,7 +2514,7 @@ def element_normal_intersection(pt1,pt2,node,image):
             side4 = Coordinate( p1.x, m_slope * p1.x + b)
             side4.x = int(side4.x)
             side4.y = int(side4.y)
-#            draw_line_normals(image, midpt, side4)
+            draw_line_normals(image, midpt, side4)
         else: # intersection happens outisde the element
             side4 = Coordinate(NoneINT, NoneINT)
 
@@ -2817,16 +2813,16 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                                 
             if len(root_i.enrichNodes) == 2:
                 draw_line(image,P1, P2)
-                print 'linears'
+#                 print 'linears'
                 
             if len(root_i.enrichNodes) == 3:
                 draw_line(image,P1, root_i.enrichNodes[2])
                 draw_line(image,root_i.enrichNodes[2], P2)
 #                 draw_line(image,root_i.enrichNodes[1], root_i.enrichNodes[2])
 #                 draw_line(image,root_i.enrichNodes[2], root_i.enrichNodes[0])
-                print ' quadratics!!!!'
+#                 print ' quadratics!!!!'
             if len(root_i.enrichNodes) == 4:
-                print ' cubics!!!!'
+#                 print ' cubics!!!!'
                 if root_i.enrichNodes[2].x <= root_i.enrichNodes[3].x:
                     E = root_i.enrichNodes[2]
                     F = root_i.enrichNodes[3]
@@ -2850,19 +2846,8 @@ def stress_concentration_constraint(tree_list, masterNode, image):
         root_i = get_node_by_id(masterNode,tree_list[i])    
          
         if len(root_i.enrichNodes) > 1: # for each non-hom node
-        # root_i.index=='312':
             [side1,side2,side3,side4,neigh_list,dir_list,whichSide] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], root_i, image)
-#            print '-----------------'
-#            print root_i.index
-#            root_i.printRect()
-#            print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
-#            print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
-#            print find_neighbor_index_of(root_i.index,dir_list[0], masterNode, tree_list)
-#            print find_neighbor_index_of(root_i.index,dir_list[1], masterNode, tree_list)
-#            print dir_list
-#            print '++++++++++++++++'
 
-#             print neigh_list
             counter1 = 0
             counter2 = 0
             
@@ -2928,21 +2913,12 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     counter1 += 1
                     [side1N,side2N,side3N,side4N,neigh_listN,dir_listN,whichSideN] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], neigh_node, image)
                     currentIndex1 = neighIndex
-#                     whichEdge1 = swap_edges(whichEdge1, dir_listN)
-#                     print 'counter 1, whichEdge=', whichEdge1, 'neigh index = ', neighIndex
-#                     print 'dirlistN=', dir_listN, 'whichSideN=', whichSideN
-#                     print side1N.x, side1N.y, side2N.x,side2N.y, side3N.x, side3N.y, side4N.x,side4N.y
                     
                     # problem when channelsCircles is tested
                     if len(dir_listN) < 1 or len(whichSideN)<2:
                         list1.append(neighIndex)
                         break
-#                     root_i.printRect()
-#                     neigh_node.printRect()
-#                    print dir_listN,whichSidePrev1,whichSideN
-#                    print whichEdge1
                     whichEdge1 = swap_directions(dir_listN,whichSidePrev1,whichSideN)
-#                    print whichEdge1
                     
                     # problem when channelsCircles is tested
                     if whichEdge1 == None:
@@ -3028,12 +3004,6 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     
                     currentIndex2 = neighIndex
                     
-#                    neigh_node.printRect()
-#                    print 'dirlist', dir_listN, neighIndex
-#                    print side1N.x, side1N.y, side2N.x,side2N.y, side3N.x, side3N.y, side4N.x,side4N.y
-#                    print 'old edge:', whichEdge2
-#                    print dir_listN,whichSidePrev2,whichSideN
-#                     whichEdge2 = swap_edges(whichEdge2, dir_listN)
                     whichEdge2 = swap_directions(dir_listN,whichSidePrev2,whichSideN)
                     
                     # problem when testing channelsCircles
@@ -3236,6 +3206,8 @@ if __name__ == "__main__":
         totalNumberOfNodes = newTotalNumberOfNodes
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
+
+#     sitk.WriteImage(outputImage,'outCircs_before3neighborrule.png')
     
       
     masterNode = rootNode
@@ -3250,22 +3222,23 @@ if __name__ == "__main__":
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
      
     print 'total number of element nodes', newTotalNumberOfNodes
-     
+#     sitk.WriteImage(outputImage,'outCircs_after3neighborrule.png')
+    
     masterNode = rootNode
     
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
 ##    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
-#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-#    process_list(full_list,rootNode, outputImage)
+#     full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+#     process_list(full_list,rootNode, outputImage)
+#      
+#     masterNode = rootNode
+#         
 #     
-#    masterNode = rootNode
-#        
-#    
-#    llist = []
-#    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-#   
+#     llist = []
+#     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+   
 #   
 #    totalNumberOfNodes = tree.count_nodes(rootNode)
 #    newTotalNumberOfNodes = -1
@@ -3332,18 +3305,18 @@ if __name__ == "__main__":
             
 # Commenting out the solver 
     [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-      
+       
     print len(p_reg)
     print len(p_regCList)
     print lenClist1
-    
+     
     [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-      
-          
+       
+           
     full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
-      
+       
     set_nsew(llist,masterNode,full_vec)
-      
+       
     p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
     # material conductivities
     k1 = 1
@@ -3351,7 +3324,7 @@ if __name__ == "__main__":
     # generate Legendre-Gauss nodes and weights:
     ruleOrder = 4
     [ui,wi] = lgwt(ruleOrder,-1,1)
-          
+           
     # get triangular mesh data
     f = open("multipleinclusions.res", "r")
     f2 = open("multipleinclusions.ele", "r")
@@ -3359,11 +3332,11 @@ if __name__ == "__main__":
     tTri = read_corners(f2)
     f.close()
     f2.close()
-          
            
+            
     UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
     aa1 = numpy.array([UU])
     ww1 = numpy.array(aa1[()])
     UU = ww1[0].item()[:,:]
-      
+       
     print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

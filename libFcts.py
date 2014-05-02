@@ -25,7 +25,8 @@ def search_in(my_list,pi,pj,inImage):
 
 ## This function draws a line between two points in space: pinit and pend
 def draw_line_normals(image,pinit,pend):
-    pix_col = 150
+    pix_col = 2
+    return
     if (pinit.x == pend.x):
         # print "vertical line"
         if (pinit.y <= pend.y):

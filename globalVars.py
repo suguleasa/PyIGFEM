@@ -9,7 +9,7 @@ PROB = 0.05
 
 # fake data
 MAX_SIZE = 256    
-MIN_SIZE = 64
+MIN_SIZE = 16
 
 ALT_MIN_SIZE = 8
 TOL_LINEARS = 2.0

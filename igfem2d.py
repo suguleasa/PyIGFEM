@@ -1006,6 +1006,135 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 
                         [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
                         J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+
+                    if len(root.enrichNodes) == 4:
+                
+                        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+                            E = root.enrichNodes[2]
+                            F = root.enrichNodes[3]
+                        else:
+                            E = root.enrichNodes[3]
+                            F = root.enrichNodes[2]
+                            
+                        coord_enrich1 = coord_enrich_computation(E)
+                        coord_enrich2 = coord_enrich_computation(F)
+                
+                        
+                        circumcenter_pt1 = circumcenter_tri(coords1)
+                        circumcenter_pt2 = circumcenter_tri(coords2)
+                        circumcenter_pt3 = circumcenter_tri(coords3)
+
+                        if(corner0 == True and corner2 == True): 
+                        # even diagonal: SW - NE
+                            lOrd = [1,2,0] 
+                            pt6.x = coord_enrich2.x
+                            pt6.y = coord_enrich2.y 
+                        else:
+                            lOrd = [0,1,2]   
+                            pt7.x = coord_enrich1.x
+                            pt7.y = coord_enrich1.y                      
+                        
+                        pt4 = Coordinate(0,0)
+                        pt5 = Coordinate(0,0)
+                        pt6 = Coordinate(0,0)
+                        pt7 = Coordinate(0,0)
+                        pt8 = Coordinate(0,0)
+                        pt9 = Coordinate(0,0)
+                         
+                        pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
+                        pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+                         
+                        pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
+                        pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+                         
+                        pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
+                        pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+                         
+                        pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
+                        pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+                 
+                         
+                        vec1_x = [coords1[lOrd[0],0], 
+                                  coords1[lOrd[1],0], 
+                                  coords1[lOrd[2],0], 
+                                  pt4.x, 
+                                  pt5.x,
+                                  pt6.x,
+                                  pt7.x,
+                                  pt8.x,
+                                  pt9.x,
+                                  circumcenter_pt1.x  
+                                  ]
+                        vec1_y = [coords1[lOrd[0],1], 
+                                  coords1[lOrd[1],1], 
+                                  coords1[lOrd[2],1], 
+                                  pt4.y, 
+                                  pt5.y,
+                                  pt6.y,
+                                  pt7.y,
+                                  pt8.y,
+                                  pt9.y,
+                                  circumcenter_pt1.y  
+                                  ]
+                        [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                        J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                        
+
+                        if(corner0 == True and corner2 == True): 
+                        # even diagonal: SW - NE
+                            lOrd = [2,0,1] 
+                            pt6.x = coord_enrich1.x
+                            pt6.y = coord_enrich1.y  
+                        else:
+                            lOrd = [1,2,0] 
+                            pt7.x = coord_enrich2.x
+                            pt7.y = coord_enrich2.y
+                            
+                        pt4 = Coordinate(0,0)
+                        pt5 = Coordinate(0,0)
+                        pt6 = Coordinate(0,0)
+                        pt7 = Coordinate(0,0)
+                        pt8 = Coordinate(0,0)
+                        pt9 = Coordinate(0,0)
+                    
+                        pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+                        pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+                        
+                        pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+                        pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+                        
+                        pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+                        pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+                        
+                        pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+                        pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+                    
+                        vec2_x = [coords2[lOrd[0],0], 
+                                  coords2[lOrd[1],0],
+                                  coords2[lOrd[2],0],
+                                  pt4.x, 
+                                  pt5.x,
+                                  pt6.x,
+                                  pt7.x,
+                                  pt8.x,
+                                  pt9.x,
+                                  circumcenter_pt2.x  
+                                  ]
+                        vec2_y = [coords2[lOrd[0],1], 
+                                  coords2[lOrd[1],1], 
+                                  coords2[lOrd[2],1], 
+                                  pt4.y, 
+                                  pt5.y,
+                                  pt6.y, 
+                                  pt7.y,
+                                  pt8.y,
+                                  pt9.y,
+                                  circumcenter_pt2.y 
+                                  ]
+                        
+                        [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                        J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )  
+                                    
                         
                     det_J1 = lambda e,n: determinant(J1)(e,n)
                     det_J2 = lambda e,n: determinant(J2)(e,n)
@@ -3805,6 +3934,36 @@ def coord_enrich_computation(E):
 #     coord_enrich2.y = 1 - coord_enrich2.y
     
     return coord_enrich1
+
+def circumcenter_tri(coords):
+# computing the circumcenter of the triangle defined by coordinates a, b, and c
+
+    a = Coordinate(coords[0,0], coords[0,1])
+    b = Coordinate(coords[1,0], coords[1,1])
+    c = Coordinate(coords[2,0], coords[2,1])
+    
+#     a = Coordinate(5,7)
+#     b = Coordinate(6,6)
+#     c = Coordinate(2,-2)
+    
+    U =  Coordinate(0,0)
+    
+    d = 2.0 * (a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y))
+
+    U.x = ( ( (a.x * a.x + a.y * a.y) * (b.y - c.y) + 
+              (b.x * b.x + b.y * b.y) * (c.y - a.y) + 
+              (c.x * c.x + c.y * c.y) * (a.y - b.y)) 
+           / d  )
+    
+    U.y = ( ( (a.x * a.x + a.y * a.y) * (c.x - b.x) + 
+              (b.x * b.x  + b.y * b.y) * (a.x - c.x) + 
+              (c.x * c.x + c.y * c.y) * (b.x - a.x) )
+           /d )
+    
+#     print '== ==+++++====', U.x, U.y
+#     U.x = (a.x + b.x + c.x) / 3.0
+#     U.y = (a.y + b.y + c.y) / 3.0
+    return U
     
 def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     K = numpy.zeros((6,6))
@@ -3827,7 +3986,6 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     x1 = coords[1,0]
     y0 = coords[0,1]
     y1 = coords[2,1]
-
     
 #    cornerA = f_circle(x0,y0)
 #    cornerB = f_circle(x1,y0)
@@ -3922,52 +4080,157 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
         coord_enrich1 = coord_enrich_computation(E)
         coord_enrich2 = coord_enrich_computation(F)
 
-        lOrd = [1,2,0] # local order 
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        
+        lOrd = [1,2,0]
+        
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+        
+        pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+        
+        pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+        
+        pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+        
+        pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+
+        pt6.x = coord_enrich2.x
+        pt6.y = coord_enrich2.y     
+        
+        pt7.x = coord_enrich1.x
+        pt7.y = coord_enrich1.y
+        
         vec2_x = [ coords2[ lOrd[0],0], 
                   coords2[lOrd[1],0],
                   coords2[lOrd[2],0],
-                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0, 
-                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0,
-                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt2.x  
                   ]
         vec2_y = [ coords2[ lOrd[0],1], 
                   coords2[lOrd[1],1], 
                   coords2[lOrd[2],1], 
-                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0, 
-                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0,
-                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y, 
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt2.y 
                   ]
+
+#         vec2_x = [ coords2[ lOrd[0],0], 
+#                   coords2[lOrd[1],0],
+#                   coords2[lOrd[2],0],
+#                   min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + abs(coords2[ lOrd[0],0] - coords2[lOrd[1],0])/3.0, 
+#                   min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * abs(coords2[ lOrd[0],0] - coords2[lOrd[1],0])/3.0,
+#                   coord_enrich1.x,
+#                   coord_enrich2.x,
+#                   min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + abs(coords2[lOrd[0],0] - coords2[lOrd[2],0])/3.0,
+#                   min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * abs(coords2[lOrd[0],0] - coords2[lOrd[2],0])/3.0,
+#                   circumcenter_pt2.x  
+#                   ]
+#         vec2_y = [ coords2[ lOrd[0],1], 
+#                   coords2[lOrd[1],1], 
+#                   coords2[lOrd[2],1], 
+#                   min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + abs(coords2[ lOrd[0],1] - coords2[lOrd[1],1])/3.0, 
+#                   min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * abs(coords2[ lOrd[0],1] - coords2[lOrd[1],1])/3.0,
+#                   coord_enrich1.y, 
+#                   coord_enrich2.y,
+#                   min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + abs(coords2[lOrd[0],1] - coords2[lOrd[2],1])/3.0,
+#                   min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * abs(coords2[lOrd[0],1] - coords2[lOrd[2],1])/3.0,
+#                   circumcenter_pt2.y
+#                   ]
         
         [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
         J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
         
+        circumcenter_pt4 = circumcenter_tri(coords4)
         lOrd = [2,0,1]
-        vec4_x = [ coords4[ lOrd[0],0], 
+        
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+        
+        pt4.x = 2.0/3.0 * coords4[lOrd[0],0] + 1.0/3.0 * coords4[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords4[lOrd[0],1] + 1.0/3.0 * coords4[lOrd[1],1]
+        
+        pt5.x = 1.0/3.0 * coords4[lOrd[0],0] + 2.0/3.0 * coords4[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords4[lOrd[0],1] + 2.0/3.0 * coords4[lOrd[1],1]
+        
+        pt8.x = 2.0/3.0 * coords4[lOrd[2],0] + 1.0/3.0 * coords4[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords4[lOrd[2],1] + 1.0/3.0 * coords4[lOrd[0],1]
+        
+        pt9.x = 1.0/3.0 * coords4[lOrd[2],0] + 2.0/3.0 * coords4[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords4[lOrd[2],1] + 2.0/3.0 * coords4[lOrd[0],1]
+
+        pt6.x = coord_enrich1.x
+        pt6.y = coord_enrich1.y     
+        
+        pt7.x = coord_enrich2.x
+        pt7.y = coord_enrich2.y
+        
+        vec4_x = [coords4[lOrd[0],0], 
                   coords4[lOrd[1],0],
                   coords4[lOrd[2],0],
-                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0, 
-                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0,
-                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt4.x  
                   ]
-        vec4_y = [ coords4[ lOrd[0],1], 
-                  coords4[lOrd[1],1], 
+        vec4_y = [coords4[lOrd[0],1], 
+                  coords4[lOrd[1],1],
                   coords4[lOrd[2],1], 
-                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0, 
-                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0,
-                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y, 
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt4.y  
                   ]
+
+#         vec4_x = [ coords4[ lOrd[0],0], 
+#                   coords4[lOrd[1],0],
+#                   coords4[lOrd[2],0],
+#                   min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + abs(coords4[ lOrd[0],0] - coords4[lOrd[1],0])/3.0, 
+#                   min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * abs(coords4[ lOrd[0],0] - coords4[lOrd[1],0])/3.0,
+#                   coord_enrich1.x,
+#                   coord_enrich2.x,
+#                   min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + abs(coords4[lOrd[0],0] - coords4[lOrd[2],0])/3.0,
+#                   min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * abs(coords4[lOrd[0],0] - coords4[lOrd[2],0])/3.0,
+#                   circumcenter_pt4.x  
+#                   ]
+#         vec4_y = [ coords4[ lOrd[0],1], 
+#                   coords4[lOrd[1],1], 
+#                   coords4[lOrd[2],1], 
+#                   min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + abs(coords4[ lOrd[0],1] - coords4[lOrd[1],1])/3.0, 
+#                   min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * abs(coords4[ lOrd[0],1] - coords4[lOrd[1],1])/3.0,
+#                   coord_enrich1.y, 
+#                   coord_enrich2.y,
+#                   min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + abs(coords4[lOrd[0],1] - coords4[lOrd[2],1])/3.0,
+#                   min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * abs(coords4[lOrd[0],1] - coords4[lOrd[2],1])/3.0,
+#                   circumcenter_pt4.y  
+#                   ]
         
         [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
         J4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
@@ -4205,7 +4468,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_computation_quad(root.enrichNodes[2])
+        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
                 
         lOrd = [0,1,2] # local order 
           
@@ -4235,54 +4498,136 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         coord_enrich1 = coord_enrich_computation(E)
         coord_enrich2 = coord_enrich_computation(F)
 
+        circumcenter_pt1 = circumcenter_tri(coords1)
         lOrd = [0,1,2] # local order 
-          
+        
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+         
+        pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+         
+        pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+         
+        pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+         
+        pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+ 
+        pt6.x = coord_enrich1.x
+        pt6.y = coord_enrich1.y     
+         
+        pt7.x = coord_enrich2.x
+        pt7.y = coord_enrich2.y
+         
         vec1_x = [coords1[lOrd[0],0], 
                   coords1[lOrd[1],0], 
                   coords1[lOrd[2],0], 
-                  min(coords1[ lOrd[0],0], coords1[lOrd[1],0]) + (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/3.0, 
-                  min(coords1[ lOrd[0],0], coords1[lOrd[1],0]) + 2.0 * (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords1[lOrd[0],0], coords1[lOrd[2],0]) + (coords1[lOrd[0],0] + coords1[lOrd[2],0])/3.0,
-                  min(coords1[lOrd[0],0], coords1[lOrd[2],0]) + 2.0 * (coords1[lOrd[0],0] + coords1[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt1.x  
                   ]
         vec1_y = [coords1[lOrd[0],1], 
                   coords1[lOrd[1],1], 
                   coords1[lOrd[2],1], 
-                  min(coords1[ lOrd[0],1], coords1[lOrd[1],1]) + (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/3.0, 
-                  min(coords1[ lOrd[0],1], coords1[lOrd[1],1]) + 2.0 * (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords1[lOrd[0],1], coords1[lOrd[2],1]) + (coords1[lOrd[0],1] + coords1[lOrd[2],1])/3.0,
-                  min(coords1[lOrd[0],1], coords1[lOrd[2],1]) + 2.0 * (coords1[lOrd[0],1] + coords1[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y,
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt1.y  
                   ]
+ 
+
+#         vec1_x = [coords1[lOrd[0],0], 
+#                   coords1[lOrd[1],0], 
+#                   coords1[lOrd[2],0], 
+#                   min(coords1[ lOrd[0],0], coords1[lOrd[1],0]) + abs(coords1[ lOrd[0],0] - coords1[lOrd[1],0])/3.0, 
+#                   min(coords1[ lOrd[0],0], coords1[lOrd[1],0]) + 2.0 * abs(coords1[ lOrd[0],0] - coords1[lOrd[1],0])/3.0,
+#                   pt6.x,
+#                   pt7.x,
+#                   min(coords1[lOrd[0],0], coords1[lOrd[2],0]) + 2.0 *abs(coords1[lOrd[0],0] - coords1[lOrd[2],0])/3.0,
+#                   min(coords1[lOrd[0],0], coords1[lOrd[2],0]) + abs(coords1[lOrd[0],0] - coords1[lOrd[2],0])/3.0,
+#                   circumcenter_pt1.x  
+#                   ]
+#         vec1_y = [coords1[lOrd[0],1], 
+#                   coords1[lOrd[1],1], 
+#                   coords1[lOrd[2],1], 
+#                   min(coords1[ lOrd[0],1], coords1[lOrd[1],1]) + abs(coords1[ lOrd[0],1] - coords1[lOrd[1],1])/3.0, 
+#                   min(coords1[ lOrd[0],1], coords1[lOrd[1],1]) + 2.0 * abs(coords1[ lOrd[0],1] - coords1[lOrd[1],1])/3.0,
+#                   pt6.y,
+#                   pt7.y,
+#                   min(coords1[lOrd[0],1], coords1[lOrd[2],1]) + 2.0 * abs(coords1[lOrd[0],1] - coords1[lOrd[2],1])/3.0,
+#                   min(coords1[lOrd[0],1], coords1[lOrd[2],1]) + abs(coords1[lOrd[0],1] - coords1[lOrd[2],1])/3.0,
+#                   circumcenter_pt1.y  
+#                   ]
+
 
         [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
         J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
         
+        circumcenter_pt3 = circumcenter_tri(coords3)
         lOrd = [1,2,0]
-        vec3_x = [ coords3[ lOrd[0],0], 
+
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+         
+        pt4.x = 2.0/3.0 * coords3[lOrd[0],0] + 1.0/3.0 * coords3[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords3[lOrd[0],1] + 1.0/3.0 * coords3[lOrd[1],1]
+         
+        pt5.x = 1.0/3.0 * coords3[lOrd[0],0] + 2.0/3.0 * coords3[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords3[lOrd[0],1] + 2.0/3.0 * coords3[lOrd[1],1]
+         
+        pt8.x = 2.0/3.0 * coords3[lOrd[2],0] + 1.0/3.0 * coords3[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords3[lOrd[2],1] + 1.0/3.0 * coords3[lOrd[0],1]
+         
+        pt9.x = 1.0/3.0 * coords3[lOrd[2],0] + 2.0/3.0 * coords3[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords3[lOrd[2],1] + 2.0/3.0 * coords3[lOrd[0],1]
+ 
+        pt6.x = coord_enrich2.x
+        pt6.y = coord_enrich2.y     
+         
+        pt7.x = coord_enrich1.x
+        pt7.y = coord_enrich1.y
+        
+        vec3_x = [coords3[ lOrd[0],0], 
                   coords3[lOrd[1],0],
                   coords3[lOrd[2],0],
-                  min(coords3[ lOrd[0],0], coords3[lOrd[1],0]) + (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/3.0, 
-                  min(coords3[ lOrd[0],0], coords3[lOrd[1],0]) + 2.0 * (coords3[ lOrd[0],0] + coords3[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords3[lOrd[0],0], coords3[lOrd[2],0]) + (coords3[lOrd[0],0] + coords3[lOrd[2],0])/3.0,
-                  min(coords3[lOrd[0],0], coords3[lOrd[2],0]) + 2.0 * (coords3[lOrd[0],0] + coords3[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt3.x  
                   ]
-        vec3_y = [ coords3[ lOrd[0],1], 
+        vec3_y = [coords3[ lOrd[0],1], 
                   coords3[lOrd[1],1], 
                   coords3[lOrd[2],1], 
-                  min(coords3[ lOrd[0],1], coords3[lOrd[1],1]) + (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/3.0, 
-                  min(coords3[ lOrd[0],1], coords3[lOrd[1],1]) + 2.0 * (coords3[ lOrd[0],1] + coords3[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords3[lOrd[0],1], coords3[lOrd[2],1]) + (coords3[lOrd[0],1] + coords3[lOrd[2],1])/3.0,
-                  min(coords3[lOrd[0],1], coords3[lOrd[2],1]) + 2.0 * (coords3[lOrd[0],1] + coords3[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y,
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt3.y  
                   ]
-
+        
         [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
         J3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
         
@@ -4536,7 +4881,6 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
         J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
         
-        
     if len(root.enrichNodes) == 4:
         
         if root.enrichNodes[2].y >= root.enrichNodes[3].y:
@@ -4549,52 +4893,159 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
         coord_enrich1 = coord_enrich_computation(E)
         coord_enrich2 = coord_enrich_computation(F)
         
-        lOrd = [0,1,2] # local order 
-        vec2_x = [ coords2[ lOrd[0],0], 
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        
+        lOrd = [0,1,2] 
+
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+        
+        pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+        
+        pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+        
+        pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+        
+        pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+
+        pt6.x = coord_enrich1.x
+        pt6.y = coord_enrich1.y     
+        
+        pt7.x = coord_enrich2.x
+        pt7.y = coord_enrich2.y
+        
+        vec2_x = [coords2[lOrd[0],0], 
                   coords2[lOrd[1],0],
                   coords2[lOrd[2],0],
-                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0, 
-                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0,
-                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt2.x  
                   ]
-        vec2_y = [ coords2[ lOrd[0],1], 
+        vec2_y = [coords2[lOrd[0],1], 
                   coords2[lOrd[1],1], 
                   coords2[lOrd[2],1], 
-                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0, 
-                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0,
-                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y, 
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt2.y 
                   ]
+        
+        
+#         vec2_x = [ coords2[ lOrd[0],0], 
+#                   coords2[lOrd[1],0],
+#                   coords2[lOrd[2],0],
+#                   min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + abs(coords2[ lOrd[0],0] - coords2[lOrd[1],0])/3.0, 
+#                   min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * abs(coords2[ lOrd[0],0] - coords2[lOrd[1],0])/3.0,
+#                   coord_enrich1.x,
+#                   coord_enrich2.x,
+#                   min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + abs(coords2[lOrd[0],0] - coords2[lOrd[2],0])/3.0,
+#                   min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * abs(coords2[lOrd[0],0] - coords2[lOrd[2],0])/3.0,
+#                   circumcenter_pt2.x  
+#                   ]
+#         vec2_y = [ coords2[ lOrd[0],1], 
+#                   coords2[lOrd[1],1], 
+#                   coords2[lOrd[2],1], 
+#                   min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + abs(coords2[ lOrd[0],1] - coords2[lOrd[1],1])/3.0, 
+#                   min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * abs(coords2[ lOrd[0],1] - coords2[lOrd[1],1])/3.0,
+#                   coord_enrich1.y, 
+#                   coord_enrich2.y,
+#                   min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + abs(coords2[lOrd[0],1] - coords2[lOrd[2],1])/3.0,
+#                   min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * abs(coords2[lOrd[0],1] - coords2[lOrd[2],1])/3.0,
+#                   circumcenter_pt2.y
+#                   ]
         
         [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
         J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
         
+        circumcenter_pt4 = circumcenter_tri(coords4)
         lOrd = [1,2,0]
-        vec4_x = [ coords4[ lOrd[0],0], 
-                  coords4[lOrd[1],0],
-                  coords4[lOrd[2],0],
-                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0, 
-                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0,
-                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0  
-                  ]
-        vec4_y = [ coords4[ lOrd[0],1], 
-                  coords4[lOrd[1],1], 
-                  coords4[lOrd[2],1], 
-                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0, 
-                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0,
-                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0  
-                  ]
+        
+        
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+        
+        pt4.x = 2.0/3.0 * coords4[lOrd[0],0] + 1.0/3.0 * coords4[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords4[lOrd[0],1] + 1.0/3.0 * coords4[lOrd[1],1]
+        
+        pt5.x = 1.0/3.0 * coords4[lOrd[0],0] + 2.0/3.0 * coords4[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords4[lOrd[0],1] + 2.0/3.0 * coords4[lOrd[1],1]
+        
+        pt8.x = 2.0/3.0 * coords4[lOrd[2],0] + 1.0/3.0 * coords4[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords4[lOrd[2],1] + 1.0/3.0 * coords4[lOrd[0],1]
+        
+        pt9.x = 1.0/3.0 * coords4[lOrd[2],0] + 2.0/3.0 * coords4[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords4[lOrd[2],1] + 2.0/3.0 * coords4[lOrd[0],1]
+
+        pt6.x = coord_enrich2.x
+        pt6.y = coord_enrich2.y     
+        
+        pt7.x = coord_enrich1.x
+        pt7.y = coord_enrich1.y
+        
+        vec4_x = [coords4[lOrd[0],0], 
+                    coords4[lOrd[1],0],
+                    coords4[lOrd[2],0],
+                    pt4.x, 
+                    pt5.x,
+                    pt6.x,
+                    pt7.x,
+                    pt8.x,
+                    pt9.x,
+                    circumcenter_pt4.x  
+                   ]
+        vec4_y = [coords4[lOrd[0],1], 
+                   coords4[lOrd[1],1],
+                   coords4[lOrd[2],1], 
+                   pt4.y, 
+                   pt5.y,
+                   pt6.y, 
+                   pt7.y,
+                   pt8.y,
+                   pt9.y,
+                   circumcenter_pt4.y  
+                   ]
+                
+#         vec4_x = [ coords4[ lOrd[0],0], 
+#                   coords4[lOrd[1],0],
+#                   coords4[lOrd[2],0],
+#                   min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + abs(coords4[ lOrd[0],0] - coords4[lOrd[1],0])/3.0, 
+#                   min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * abs(coords4[ lOrd[0],0] - coords4[lOrd[1],0])/3.0,
+#                   coord_enrich1.x,
+#                   coord_enrich2.x,
+#                   min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + abs(coords4[lOrd[0],0] - coords4[lOrd[2],0])/3.0,
+#                   min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * abs(coords4[lOrd[0],0] - coords4[lOrd[2],0])/3.0,
+#                   circumcenter_pt4.x  
+#                   ]
+#         vec4_y = [ coords4[ lOrd[0],1], 
+#                   coords4[lOrd[1],1], 
+#                   coords4[lOrd[2],1], 
+#                   min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + abs(coords4[ lOrd[0],1] - coords4[lOrd[1],1])/3.0, 
+#                   min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * abs(coords4[ lOrd[0],1] - coords4[lOrd[1],1])/3.0,
+#                   coord_enrich1.y, 
+#                   coord_enrich2.y,
+#                   min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + abs(coords4[lOrd[0],1] - coords4[lOrd[2],1])/3.0,
+#                   min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * abs(coords4[lOrd[0],1] - coords4[lOrd[2],1])/3.0,
+#                   circumcenter_pt4.y  
+#                   ]
         
         [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
         J4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
@@ -4864,52 +5315,174 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         coord_enrich1 = coord_enrich_computation(E)
         coord_enrich2 = coord_enrich_computation(F)
 
-        lOrd = [2,0,1] # local order    
-        vec2_x = [ coords2[ lOrd[0],0], 
+        
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        lOrd = [2,0,1] 
+        
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+        
+        pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+        
+        pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+        
+        pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+        
+        pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+
+        pt6.x = coord_enrich1.x
+        pt6.y = coord_enrich1.y     
+        
+        pt7.x = coord_enrich2.x
+        pt7.y = coord_enrich2.y
+        
+        vec2_x = [coords2[lOrd[0],0], 
                   coords2[lOrd[1],0],
                   coords2[lOrd[2],0],
-                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0, 
-                  min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0,
-                  min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * (coords2[lOrd[0],0] + coords2[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt2.x  
                   ]
-        vec2_y = [ coords2[ lOrd[0],1], 
+        vec2_y = [coords2[lOrd[0],1], 
                   coords2[lOrd[1],1], 
                   coords2[lOrd[2],1], 
-                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0, 
-                  min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0,
-                  min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * (coords2[lOrd[0],1] + coords2[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y, 
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt2.y 
                   ]
 
+#         print vec2_x
+#         print vec2_y
+#         print coords2
+#         print circumcenter_pt2.x, circumcenter_pt2.y
+#         print min(coords2[ lOrd[0],1], coords2[lOrd[1],1]), coords2[ lOrd[0],1], coords2[lOrd[1],1] 
+#         print (coords2[ lOrd[0],1] + coords2[lOrd[1],1]) / 3.0
+#         print min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0
+# 
+#         vec2_x = [ coords2[ lOrd[0],0], 
+#                   coords2[lOrd[1],0],
+#                   coords2[lOrd[2],0],
+#                   min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + abs(coords2[ lOrd[0],0] - coords2[lOrd[1],0])/3.0, 
+#                   min(coords2[ lOrd[0],0], coords2[lOrd[1],0]) + 2.0 * abs(coords2[ lOrd[0],0] - coords2[lOrd[1],0])/3.0,
+#                   coord_enrich1.x,
+#                   coord_enrich2.x,
+#                   min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + abs(coords2[lOrd[0],0] - coords2[lOrd[2],0])/3.0,
+#                   min(coords2[lOrd[0],0], coords2[lOrd[2],0]) + 2.0 * abs(coords2[lOrd[0],0] - coords2[lOrd[2],0])/3.0,
+#                   circumcenter_pt2.x  
+#                   ]
+#         vec2_y = [ coords2[ lOrd[0],1], 
+#                   coords2[lOrd[1],1], 
+#                   coords2[lOrd[2],1], 
+#                   min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + abs(coords2[ lOrd[0],1] - coords2[lOrd[1],1])/3.0, 
+#                   min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + 2.0 * abs(coords2[ lOrd[0],1] - coords2[lOrd[1],1])/3.0,
+#                   coord_enrich1.y, 
+#                   coord_enrich2.y,
+#                   min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + abs(coords2[lOrd[0],1] - coords2[lOrd[2],1])/3.0,
+#                   min(coords2[lOrd[0],1], coords2[lOrd[2],1]) + 2.0 * abs(coords2[lOrd[0],1] - coords2[lOrd[2],1])/3.0,
+#                 circumcenter_pt2.y  
+#                   ]
+# 
+#         print vec2_x
+#         print vec2_y
         [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
         J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+#         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
+#         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
+                   
+        circumcenter_pt4 = circumcenter_tri(coords4)
         
         lOrd = [1,2,0]
-        vec4_x = [ coords4[ lOrd[0],0], 
+                
+        pt4 = Coordinate(0,0)
+        pt5 = Coordinate(0,0)
+        pt6 = Coordinate(0,0)
+        pt7 = Coordinate(0,0)
+        pt8 = Coordinate(0,0)
+        pt9 = Coordinate(0,0)
+        
+        pt4.x = 2.0/3.0 * coords4[lOrd[0],0] + 1.0/3.0 * coords4[lOrd[1],0]
+        pt4.y = 2.0/3.0 * coords4[lOrd[0],1] + 1.0/3.0 * coords4[lOrd[1],1]
+        
+        pt5.x = 1.0/3.0 * coords4[lOrd[0],0] + 2.0/3.0 * coords4[lOrd[1],0]
+        pt5.y = 1.0/3.0 * coords4[lOrd[0],1] + 2.0/3.0 * coords4[lOrd[1],1]
+        
+        pt8.x = 2.0/3.0 * coords4[lOrd[2],0] + 1.0/3.0 * coords4[lOrd[0],0]
+        pt8.y = 2.0/3.0 * coords4[lOrd[2],1] + 1.0/3.0 * coords4[lOrd[0],1]
+        
+        pt9.x = 1.0/3.0 * coords4[lOrd[2],0] + 2.0/3.0 * coords4[lOrd[0],0]
+        pt9.y = 1.0/3.0 * coords4[lOrd[2],1] + 2.0/3.0 * coords4[lOrd[0],1]
+
+        pt6.x = coord_enrich2.x
+        pt6.y = coord_enrich2.y     
+        
+        pt7.x = coord_enrich1.x
+        pt7.y = coord_enrich1.y
+         
+        vec4_x = [coords4[lOrd[0],0], 
                   coords4[lOrd[1],0],
                   coords4[lOrd[2],0],
-                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0, 
-                  min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * (coords4[ lOrd[0],0] + coords4[lOrd[1],0])/3.0,
-                  coord_enrich1.x,
-                  coord_enrich2.x,
-                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0,
-                  min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * (coords4[lOrd[0],0] + coords4[lOrd[2],0])/3.0  
+                  pt4.x, 
+                  pt5.x,
+                  pt6.x,
+                  pt7.x,
+                  pt8.x,
+                  pt9.x,
+                  circumcenter_pt4.x  
                   ]
-        vec4_y = [ coords4[ lOrd[0],1], 
-                  coords4[lOrd[1],1], 
+        vec4_y = [coords4[lOrd[0],1], 
+                  coords4[lOrd[1],1],
                   coords4[lOrd[2],1], 
-                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0, 
-                  min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * (coords4[ lOrd[0],1] + coords4[lOrd[1],1])/3.0,
-                  coord_enrich1.y, 
-                  coord_enrich2.y,
-                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0,
-                  min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * (coords4[lOrd[0],1] + coords4[lOrd[2],1])/3.0  
+                  pt4.y, 
+                  pt5.y,
+                  pt6.y, 
+                  pt7.y,
+                  pt8.y,
+                  pt9.y,
+                  circumcenter_pt4.y  
                   ]
+         
+#         vec4_x = [ coords4[ lOrd[0],0], 
+#                   coords4[lOrd[1],0],
+#                   coords4[lOrd[2],0],
+#                   min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + abs(coords4[ lOrd[0],0] - coords4[lOrd[1],0])/3.0, 
+#                   min(coords4[ lOrd[0],0], coords4[lOrd[1],0]) + 2.0 * abs(coords4[ lOrd[0],0] - coords4[lOrd[1],0])/3.0,
+#                   coord_enrich1.x,
+#                   coord_enrich2.x,
+#                   min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + abs(coords4[lOrd[0],0] - coords4[lOrd[2],0])/3.0,
+#                   min(coords4[lOrd[0],0], coords4[lOrd[2],0]) + 2.0 * abs(coords4[lOrd[0],0] - coords4[lOrd[2],0])/3.0,
+#                 circumcenter_pt4.x  
+#                   ]
+#         vec4_y = [ coords4[ lOrd[0],1], 
+#                   coords4[lOrd[1],1], 
+#                   coords4[lOrd[2],1], 
+#                   min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + abs(coords4[ lOrd[0],1] - coords4[lOrd[1],1])/3.0, 
+#                   min(coords4[ lOrd[0],1], coords4[lOrd[1],1]) + 2.0 * abs(coords4[ lOrd[0],1] - coords4[lOrd[1],1])/3.0,
+#                   coord_enrich1.y, 
+#                   coord_enrich2.y,
+#                   min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + abs(coords4[lOrd[0],1] - coords4[lOrd[2],1])/3.0,
+#                   min(coords4[lOrd[0],1], coords4[lOrd[2],1]) + 2.0 * abs(coords4[lOrd[0],1] - coords4[lOrd[2],1])/3.0,
+#                 circumcenter_pt4.y  
+#                   ]
+
+
+#         [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
+#         J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
         
         [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
         J4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
@@ -5176,7 +5749,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
             J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
             
-            lOrd = [0,1,2]
+            lOrd = [1,2,0]
             vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
             vec1_y = [ coords1[ lOrd[0],1], coords1[lOrd[1],1], coords1[lOrd[2],1], (coords1[ lOrd[0],1] + coords1[lOrd[1],1])/2.0, coord_enrich.y, (coords1[lOrd[0],1] + coords1[lOrd[2],1])/2.0  ]
 
@@ -5191,6 +5764,245 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
             J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
 
         
+    if len(root.enrichNodes) == 4:
+
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        
+        circumcenter_pt1 = circumcenter_tri(coords1)
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        circumcenter_pt3 = circumcenter_tri(coords3)
+        
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [0,1,2]
+        
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+            
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+    
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+        
+            lOrd = [1,2,0]
+            
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords3[lOrd[0],0] + 1.0/3.0 * coords3[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords3[lOrd[0],1] + 1.0/3.0 * coords3[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords3[lOrd[0],0] + 2.0/3.0 * coords3[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords3[lOrd[0],1] + 2.0/3.0 * coords3[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords3[lOrd[2],0] + 1.0/3.0 * coords3[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords3[lOrd[2],1] + 1.0/3.0 * coords3[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords3[lOrd[2],0] + 2.0/3.0 * coords3[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords3[lOrd[2],1] + 2.0/3.0 * coords3[lOrd[0],1]
+     
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+             
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+            
+            vec3_x = [coords3[ lOrd[0],0], 
+                      coords3[lOrd[1],0],
+                      coords3[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt3.x  
+                      ]
+            vec3_y = [coords3[ lOrd[0],1], 
+                      coords3[lOrd[1],1], 
+                      coords3[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt3.y  
+                      ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            
+            lOrd = [1,2,0]
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+     
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+             
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+             
+            vec1_x = [coords1[lOrd[0],0], 
+                      coords1[lOrd[1],0], 
+                      coords1[lOrd[2],0], 
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt1.x  
+                      ]
+            vec1_y = [coords1[lOrd[0],1], 
+                      coords1[lOrd[1],1], 
+                      coords1[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt1.y  
+                      ]
+            [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                        
+            lOrd = [2,0,1] 
+              
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+            
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+            
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -5389,7 +6201,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 #     print 'South edge: K = ', K_cst
 
     
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) >= 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5442,6 +6254,247 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
             [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
             J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
 
+    if len(root.enrichNodes) == 4:
+
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        
+        circumcenter_pt1 = circumcenter_tri(coords1)
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        circumcenter_pt3 = circumcenter_tri(coords3)
+        
+                    
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [2,0,1] # local order    
+            
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+            
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+            
+                    
+            lOrd = [1,2,0]
+            
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords3[lOrd[0],0] + 1.0/3.0 * coords3[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords3[lOrd[0],1] + 1.0/3.0 * coords3[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords3[lOrd[0],0] + 2.0/3.0 * coords3[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords3[lOrd[0],1] + 2.0/3.0 * coords3[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords3[lOrd[2],0] + 1.0/3.0 * coords3[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords3[lOrd[2],1] + 1.0/3.0 * coords3[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords3[lOrd[2],0] + 2.0/3.0 * coords3[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords3[lOrd[2],1] + 2.0/3.0 * coords3[lOrd[0],1]
+     
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+             
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+            
+            vec3_x = [coords3[ lOrd[0],0], 
+                      coords3[lOrd[1],0],
+                      coords3[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt3.x  
+                      ]
+            vec3_y = [coords3[ lOrd[0],1], 
+                      coords3[lOrd[1],1], 
+                      coords3[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt3.y  
+                      ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            lOrd = [0,1,2]
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+     
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+             
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+             
+            vec1_x = [coords1[lOrd[0],0], 
+                      coords1[lOrd[1],0], 
+                      coords1[lOrd[2],0], 
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt1.x  
+                      ]
+            vec1_y = [coords1[lOrd[0],1], 
+                      coords1[lOrd[1],1], 
+                      coords1[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt1.y  
+                      ]
+            [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+            
+            
+                        
+            lOrd = [1,2,0] # local order    
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+            
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+            
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -5674,7 +6727,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
              K_cst = [k2,k2,k1]
     
             
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) >= 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5726,6 +6779,242 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
     
             [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
             J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+            
+    if len(root.enrichNodes) == 4:
+
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
+            
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        
+        circumcenter_pt1 = circumcenter_tri(coords1)
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        circumcenter_pt3 = circumcenter_tri(coords3)
+
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [0,1,2] # local order    
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+            
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                    
+            lOrd = [1,2,0]
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords3[lOrd[0],0] + 1.0/3.0 * coords3[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords3[lOrd[0],1] + 1.0/3.0 * coords3[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords3[lOrd[0],0] + 2.0/3.0 * coords3[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords3[lOrd[0],1] + 2.0/3.0 * coords3[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords3[lOrd[2],0] + 1.0/3.0 * coords3[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords3[lOrd[2],1] + 1.0/3.0 * coords3[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords3[lOrd[2],0] + 2.0/3.0 * coords3[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords3[lOrd[2],1] + 2.0/3.0 * coords3[lOrd[0],1]
+     
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+             
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+            
+            vec3_x = [coords3[ lOrd[0],0], 
+                      coords3[lOrd[1],0],
+                      coords3[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt3.x  
+                      ]
+            vec3_y = [coords3[ lOrd[0],1], 
+                      coords3[lOrd[1],1], 
+                      coords3[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt3.y  
+                      ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            lOrd = [2,0,1]
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+     
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+             
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+             
+            vec1_x = [coords1[lOrd[0],0], 
+                      coords1[lOrd[1],0], 
+                      coords1[lOrd[2],0], 
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt1.x  
+                      ]
+            vec1_y = [coords1[lOrd[0],1], 
+                      coords1[lOrd[1],1], 
+                      coords1[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt1.y  
+                      ]
+            [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+            
+                        
+            lOrd = [1,2,0] # local order    
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+            
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )  
             
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
@@ -5938,7 +7227,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 #    else:
 #        K_cst = [k2,k2,k2,k1]
         
-    if len(root.enrichNodes) == 2:
+    if len(root.enrichNodes) >= 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
@@ -5990,7 +7279,242 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
     
             [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
             J2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+   
+    if len(root.enrichNodes) == 4:
+
+        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+            E = root.enrichNodes[2]
+            F = root.enrichNodes[3]
+        else:
+            E = root.enrichNodes[3]
+            F = root.enrichNodes[2]
             
+        coord_enrich1 = coord_enrich_computation(E)
+        coord_enrich2 = coord_enrich_computation(F)
+
+        
+        circumcenter_pt1 = circumcenter_tri(coords1)
+        circumcenter_pt2 = circumcenter_tri(coords2)
+        circumcenter_pt3 = circumcenter_tri(coords3)
+        
+        if K_cst[0] == K_cst[1]:
+            # triangle 3 is the one with curved edge
+            [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
+            J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
+            
+            lOrd = [0,1,2] # local order    
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+            
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                    
+            lOrd = [2,0,1]
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords3[lOrd[0],0] + 1.0/3.0 * coords3[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords3[lOrd[0],1] + 1.0/3.0 * coords3[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords3[lOrd[0],0] + 2.0/3.0 * coords3[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords3[lOrd[0],1] + 2.0/3.0 * coords3[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords3[lOrd[2],0] + 1.0/3.0 * coords3[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords3[lOrd[2],1] + 1.0/3.0 * coords3[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords3[lOrd[2],0] + 2.0/3.0 * coords3[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords3[lOrd[2],1] + 2.0/3.0 * coords3[lOrd[0],1]
+     
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+             
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+            
+            vec3_x = [coords3[ lOrd[0],0], 
+                      coords3[lOrd[1],0],
+                      coords3[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt3.x  
+                      ]
+            vec3_y = [coords3[ lOrd[0],1], 
+                      coords3[lOrd[1],1], 
+                      coords3[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt3.y  
+                      ]
+
+            [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+            J3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+            
+        if K_cst[1] == K_cst[2]:
+            # triangle 1 is the one with curved edge
+
+            [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
+            J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
+            
+            lOrd = [0,1,2]
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+             
+            pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+             
+            pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+             
+            pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+             
+            pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+     
+            pt6.x = coord_enrich1.x
+            pt6.y = coord_enrich1.y     
+             
+            pt7.x = coord_enrich2.x
+            pt7.y = coord_enrich2.y
+             
+            vec1_x = [coords1[lOrd[0],0], 
+                      coords1[lOrd[1],0], 
+                      coords1[lOrd[2],0], 
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt1.x  
+                      ]
+            vec1_y = [coords1[lOrd[0],1], 
+                      coords1[lOrd[1],1], 
+                      coords1[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y,
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt1.y  
+                      ]
+            [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+            J1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                        
+            lOrd = [1,2,0] # local order    
+            pt4 = Coordinate(0,0)
+            pt5 = Coordinate(0,0)
+            pt6 = Coordinate(0,0)
+            pt7 = Coordinate(0,0)
+            pt8 = Coordinate(0,0)
+            pt9 = Coordinate(0,0)
+        
+            pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
+            pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+            
+            pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
+            pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+            
+            pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
+            pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+            
+            pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
+            pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+    
+            pt6.x = coord_enrich2.x
+            pt6.y = coord_enrich2.y     
+            
+            pt7.x = coord_enrich1.x
+            pt7.y = coord_enrich1.y
+        
+            vec2_x = [coords2[lOrd[0],0], 
+                      coords2[lOrd[1],0],
+                      coords2[lOrd[2],0],
+                      pt4.x, 
+                      pt5.x,
+                      pt6.x,
+                      pt7.x,
+                      pt8.x,
+                      pt9.x,
+                      circumcenter_pt2.x  
+                      ]
+            vec2_y = [coords2[lOrd[0],1], 
+                      coords2[lOrd[1],1], 
+                      coords2[lOrd[2],1], 
+                      pt4.y, 
+                      pt5.y,
+                      pt6.y, 
+                      pt7.y,
+                      pt8.y,
+                      pt9.y,
+                      circumcenter_pt2.y 
+                      ]
+            
+            [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+            J2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )   
+                    
     det_J1 = lambda e,n: determinant(J1)(e,n)
     det_J2 = lambda e,n: determinant(J2)(e,n)
     det_J3 = lambda e,n: determinant(J3)(e,n)
@@ -6375,31 +7899,32 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
 
         lOrd = [0,1,2,3] # local order    
+        
         vecB_x = [ bottom_coords[ lOrd[0],0], 
-                  min(bottom_coords[ lOrd[0],0], bottom_coords[lOrd[1],0]) + (bottom_coords[ lOrd[0],0] + bottom_coords[lOrd[1],0])/3.0,
-                  min(bottom_coords[ lOrd[0],0], bottom_coords[lOrd[1],0]) + 2.0 * (bottom_coords[ lOrd[0],0] + bottom_coords[lOrd[1],0])/3.0,
+                  2.0/3.0 * bottom_coords[lOrd[0],0] + 1.0/3.0 * bottom_coords[lOrd[1],0],
+                  1.0/3.0 * bottom_coords[lOrd[0],0] + 2.0/3.0 * bottom_coords[lOrd[1],0],
                   bottom_coords[lOrd[1],0],
-                  min(bottom_coords[lOrd[1],0] , bottom_coords[lOrd[2],0]) + (bottom_coords[lOrd[1],0] + bottom_coords[lOrd[2],0])/3.0,
-                  min(bottom_coords[lOrd[1],0] , bottom_coords[lOrd[2],0]) + 2.0 * (bottom_coords[lOrd[1],0] + bottom_coords[lOrd[2],0])/3.0,
+                  2.0/3.0 * bottom_coords[lOrd[1],0] + 1.0/3.0 * bottom_coords[lOrd[2],0],
+                  1.0/3.0 * bottom_coords[lOrd[1],0] + 2.0/3.0 * bottom_coords[lOrd[2],0],
                   bottom_coords[lOrd[2],0], 
-                  coord_enrich1.x,
                   coord_enrich2.x,
+                  coord_enrich1.x,
                   bottom_coords[lOrd[3],0],
-                  min(bottom_coords[lOrd[3],0], bottom_coords[lOrd[0],0]) + (bottom_coords[lOrd[3],0] + bottom_coords[lOrd[0],0])/3.0,
-                  min(bottom_coords[lOrd[3],0], bottom_coords[lOrd[0],0]) + 2.0 * (bottom_coords[lOrd[3],0] + bottom_coords[lOrd[0],0])/3.0
+                  2.0/3.0 * bottom_coords[lOrd[3],0] + 1.0/3.0 * bottom_coords[lOrd[0],0],
+                  1.0/3.0 * bottom_coords[lOrd[3],0] + 2.0/3.0 * bottom_coords[lOrd[0],0]
                  ]
         vecB_y = [ bottom_coords[ lOrd[0],1], 
-                  min(bottom_coords[ lOrd[0],1], bottom_coords[lOrd[1],1]) + (bottom_coords[ lOrd[0],1] + bottom_coords[lOrd[1],1])/3.0,
-                  min(bottom_coords[ lOrd[0],1], bottom_coords[lOrd[1],1]) + 2.0 * (bottom_coords[ lOrd[0],1] + bottom_coords[lOrd[1],1])/3.0,
+                  2.0/3.0 * bottom_coords[lOrd[0],1] + 1.0/3.0 * bottom_coords[lOrd[1],1],
+                  1.0/3.0 * bottom_coords[lOrd[0],1] + 2.0/3.0 * bottom_coords[lOrd[1],1],
                   bottom_coords[lOrd[1],1],
-                  min(bottom_coords[lOrd[1],1] , bottom_coords[lOrd[2],1]) + (bottom_coords[lOrd[1],1] + bottom_coords[lOrd[2],1])/3.0,
-                  min(bottom_coords[lOrd[1],1] , bottom_coords[lOrd[2],1]) + 2.0 * (bottom_coords[lOrd[1],1] + bottom_coords[lOrd[2],1])/3.0,
+                  2.0/3.0 * bottom_coords[lOrd[1],1] + 1.0/3.0 * bottom_coords[lOrd[2],1],
+                  1.0/3.0 * bottom_coords[lOrd[1],1] + 2.0/3.0 * bottom_coords[lOrd[2],1],
                   bottom_coords[lOrd[2],1], 
-                  coord_enrich1.y,
                   coord_enrich2.y,
+                  coord_enrich1.y,
                   bottom_coords[lOrd[3],1],
-                  min(bottom_coords[lOrd[3],1], bottom_coords[lOrd[0],1]) + (bottom_coords[lOrd[3],1] + bottom_coords[lOrd[0],1])/3.0,
-                  min(bottom_coords[lOrd[3],1], bottom_coords[lOrd[0],1]) + 2.0 * (bottom_coords[lOrd[3],1] + bottom_coords[lOrd[0],1])/3.0
+                  2.0/3.0 * bottom_coords[lOrd[3],1] + 1.0/3.0 * bottom_coords[lOrd[0],1],
+                  1.0/3.0 * bottom_coords[lOrd[3],1] + 2.0/3.0 * bottom_coords[lOrd[0],1]
                  ]
 
         [x_fct_B, y_fct_B] = quad_xy_fct_bi_cubic( vecB_x, vecB_y )
@@ -6407,31 +7932,31 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
         
         lOrd = [2,3,0,1]
         vecT_x = [ top_coords[ lOrd[0],0], 
-                  min(top_coords[ lOrd[0],0], top_coords[lOrd[1],0]) + (top_coords[ lOrd[0],0] + topoprds[lOrd[1],0])/3.0,
-                  min(top_coords[ lOrd[0],0], top_coords[lOrd[1],0]) + 2.0 * (top_coords[ lOrd[0],0] + top_coords[lOrd[1],0])/3.0,
+                  2.0/3.0 * top_coords[lOrd[0],0] + 1.0/3.0 * top_coords[lOrd[1],0],
+                  1.0/3.0 * top_coords[lOrd[0],0] + 2.0/3.0 * top_coords[lOrd[1],0],
                   top_coords[lOrd[1],0],
-                  min(top_coords[lOrd[1],0] , top_coords[lOrd[2],0]) + (top_coords[lOrd[1],0] + top_coords[lOrd[2],0])/3.0,
-                  min(top_coords[lOrd[1],0] , top_coords[lOrd[2],0]) + 2.0 * (top_coords[lOrd[1],0] + top_coords[lOrd[2],0])/3.0,
+                  2.0/3.0 * top_coords[lOrd[1],0] + 1.0/3.0 * top_coords[lOrd[2],0],
+                  1.0/3.0 * top_coords[lOrd[1],0] + 2.0/3.0 * top_coords[lOrd[2],0],
                   top_coords[lOrd[2],0], 
                   coord_enrich1.x,
                   coord_enrich2.x,
                   top_coords[lOrd[3],0],
-                  min(top_coords[lOrd[3],0], top_coords[lOrd[0],0]) + (top_coords[lOrd[3],0] + top_coords[lOrd[0],0])/3.0,
-                  min(top_coords[lOrd[3],0], top_coords[lOrd[0],0]) + 2.0 * (top_coords[lOrd[3],0] + top_coords[lOrd[0],0])/3.0
+                  2.0/3.0 * top_coords[lOrd[3],0] + 1.0/3.0 * top_coords[lOrd[0],0],
+                  1.0/3.0 * top_coords[lOrd[3],0] + 2.0/3.0 * top_coords[lOrd[0],0]
                  ]
         vecT_y = [ top_coords[ lOrd[0],1], 
-                  min(top_coords[ lOrd[0],1], top_coords[lOrd[1],1]) + (top_coords[ lOrd[0],1] + top_coords[lOrd[1],1])/3.0,
-                  min(top_coords[ lOrd[0],1], top_coords[lOrd[1],1]) + 2.0 * (top_coords[ lOrd[0],1] + top_coords[lOrd[1],1])/3.0,
+                  2.0/3.0 * top_coords[lOrd[0],1] + 1.0/3.0 * top_coords[lOrd[1],1],
+                  1.0/3.0 * top_coords[lOrd[0],1] + 2.0/3.0 * top_coords[lOrd[1],1],
                   top_coords[lOrd[1],1],
-                  min(top_coords[lOrd[1],1] , top_coords[lOrd[2],1]) + (top_coords[lOrd[1],1] + top_coords[lOrd[2],1])/3.0,
-                  min(top_coords[lOrd[1],1] , top_coords[lOrd[2],1]) + 2.0 * (top_coords[lOrd[1],1] + top_coords[lOrd[2],1])/3.0,
+                  2.0/3.0 * top_coords[lOrd[1],1] + 1.0/3.0 * top_coords[lOrd[2],1],
+                  1.0/3.0 * top_coords[lOrd[1],1] + 2.0/3.0 * top_coords[lOrd[2],1],
                   top_coords[lOrd[2],1], 
                   coord_enrich1.y,
                   coord_enrich2.y,
                   top_coords[lOrd[3],1],
-                  min(top_coords[lOrd[3],1], top_coords[lOrd[0],1]) + (top_coords[lOrd[3],1] + top_coords[lOrd[0],1])/3.0,
-                  min(top_coords[lOrd[3],1], top_coords[lOrd[0],1]) + 2.0 * (top_coords[lOrd[3],1] + top_coords[lOrd[0],1])/3.0
-                 ]
+                  2.0/3.0 * top_coords[lOrd[3],1] + 1.0/3.0 * top_coords[lOrd[0],1],
+                  1.0/3.0 * top_coords[lOrd[3],1] + 2.0/3.0 * top_coords[lOrd[0],1]
+                ]
 
         [x_fct_T, y_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
         J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )        
@@ -6739,64 +8264,64 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
         
         
         lOrd = [3,0,1,2] # local order    
-        vecL_x = [ left_coords[ lOrd[0],0], 
-                  min(left_coords[ lOrd[0],0], left_coords[lOrd[1],0]) + (left_coords[ lOrd[0],0] + left_coords[lOrd[1],0])/3.0,
-                  min(left_coords[ lOrd[0],0], left_coords[lOrd[1],0]) + 2.0 * (left_coords[ lOrd[0],0] + left_coords[lOrd[1],0])/3.0,
+        vecL_x = [ left_coords[lOrd[0],0], 
+                  2.0/3.0 * left_coords[lOrd[0],0] + 1.0/3.0 * left_coords[lOrd[1],0],
+                  1.0/3.0 * left_coords[lOrd[0],0] + 2.0/3.0 * left_coords[lOrd[1],0],
                   left_coords[lOrd[1],0],
-                  min(left_coords[lOrd[1],0] , left_coords[lOrd[2],0]) + (left_coords[lOrd[1],0] + left_coords[lOrd[2],0])/3.0,
-                  min(left_coords[lOrd[1],0] , left_coords[lOrd[2],0]) + 2.0 * (left_coords[lOrd[1],0] + left_coords[lOrd[2],0])/3.0,
+                  2.0/3.0 * left_coords[lOrd[1],0] + 1.0/3.0 * left_coords[lOrd[2],0],
+                  1.0/3.0 * left_coords[lOrd[1],0] + 2.0/3.0 * left_coords[lOrd[2],0],
                   left_coords[lOrd[2],0], 
                   coord_enrich1.x,
                   coord_enrich2.x,
                   left_coords[lOrd[3],0],
-                  min(left_coords[lOrd[3],0], left_coords[lOrd[0],0]) + (left_coords[lOrd[3],0] + left_coords[lOrd[0],0])/3.0,
-                  min(left_coords[lOrd[3],0], left_coords[lOrd[0],0]) + 2.0 * (left_coords[lOrd[3],0] + left_coords[lOrd[0],0])/3.0
+                  2.0/3.0 * left_coords[lOrd[3],0] + 1.0/3.0 * left_coords[lOrd[0],0],
+                  1.0/3.0 * left_coords[lOrd[3],0] + 2.0/3.0 * left_coords[lOrd[0],0]
                  ]
-        vecL_y = [ left_coords[ lOrd[0],1], 
-                  min(left_coords[ lOrd[0],1], left_coords[lOrd[1],1]) + (left_coords[ lOrd[0],1] + left_coords[lOrd[1],1])/3.0,
-                  min(left_coords[ lOrd[0],1], left_coords[lOrd[1],1]) + 2.0 * (left_coords[ lOrd[0],1] + left_coords[lOrd[1],1])/3.0,
+        vecL_y = [ left_coords[lOrd[0],1], 
+                  2.0/3.0 * left_coords[lOrd[0],1] + 1.0/3.0 * left_coords[lOrd[1],1],
+                  1.0/3.0 * left_coords[lOrd[0],1] + 2.0/3.0 * left_coords[lOrd[1],1],
                   left_coords[lOrd[1],1],
-                  min(left_coords[lOrd[1],1] , left_coords[lOrd[2],1]) + (left_coords[lOrd[1],1] + left_coords[lOrd[2],1])/3.0,
-                  min(left_coords[lOrd[1],1] , left_coords[lOrd[2],1]) + 2.0 * (left_coords[lOrd[1],1] + left_coords[lOrd[2],1])/3.0,
+                  2.0/3.0 * left_coords[lOrd[1],1] + 1.0/3.0 * left_coords[lOrd[2],1],
+                  1.0/3.0 * left_coords[lOrd[1],1] + 2.0/3.0 * left_coords[lOrd[2],1],
                   left_coords[lOrd[2],1], 
                   coord_enrich1.y,
                   coord_enrich2.y,
                   left_coords[lOrd[3],1],
-                  min(left_coords[lOrd[3],1], left_coords[lOrd[0],1]) + (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/3.0,
-                  min(left_coords[lOrd[3],1], left_coords[lOrd[0],1]) + 2.0 * (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/3.0
-                 ]
+                  2.0/3.0 * left_coords[lOrd[3],1] + 1.0/3.0 * left_coords[lOrd[0],1],
+                  1.0/3.0 * left_coords[lOrd[3],1] + 2.0/3.0 * left_coords[lOrd[0],1]
+                ]
 
-        
         [x_fct_L, y_fct_L] = quad_xy_fct_bi_cubic( vecL_x, vecL_y )
         J_left = quad_jacobian_mat_bi_cubic( vecL_x, vecL_y )
         
         lOrd = [1,2,3,0]
+
         vecR_x = [ right_coords[ lOrd[0],0], 
-                  min(right_coords[ lOrd[0],0], right_coords[lOrd[1],0]) + (right_coords[ lOrd[0],0] + right_coords[lOrd[1],0])/3.0,
-                  min(right_coords[ lOrd[0],0], right_coords[lOrd[1],0]) + 2.0 * (right_coords[ lOrd[0],0] + right_coords[lOrd[1],0])/3.0,
+                  2.0/3.0 * right_coords[lOrd[0],0] + 1.0/3.0 * right_coords[lOrd[1],0],
+                  1.0/3.0 * right_coords[lOrd[0],0] + 2.0/3.0 * right_coords[lOrd[1],0],
                   right_coords[lOrd[1],0],
-                  min(right_coords[lOrd[1],0] , right_coords[lOrd[2],0]) + (right_coords[lOrd[1],0] + right_coords[lOrd[2],0])/3.0,
-                  min(right_coords[lOrd[1],0] , right_coords[lOrd[2],0]) + 2.0 * (right_coords[lOrd[1],0] + right_coords[lOrd[2],0])/3.0,
+                  2.0/3.0 * right_coords[lOrd[1],0] + 1.0/3.0 * right_coords[lOrd[2],0],
+                  1.0/3.0 * right_coords[lOrd[1],0] + 2.0/3.0 * right_coords[lOrd[2],0],
                   right_coords[lOrd[2],0], 
-                  coord_enrich1.x,
                   coord_enrich2.x,
+                  coord_enrich1.x,
                   right_coords[lOrd[3],0],
-                  min(right_coords[lOrd[3],0], right_coords[lOrd[0],0]) + (right_coords[lOrd[3],0] + right_coords[lOrd[0],0])/3.0,
-                  min(right_coords[lOrd[3],0], right_coords[lOrd[0],0]) + 2.0 * (right_coords[lOrd[3],0] + right_coords[lOrd[0],0])/3.0
-                 ]
+                  2.0/3.0 * right_coords[lOrd[3],0] + 1.0/3.0 * right_coords[lOrd[0],0],
+                  1.0/3.0 * right_coords[lOrd[3],0] + 2.0/3.0 * right_coords[lOrd[0],0]
+                ]
         vecR_y = [ right_coords[ lOrd[0],1], 
-                  min(right_coords[ lOrd[0],1], right_coords[lOrd[1],1]) + (right_coords[ lOrd[0],1] + right_coords[lOrd[1],1])/3.0,
-                  min(right_coords[ lOrd[0],1], right_coords[lOrd[1],1]) + 2.0 * (right_coords[ lOrd[0],1] + right_coords[lOrd[1],1])/3.0,
+                  2.0/3.0 * right_coords[lOrd[0],1] + 1.0/3.0 * right_coords[lOrd[1],1],
+                  1.0/3.0 * right_coords[lOrd[0],1] + 2.0/3.0 * right_coords[lOrd[1],1],
                   right_coords[lOrd[1],1],
-                  min(right_coords[lOrd[1],1] , right_coords[lOrd[2],1]) + (right_coords[lOrd[1],1] + right_coords[lOrd[2],1])/3.0,
-                  min(right_coords[lOrd[1],1] , right_coords[lOrd[2],1]) + 2.0 * (right_coords[lOrd[1],1] + right_coords[lOrd[2],1])/3.0,
+                  2.0/3.0 * right_coords[lOrd[1],1] + 1.0/3.0 * right_coords[lOrd[2],1],
+                  1.0/3.0 * right_coords[lOrd[1],1] + 2.0/3.0 * right_coords[lOrd[2],1],
                   right_coords[lOrd[2],1], 
-                  coord_enrich1.y,
                   coord_enrich2.y,
+                  coord_enrich1.y,
                   right_coords[lOrd[3],1],
-                  min(right_coords[lOrd[3],1], right_coords[lOrd[0],1]) + (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/3.0,
-                  min(right_coords[lOrd[3],1], right_coords[lOrd[0],1]) + 2.0 * (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/3.0
-                 ]
+                  2.0/3.0 * right_coords[lOrd[3],1] + 1.0/3.0 * right_coords[lOrd[0],1],
+                  1.0/3.0 * right_coords[lOrd[3],1] + 2.0/3.0 * right_coords[lOrd[0],1]
+                  ]
         
         [x_fct_R, y_fct_R] = quad_xy_fct_bi_cubic( vecR_x, vecR_y )
         J_right = quad_jacobian_mat_bi_cubic( vecR_x, vecR_y )

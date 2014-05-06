@@ -598,7 +598,7 @@ def tri_iso_deriv_wrt_to_n_cubic():
 	N8n = lambda e,n: (-9 * (1 + 9 * n * n - e + n * (-8 + 6 * e))) / 2.0
 	N9n = lambda e,n: (9 * (2 + 9 * n * n - 5 * e + 3 * e * e + 2 * n * (-5 + 6 * e))) / 2.0
 	
-	N10n = lambda e,n: -27 * p * (-1 + 2 * n + e)
+	N10n = lambda e,n: -27 * e * (-1 + 2 * n + e)
 
 
 	return [N1n,N2n,N3n,N4n, N5n,N6n,N7n,N8n, N9n, N10n]

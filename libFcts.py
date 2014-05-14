@@ -2,6 +2,7 @@ import SimpleITK as sitk
 from globalVars import *
 from math import sqrt, floor
 from numpy import *
+import numpy
 
 class Coordinate(object):
     def __init__(self,x=-1,y=-1):
@@ -404,7 +405,7 @@ def log_search(image,bbegin,eend):
 ## case 1: 3:1 -- P1 the outsider
 def case_NW_polynomial_test(image,p1,p2,p3,p4,L1,L4, poly_opt = 0):
     x_is_F_of_y = False;
-	
+    
 # 	if len(L1)>1 or len(L4) > 1:
 # 		pt = Coordinate(-1,-1);
 # 		vecCoord = [];
@@ -414,163 +415,166 @@ def case_NW_polynomial_test(image,p1,p2,p3,p4,L1,L4, poly_opt = 0):
 # 		L1 = L1[0]
 # 		L4 = L4[0]
 		
-    if ( find_distance(L1,L4) <= 2.0):
-		pt = Coordinate(-1,-1);
-		vecCoord = [];
-		vecCoord.append(pt);
-		return vecCoord;
-	
-#	root.printRect()
-	
-	# LINEAR POLYNOMIAL
-	# Step 1. Search for the interface along the 45 degree line
-    A = log_search(image,p1,p3);
-
-	# Step 2. Find intersection of line between L1,L4 and the 45 degree line
-    if (abs(L1.x-p1.x) < abs(L4.y - p1.y)):
-		B = line_line_intersection_x(image,p1,p3,L1,L4);
-		x_is_F_of_y = True;
-    else:
-		B = line_line_intersection_y(image,p1,p3,L1,L4);
-		x_is_F_of_y = False;
-			
-	# Step 3. If a linear is close enough, return coordinates.
-    if (find_distance(A,B) <= TOL_LINEARS):
-#         draw_line(imageOut,L1,L4)
-        vecCoord = [L1, L4]
-        return vecCoord
-
-    if TOL_QUADRATICS >= 0:
-    	# QUADRATIC POLYNOMIAL
-    	# Step 1. Build the quadratic polynomial
-        if A.x==L4.x or A.x==L1.x:
+    if POL_APPROX != 3:    
+        
+        if ( find_distance(L1,L4) <= 2.0):
     		pt = Coordinate(-1,-1);
-    		vecCoord = []; 
+    		vecCoord = [];
     		vecCoord.append(pt);
     		return vecCoord;
+    	
+    #	root.printRect()
+    	
+    	# LINEAR POLYNOMIAL
+    	# Step 1. Search for the interface along the 45 degree line
+        A = log_search(image,p1,p3);
     
-        xx = [L4.x,A.x,L1.x];
-        yy = [L4.y,A.y,L1.y];
-        d = newt_coef(xx,yy); 
-        if (x_is_F_of_y == False):
-    		# Step 2. Search for the interface along a vertical line
-    		p12 = Coordinate( (p1.x + L1.x)/2.0, p1.y);
-    		p34 = Coordinate( p12.x, p4.y);
-    		C = log_search(image,p12,p34);
-    
-    		# Step 3. Find intersection between quadratic and vertical line
-    		D = Coordinate(p12.x, floor(newt_fct_eval(d,xx,p12.x)) );
+    	# Step 2. Find intersection of line between L1,L4 and the 45 degree line
+        if (abs(L1.x-p1.x) < abs(L4.y - p1.y)):
+    		B = line_line_intersection_x(image,p1,p3,L1,L4);
+    		x_is_F_of_y = True;
         else:
-    		# Step 2. Search for the interface along a vertical line
-    		p14 = Coordinate( p1.x, (p1.y + L4.y) / 2.0 );
-    		p23 = Coordinate( p2.x, p14.y );
-    		C = log_search(image,p14,p23);
+    		B = line_line_intersection_y(image,p1,p3,L1,L4);
+    		x_is_F_of_y = False;
+    			
+    	# Step 3. If a linear is close enough, return coordinates.
+        if (find_distance(A,B) <= TOL_LINEARS):
+    #         draw_line(imageOut,L1,L4)
+            vecCoord = [L1, L4]
+            return vecCoord
     
-    		# Step 3. Find intersection between quadratic and vertical line
-    		D = Coordinate( p14.y, floor(newt_fct_eval(d,xx,p14.y)) );
-    
-    		temp = D.x;
-    		D.x = int(D.y);
-    		D.y = int(temp);
-       
-        CD_dist = find_distance(C,D)
-       
-    	# Step 4. Check distance
-        if (CD_dist <= TOL_QUADRATICS):
-    #		draw_curve(imageOut,L4,L1,d,xx);
-    #         draw_line(imageOut,L4,C)
-    #         draw_line(imageOut,C,L1)
-            vecCoord = [L4, L1, A];
-            return vecCoord;
-
-    if TOL_CUBICS >= 0:
-    	# CUBIC POLYNOMIAL
-        if (x_is_F_of_y == False):
-    		# Step 1. Search for the interface along vertical lines at 1/3 and 2/3
-    		p1third12 = Coordinate( double ((L1.x - p1.x) / 3.0) + p1.x, p1.y);
-    		p1third34 = Coordinate( p1third12.x, p4.y);
-    		E = log_search(image,p1third12,p1third34);
-    
-    		p2thirds12 = Coordinate( double (2.0 * (L1.x - p1.x) / 3.0) + p1.x, p1.y);
-    		p2thirds34 = Coordinate(p2thirds12.x, p4.y);
-    		F = log_search(image,p2thirds12,p2thirds34);
-    
-    		# Step 2. Build the cubic polynomial
-    		xi = [L4.x, E.x, F.x, L1.x];
-    		yi = [L4.y, E.y, F.y, L1.y];
-    		di = newt_coef(xi,yi);
-    
-    		# Step 3. Find intersection of interface with  this line
-    		G = Coordinate( p1third12.x, floor(newt_fct_eval(di,xi,p1third12.x)) );
-    		H = Coordinate( p2thirds12.x, floor(newt_fct_eval(di,xi,p2thirds12.x)) );
-    
-        else:
-    		# Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
-    		p1third14 = Coordinate( p1.x, float ((L4.y - p1.y) / 3.0) + p1.y);
-    		p1third23 = Coordinate( p2.x, p1third14.y);
-    		E = log_search(image,p1third14,p1third23);
-    
-    		p2thirds14 = Coordinate( p1.x, float (2.0 * (L4.y - p1.y) / 3.0) + p1.y);
-    		p2thirds23 = Coordinate( p2.x, p2thirds14.y);
-    		F = log_search(image,p2thirds14,p2thirds23);
-    
-    		# Step 2. Build the cubic polynomial
-    		xi = [L4.y, E.y, F.y, L1.y];
-    		yi = [L4.x, E.x, F.x, L1.x];
-    		di = newt_coef(xi,yi);
-    
-    		# Step 3. Find intersection of interface with  this line
-    		G = Coordinate(p1third14.y, floor( newt_fct_eval(di,xi,p1third14.y)) );
-    		H = Coordinate(p2thirds14.y, floor( newt_fct_eval(di,xi,p2thirds14.y)) );
-    		
-    		temp2 = G.x
-    		G.x = int(G.y)
-    		G.y = int(temp2)
-    
-    		temp3 = H.x
-    		H.x = int(H.y)
-    		H.y = int(temp3)
-    
-        EG_dist = find_distance(E,G)
-        FH_dist = find_distance(F,H)
+        if TOL_QUADRATICS >= 0:
+        	# QUADRATIC POLYNOMIAL
+        	# Step 1. Build the quadratic polynomial
+            if A.x==L4.x or A.x==L1.x:
+        		pt = Coordinate(-1,-1);
+        		vecCoord = []; 
+        		vecCoord.append(pt);
+        		return vecCoord;
         
-        # Step 4. Check distance
-        if (EG_dist <= TOL_CUBICS) and (FH_dist <= TOL_CUBICS):
-    # 		if E.y>F.y:
-    # 			draw_line(imageOut,L4,E)
-    # 			draw_line(imageOut,E,F)
-    # 			draw_line(imageOut,F,L1)
-    # 		else:
-    # 			draw_line(imageOut,L4,F)
-    # 			draw_line(imageOut,E,F)
-    # 			draw_line(imageOut,E,L1)
-    
-    		vecCoord = [L4, L1, E, F];
-    		return vecCoord;
-
-#    if poly_opt == 0:
-#        dist_list = [CD_dist, min(EG_dist, FH_dist)]
-#        vec_list = [ [L4,L1,A], [L4,L1,E,F] ]
-#        M = min(dist_list)
-#        min_index_dist = dist_list.index(M)
-#        return vec_list[min_index_dist]
-
-    if poly_opt == 1:
-        vec_list =  [L4,L1,A]
-        return vec_list
-    
-    if poly_opt == 2:
-        vec_list = [L4,L1,E,F] 
-        return vec_list
-    
+            xx = [L4.x,A.x,L1.x];
+            yy = [L4.y,A.y,L1.y];
+            d = newt_coef(xx,yy); 
+            if (x_is_F_of_y == False):
+        		# Step 2. Search for the interface along a vertical line
+        		p12 = Coordinate( (p1.x + L1.x)/2.0, p1.y);
+        		p34 = Coordinate( p12.x, p4.y);
+        		C = log_search(image,p12,p34);
         
+        		# Step 3. Find intersection between quadratic and vertical line
+        		D = Coordinate(p12.x, floor(newt_fct_eval(d,xx,p12.x)) );
+            else:
+        		# Step 2. Search for the interface along a vertical line
+        		p14 = Coordinate( p1.x, (p1.y + L4.y) / 2.0 );
+        		p23 = Coordinate( p2.x, p14.y );
+        		C = log_search(image,p14,p23);
+        
+        		# Step 3. Find intersection between quadratic and vertical line
+        		D = Coordinate( p14.y, floor(newt_fct_eval(d,xx,p14.y)) );
+        
+        		temp = D.x;
+        		D.x = int(D.y);
+        		D.y = int(temp);
+           
+            CD_dist = find_distance(C,D)
+           
+        	# Step 4. Check distance
+            if (CD_dist <= TOL_QUADRATICS):
+        #		draw_curve(imageOut,L4,L1,d,xx);
+        #         draw_line(imageOut,L4,C)
+        #         draw_line(imageOut,C,L1)
+                vecCoord = [L4, L1, A];
+                return vecCoord;
+    
+        if TOL_CUBICS >= 0:
+        	# CUBIC POLYNOMIAL
+            if (x_is_F_of_y == False):
+        		# Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+        		p1third12 = Coordinate( double ((L1.x - p1.x) / 3.0) + p1.x, p1.y);
+        		p1third34 = Coordinate( p1third12.x, p4.y);
+        		E = log_search(image,p1third12,p1third34);
+        
+        		p2thirds12 = Coordinate( double (2.0 * (L1.x - p1.x) / 3.0) + p1.x, p1.y);
+        		p2thirds34 = Coordinate(p2thirds12.x, p4.y);
+        		F = log_search(image,p2thirds12,p2thirds34);
+        
+        		# Step 2. Build the cubic polynomial
+        		xi = [L4.x, E.x, F.x, L1.x];
+        		yi = [L4.y, E.y, F.y, L1.y];
+        		di = newt_coef(xi,yi);
+        
+        		# Step 3. Find intersection of interface with  this line
+        		G = Coordinate( p1third12.x, floor(newt_fct_eval(di,xi,p1third12.x)) );
+        		H = Coordinate( p2thirds12.x, floor(newt_fct_eval(di,xi,p2thirds12.x)) );
+        
+            else:
+        		# Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
+        		p1third14 = Coordinate( p1.x, float ((L4.y - p1.y) / 3.0) + p1.y);
+        		p1third23 = Coordinate( p2.x, p1third14.y);
+        		E = log_search(image,p1third14,p1third23);
+        
+        		p2thirds14 = Coordinate( p1.x, float (2.0 * (L4.y - p1.y) / 3.0) + p1.y);
+        		p2thirds23 = Coordinate( p2.x, p2thirds14.y);
+        		F = log_search(image,p2thirds14,p2thirds23);
+        
+        		# Step 2. Build the cubic polynomial
+        		xi = [L4.y, E.y, F.y, L1.y];
+        		yi = [L4.x, E.x, F.x, L1.x];
+        		di = newt_coef(xi,yi);
+        
+        		# Step 3. Find intersection of interface with  this line
+        		G = Coordinate(p1third14.y, floor( newt_fct_eval(di,xi,p1third14.y)) );
+        		H = Coordinate(p2thirds14.y, floor( newt_fct_eval(di,xi,p2thirds14.y)) );
+        		
+        		temp2 = G.x
+        		G.x = int(G.y)
+        		G.y = int(temp2)
+        
+        		temp3 = H.x
+        		H.x = int(H.y)
+        		H.y = int(temp3)
+        
+            EG_dist = find_distance(E,G)
+            FH_dist = find_distance(F,H)
+            
+            # Step 4. Check distance
+            if (EG_dist <= TOL_CUBICS) and (FH_dist <= TOL_CUBICS):
+        # 		if E.y>F.y:
+        # 			draw_line(imageOut,L4,E)
+        # 			draw_line(imageOut,E,F)
+        # 			draw_line(imageOut,F,L1)
+        # 		else:
+        # 			draw_line(imageOut,L4,F)
+        # 			draw_line(imageOut,E,F)
+        # 			draw_line(imageOut,E,L1)
+        
+        		vecCoord = [L4, L1, E, F];
+        		return vecCoord;
+    
+    #    if poly_opt == 0:
+    #        dist_list = [CD_dist, min(EG_dist, FH_dist)]
+    #        vec_list = [ [L4,L1,A], [L4,L1,E,F] ]
+    #        M = min(dist_list)
+    #        min_index_dist = dist_list.index(M)
+    #        return vec_list[min_index_dist]
+    
+        if poly_opt == 1:
+            vec_list =  [L4,L1,A]
+            return vec_list
+        
+        if poly_opt == 2:
+            vec_list = [L4,L1,E,F] 
+            return vec_list
+        
+            
+            
     pt = Coordinate(-1,-1);
     vecCoord = [];
     vecCoord.append(pt);
     return vecCoord;
 
 
-
+ 
 # case 2: 3:1 -- P2 the outsider
 def case_NE_polynomial_test(image,p1,p2,p3,p4,L1,L2, poly_opt = 0):
     x_is_F_of_y = False;
@@ -1354,3 +1358,344 @@ def case_horizontal_polynomial_test(image,p1,p2,p3,p4,L2,L4, poly_opt = 0):
     vecCoord.append(pt)
     return vecCoord
 
+def Nurbs_control_points(Q):
+    R = numpy.matrix([[1.0, 0.0, 0.0, 0.0],[ 1.0/9.0, 2.0/3.0, 2.0/9.0, 0.0 ], [  0.0, 2.0/9.0, 2.0/3.0, 1.0/9.0],[ 0.0, 0.0, 0.0, 1.0] ] )
+    Q = numpy.matrix( [ [Q[0][0], Q[0][1]], [Q[1][0], Q[1][1]], [Q[2][0], Q[2][1]], [Q[3][0], Q[3][1]] ])
+    
+    P = numpy.linalg.solve(R,Q)
+    return P
+
+def Nurbs_basis_fcts(t,P):
+    
+#    n = len(t)
+#    for i in range(0,n):
+    if t < 1.0/2.0:
+        N = lambda t: P[0] * (1 - 2 * t) * (1 - 2 * t) + P[1] * 2 * t * (2 - 3 * t) + P[2] * 2 * t * t
+    else:
+        N = lambda t: P[1] * 2 * (1 - t) * (1 - t) + P[2] * (8*t - 6*t*t - 2) + P[3] * (2*t - 1) * (2*t -1) 
+    return N
+
+def Nurbs_NW_case(image,p1,p2,p3,p4,L1,L4):
+    
+    x_is_F_of_y = False
+    
+    if (abs(L1.x-p1.x) < abs(L4.y - p1.y)):
+        x_is_F_of_y = True
+    else:
+        x_is_F_of_y = False
+    
+    if (x_is_F_of_y == False):
+        
+        # Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+        p1third12 = Coordinate( double ((L1.x - p1.x) / 3.0) + p1.x, p1.y);
+        p1third34 = Coordinate( p1third12.x, p4.y);
+        E = log_search(image,p1third12,p1third34);
+#        print len(E)
+#        E = E[0]
+        
+        p2thirds12 = Coordinate( double (2.0 * (L1.x - p1.x) / 3.0) + p1.x, p1.y);
+        p2thirds34 = Coordinate(p2thirds12.x, p4.y);
+        F = log_search(image,p2thirds12,p2thirds34);
+#        F = F[0]
+        
+        # Step 2. Build the sample points vector   
+        Q = [ [L4.x, L4.y], [E.x, E.y], [F.x, F.y], [L1.x, L1.y]]
+        
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+        
+        N = Nurbs_basis_fcts(1.0/3.0,P)
+        pt1 =  N(1.0/3.0)
+        pt1 = Coordinate(pt1[0,0], pt1[0,1])
+        
+        N = Nurbs_basis_fcts(2.0/3.0,P)
+        pt2 = N(2.0/3.0)
+        pt2 = Coordinate(pt2[0,0], pt2[0,1])
+                    
+        t_step = 1.0 / abs(L1.x-p1.x)
+        
+        t = arange(0, 1+t_step, t_step)
+        
+
+#        if find_distance(pt1,E) <= TOL_NURBS and find_distance(pt2,F) <= TOL_NURBS:
+#            return [t,P,x_is_F_of_y, True]
+#        else:
+#            return [t,P,x_is_F_of_y, False]
+        
+        
+    else:
+        
+        # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
+        p1third14 = Coordinate( p1.x, float ((L4.y - p1.y) / 3.0) + p1.y);
+        p1third23 = Coordinate( p2.x, p1third14.y);
+#            E = log_search(image,p1third14,p1third23);
+#            print 'E=', E.x, E.y
+#            print p1third14.x, p1third14.y, p1third23.x, p1third23.y
+        
+        E = linear_search(image,p1third14,p1third23);
+        E = E[0]
+
+        p2thirds14 = Coordinate( p1.x, float (2.0 * (L4.y - p1.y) / 3.0) + p1.y);
+        p2thirds23 = Coordinate( p2.x, p2thirds14.y);
+        F = linear_search(image,p2thirds14,p2thirds23);
+        F = F[0]
+
+        # Step 2. Build the sample points vector   
+        Q = [ [L4.y, L4.x], [F.y, F.x], [E.y, E.x], [L1.y, L1.x]]
+        
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+        
+        
+        t_step = 1.0 / abs(L4.y - p1.y)
+        
+        t = arange(0, 1+t_step, t_step)
+        
+    return [t,P,x_is_F_of_y]
+
+#        if find_distance(pt1,F) <= TOL_NURBS and find_distance(pt2,E) <= TOL_NURBS:
+#            return [t,P,x_is_F_of_y, True]
+#        else:
+#            return [t,P,x_is_F_of_y, False]
+
+
+def Nurbs_NE_case(image,p1,p2,p3,p4,L1,L2):
+    
+    x_is_F_of_y = False
+        
+    if (abs(p2.x-L1.x) < abs(L2.y - p2.y)):
+        x_is_F_of_y = True;
+    else:
+        x_is_F_of_y = False;
+
+    if( x_is_F_of_y == False):
+        # Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+        p1third12 = Coordinate( float ((p2.x - L1.x) / 3.0) + L1.x, p1.y);
+        p1third34 = Coordinate( p1third12.x, p4.y );
+        E = log_search(image,p1third12,p1third34);
+
+        p2thirds12  = Coordinate( float (2.0 * (p2.x - L1.x) / 3.0) + L1.x, p1.y);
+        p2thirds34 = Coordinate( p2thirds12.x, p4.y);
+        F = log_search(image,p2thirds12,p2thirds34);
+        
+        # Step 2. Build the sample points vector   
+        Q = [ [L1.x, L1.y], [E.x, E.y], [F.x, F.y], [L2.x, L2.y]]
+        
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+        
+        t_step = 1.0 / abs(p2.x - L1.x)
+        
+        t = arange(0, 1+t_step, t_step)
+        
+    else:
+        # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
+        p1third14 = Coordinate( p1.x, float((L2.y - p2.y) / 3.0) + p2.y );
+        p1third23 = Coordinate( p2.x, p1third14.y);
+        E = log_search(image,p1third14,p1third23);
+
+        p2thirds14 = Coordinate( p1.x, float (2.0 * (L2.y - p2.y) / 3.0) + p2.y );
+        p2thirds23 = Coordinate( p2.x, p2thirds14.y );
+        F = log_search(image,p2thirds14,p2thirds23);
+        
+        # Step 2. Build the sample points vector   
+        Q = [ [L1.y, L1.x], [E.y, E.x], [F.y, F.x], [L2.y, L2.x]]
+        
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+        
+        t_step = 1.0 / abs(L2.y - p2.y)
+        
+        t = arange(0, 1+t_step, t_step)
+         
+    return [t,P,x_is_F_of_y]
+
+def Nurbs_SE_case(image,p1,p2,p3,p4,L2,L3):
+    
+    x_is_F_of_y = False
+    if( abs(L3.x - p3.x) < abs(p3.y - L2.y) ):
+        x_is_F_of_y = True;
+
+    else:
+        x_is_F_of_y = False;
+
+    if (x_is_F_of_y == False):
+        # Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+        p1third12 = Coordinate( float ((p3.x - L3.x) / 3.0) + L3.x, p1.y);
+        p1third34 = Coordinate( p1third12.x, p4.y);
+        E = log_search(image,p1third12,p1third34);
+
+        p2thirds12  = Coordinate( float (2.0 * (p3.x - L3.x) / 3.0) + L3.x, p1.y );
+        p2thirds34 = Coordinate( p2thirds12.x, p4.y );
+        F = log_search(image,p2thirds12,p2thirds34);
+
+        # Step 2. Build the sample points vector   
+        Q = [ [L3.x, L3.y], [E.x, E.y], [F.x, F.y], [L2.x, L2.y]]
+        
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+        
+        t_step = 1.0 / abs(p3.x - L3.x)
+        
+        t = arange(0, 1+t_step, t_step)
+        
+    else:
+        # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
+        p1third14 = Coordinate( p1.x, float ((p3.y - L2.y) / 3.0) + L2.y );
+        p1third23 = Coordinate( p2.x, p1third14.y);
+        E = log_search(image,p1third14,p1third23);
+
+        p2thirds14 = Coordinate( p1.x, float (2.0 * (p3.y - L2.y) / 3.0) + L2.y );
+        p2thirds23 = Coordinate( p2.x, p2thirds14.y );
+        F = log_search(image,p2thirds14,p2thirds23);
+
+        # Step 2. Build the sample points vector   
+        Q = [ [L3.y, L3.x], [F.y, F.x], [E.y, E.x], [L2.y, L2.x]]
+#        Q = [ [L2.y, L2.x], [E.y, E.x], [F.y, F.x], [L3.y, L3.x]]
+        
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+    
+        t_step = 1.0 / abs(p3.y - L2.y)
+        
+        t = arange(0, 1+t_step, t_step)
+        
+                
+    return [t,P,x_is_F_of_y]
+
+
+def Nurbs_SW_case(image,p1,p2,p3,p4,L3,L4):
+    
+    x_is_F_of_y = False
+    
+    # Step 2. Find intersection of line between L4,L3 and the 45 degree line
+    if ( abs(L3.x - p4.x) < abs(p4.y - L4.y) ):
+        x_is_F_of_y = True;
+    else: 
+        x_is_F_of_y = False;
+
+
+    if (x_is_F_of_y == False):
+        # Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+        p1third12 = Coordinate( float ((p4.x - L3.x) / 3.0) + L3.x, p1.y);
+        p1third34 = Coordinate( p1third12.x, p4.y);
+        E = log_search(image,p1third12,p1third34);
+        
+        p2thirds12 = Coordinate(float (2.0 * (p4.x - L3.x) / 3.0) + L3.x, p1.y);
+        p2thirds34 = Coordinate( p2thirds12.x, p4.y);
+        F = log_search(image, p2thirds12, p2thirds34);
+
+        # Step 2. Build the sample points vector   
+        Q = [ [L4.x, L4.y], [F.x, F.y], [E.x, E.y], [L3.x, L3.y]]
+
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+        
+        t_step = 1.0 / abs(p4.x - L3.x)
+        
+        t = arange(0, 1+t_step, t_step)
+        
+    else:
+        # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
+        p1third14 = Coordinate( p1.x, float ((p4.y - L4.y) / 3.0) + L4.y);
+        p1third23 = Coordinate( p2.x, p1third14.y);
+        E = log_search(image,p1third14,p1third23);
+
+        p2thirds14 = Coordinate(p1.x, float (2.0 * (p4.y - L4.y) / 3.0) + L4.y );
+        p2thirds23 = Coordinate(p2.x, p2thirds14.y);
+        F = log_search(image, p2thirds14,p2thirds23);
+
+        # Step 2. Build the sample points vector   
+        Q = [ [L3.y, L3.x], [F.y, F.x], [E.y, E.x], [L4.y, L4.x]]
+    
+        # Step 3. Determine the control points
+        P = Nurbs_control_points(Q)
+    
+        t_step = 1.0 / abs(p4.y - L4.y)
+        
+        t = arange(0, 1+t_step, t_step)
+
+    return [t,P,x_is_F_of_y]
+
+
+def Nurbs_vertical_case(image,p1,p2,p3,p4,L1,L3):
+    
+    x_is_F_of_y = True
+    
+    # Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+    p1third14 = Coordinate( p1.x, float ((p4.y - p1.y) / 3.0) + p1.y);
+    p1third23 = Coordinate( p2.x, float ((p3.y - p2.y) / 3.0) + p2.y);
+    E = log_search(image,p1third14,p1third23);
+
+    p2thirds14 = Coordinate(p1.x, float (2.0 * (p4.y - p1.y) / 3.0) + p1.y );
+    p2thirds23 = Coordinate(p2.x, float (2.0 * (p3.y - p2.y) / 3.0) + p2.y );
+    F = log_search(image,p2thirds14,p2thirds23);
+
+    # Step 2. Build the sample points vector   
+    Q = [ [L3.y, L3.x], [F.y, F.x], [E.y, E.x], [L1.y, L1.x]]
+    
+    # Step 3. Determine the control points
+    P = Nurbs_control_points(Q)
+
+    t_step = 1.0 / abs(p1.y - p4.y)
+    
+    t = arange(0, 1+t_step, t_step)
+                
+    return [t,P,x_is_F_of_y]
+
+    
+def Nurbs_horizontal_case(image,p1,p2,p3,p4,L2,L4):
+    
+    x_is_F_of_y = False    
+
+    # Step 1. Search for the interface along vertical lines at 1/3 and 2/3
+    p1third12 = Coordinate( float ((p2.x - p1.x) / 3.0) + p1.x, p1.y);
+    p1third34 = Coordinate( float ((p3.x - p4.x) / 3.0) + p4.x, p4.y);
+    E = log_search(image,p1third12,p1third34);
+
+    p2thirds12 = Coordinate( float (2.0 * (p2.x - p1.x) / 3.0) + p1.x, p1.y);
+    p2thirds34 = Coordinate( float (2.0 * (p3.x - p4.x) / 3.0) + p4.x, p4.y);
+    F = log_search(image,p2thirds12,p2thirds34);
+
+    # Step 2. Build the cubic polynomial
+    xi = [L4.x, E.x, F.x, L2.x];
+    yi = [L4.y, E.y, F.y, L2.y];
+        
+            
+    # Step 2. Build the sample points vector   
+    Q = [ [L4.x, L4.y], [E.x, E.y], [F.x, F.y], [L2.x, L2.y]]
+    
+    # Step 3. Determine the control points
+    P = Nurbs_control_points(Q)
+
+    t_step = 1.0 / abs(p1.x - p2.x)
+    
+    t = arange(0, 1+t_step, t_step)
+                
+    return [t,P,x_is_F_of_y]
+
+
+                
+def draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4):
+     
+    imageSize = image.GetSize()
+    
+    Px = P[:,0]
+    Py = P[:,1]
+    
+    for i in range(0,len(t)):
+        if x_is_F_of_y == False:
+            Nx = Nurbs_basis_fcts(t[i],Px)
+            Ny = Nurbs_basis_fcts(t[i],Py)
+        else:
+            Nx = Nurbs_basis_fcts(t[i],Py)
+            Ny = Nurbs_basis_fcts(t[i],Px)
+
+        xloc = int(Nx(t[i]))
+        yloc = int(Ny(t[i]))
+        
+        if ( (p1.x <= xloc and xloc <= p2.x and p1.y <= yloc and yloc <= p4.y) or 
+         (p1.x <= yloc and yloc <= p2.x and p1.y <= xloc and xloc <= p4.y) ):
+                image.SetPixel(xloc,yloc,0,1)
+        
+    

@@ -785,7 +785,7 @@ class CNode(Node):
         
 
         
-        if abs(p1.x - p2.x) >= MAX_SIZE:               
+        if abs(p1.x - p2.x) >= MAX_SIZE_X or abs(p1.y - p4.y)>= MAX_SIZE_Y:               
             draw_line(self.outImage,cMid12,cMid34);
             draw_line(self.outImage,cMid14,cMid23);
 
@@ -823,9 +823,6 @@ class CNode(Node):
                 L3 = search_in(LIST,p4,p3,self.inImage)
                 L4 = search_in(LIST,p1,p4,self.inImage)                
                 
-                if self.index == '22':
-                    print len(L1), len(L2)
-                    
                 if ( 
                     len(L2) > 1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1 
                     # or len(L2) < 1 or len(L4) < 1 or len(L1) < 1 or len(L3) < 1
@@ -878,17 +875,24 @@ class CNode(Node):
                 
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
-                #print "case 1"
-                    vecCoord1 = case_NW_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L4);
-                    self.ishomog = 0
-                    if ( vecCoord1[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
+#                    print "case 1"
+                    if POL_APPROX != 3:
+                        vecCoord1 = case_NW_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L4);
+                        self.ishomog = 0
+                        if ( vecCoord1[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
+                            draw_line(self.outImage,cMid12,cMid34);
+                            draw_line(self.outImage,cMid14,cMid23);               
+                            return True
+                        elif vecCoord1[0] != -1:
+                            self.enrichNodes = vecCoord1#[L1, L4]
+#                    else:
+#                        [t,P,x_is_F_of_y, test_approx]= Nurbs_NW_case(self.inImage,p1,p2,p3,p4,L1,L4)
+#                        print '+++++++++++++0000000000000000000000000000------------'
+#                        if test_approx == False:
+#                            draw_line(self.outImage,cMid12,cMid34)
+#                            draw_line(self.outImage,cMid14,cMid23)
+#                            return True
 
-                        draw_line(self.outImage,cMid12,cMid34);
-                        draw_line(self.outImage,cMid14,cMid23);               
-                        return True
-                    elif vecCoord1[0] != -1:
-                        self.enrichNodes = vecCoord1#[L1, L4]
-                       
 #                        self.mat = 'Fluid'
 #                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
@@ -971,7 +975,8 @@ class CNode(Node):
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23);
                     return True
-                
+                    
+                    
                 if (l1==1 and l2==1 and l3==0 and l4==1) or (l1==1 and l2==1 and l3==1 and l4==0) or (l1==0 and l2==1 and l3==1 and l4==1) or (l1==1 and l2==0 and l3==1 and l4==1) :
                     self.ishomog = 0
                     draw_line(self.outImage,cMid12,cMid34);
@@ -2753,88 +2758,121 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                 P2 = root_i.enrichNodes[0]
             
             p1,p2,p3,p4 = root_i.rect
-           
-            if POL_APPROX > 0: # choosing whether or not to activate higher order polynomial approximations at the end 
-                l1 = ends_in_same_bin(inImage,p1,p2);
-                l2 = ends_in_same_bin(inImage,p2,p3);
-                l3 = ends_in_same_bin(inImage,p4,p3);
-                l4 = ends_in_same_bin(inImage,p1,p4);
+            
+            l1 = ends_in_same_bin(inImage,p1,p2)
+            l2 = ends_in_same_bin(inImage,p2,p3)
+            l3 = ends_in_same_bin(inImage,p4,p3)
+            l4 = ends_in_same_bin(inImage,p1,p4)
+            
+            if POL_APPROX != 3:
+                if POL_APPROX > 0: # choosing whether or not to activate higher order polynomial approximations at the end 
                     
-    #            print 'before all', len(root_i.enrichNodes)
-    
-                # if no linear, quadratic or cubic polynomial could approximate the interface
-                # re-do the polynomial approximation for higher order polynomials
-                
-                # horizontal case 
-                if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
-                    vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
-                    if len(vecCoord) > 1: 
+                        
+        #            print 'before all', len(root_i.enrichNodes)
+        
+                    # if no linear, quadratic or cubic polynomial could approximate the interface
+                    # re-do the polynomial approximation for higher order polynomials
+                    
+                    # horizontal case 
+                    if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
+                        vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1: 
+                                root_i.enrichNodes = vecCoord
+                    
+                    # vertical case
+                    if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1 :
                             root_i.enrichNodes = vecCoord
-                
-                # vertical case
-                if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
-                    if len(vecCoord) > 1 :
-                        root_i.enrichNodes = vecCoord
-                
+                    
+                    # NW case
+                    if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1:
+                            root_i.enrichNodes = vecCoord
+                            
+                    # NE case
+                    if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1:
+                            root_i.enrichNodes = vecCoord
+                            
+                    # SE case                        
+                    if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1 :
+                            root_i.enrichNodes = vecCoord
+                            
+                    # SW case
+                    if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1 :
+                            root_i.enrichNodes = vecCoord
+        
+        
+        #            print len(root_i.enrichNodes)
+                    
+                    if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
+                        P1 = root_i.enrichNodes[0]
+                        P2 = root_i.enrichNodes[1]
+                    else:
+                        P1 = root_i.enrichNodes[1]
+                        P2 = root_i.enrichNodes[0]
+                                    
+                if len(root_i.enrichNodes) == 2:
+                    draw_line(image,P1, P2)
+    #                 print 'linears'
+                    
+                if len(root_i.enrichNodes) == 3:
+                    draw_line(image,P1, root_i.enrichNodes[2])
+                    draw_line(image,root_i.enrichNodes[2], P2)
+    #                 draw_line(image,root_i.enrichNodes[1], root_i.enrichNodes[2])
+    #                 draw_line(image,root_i.enrichNodes[2], root_i.enrichNodes[0])
+    #                 print ' quadratics!!!!'
+                if len(root_i.enrichNodes) == 4:
+    #                 print ' cubics!!!!'
+                    if root_i.enrichNodes[2].x <= root_i.enrichNodes[3].x:
+                        E = root_i.enrichNodes[2]
+                        F = root_i.enrichNodes[3]
+                    else:
+                        E = root_i.enrichNodes[3]
+                        F = root_i.enrichNodes[2]
+                    draw_line(image,P1,E)
+                    draw_line(image,E,F)
+                    draw_line(image,F,P2)
+            
+            else:
+            # NURBS!!!
                 # NW case
                 if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
-                    if len(vecCoord) > 1:
-                        root_i.enrichNodes = vecCoord
-                        
+                    [t,P,x_is_F_of_y] = Nurbs_NW_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                                         
                 # NE case
                 if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
-                    if len(vecCoord) > 1:
-                        root_i.enrichNodes = vecCoord
-                        
-                # SE case                        
+                    [t,P,x_is_F_of_y] = Nurbs_NE_case(inImage,p1,p2,p3,p4,P1,P2)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                
+                 # SE case                        
                 if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
-                    if len(vecCoord) > 1 :
-                        root_i.enrichNodes = vecCoord
-                        
-                # SW case
+                    [t,P,x_is_F_of_y] = Nurbs_SE_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                
+                 # SW case
                 if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
-                    if len(vecCoord) > 1 :
-                        root_i.enrichNodes = vecCoord
-    
-    
-    #            print len(root_i.enrichNodes)
-                
-                if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
-                    P1 = root_i.enrichNodes[0]
-                    P2 = root_i.enrichNodes[1]
-                else:
-                    P1 = root_i.enrichNodes[1]
-                    P2 = root_i.enrichNodes[0]
-                                
-            if len(root_i.enrichNodes) == 2:
-                draw_line(image,P1, P2)
-#                 print 'linears'
-                
-            if len(root_i.enrichNodes) == 3:
-                draw_line(image,P1, root_i.enrichNodes[2])
-                draw_line(image,root_i.enrichNodes[2], P2)
-#                 draw_line(image,root_i.enrichNodes[1], root_i.enrichNodes[2])
-#                 draw_line(image,root_i.enrichNodes[2], root_i.enrichNodes[0])
-#                 print ' quadratics!!!!'
-            if len(root_i.enrichNodes) == 4:
-#                 print ' cubics!!!!'
-                if root_i.enrichNodes[2].x <= root_i.enrichNodes[3].x:
-                    E = root_i.enrichNodes[2]
-                    F = root_i.enrichNodes[3]
-                else:
-                    E = root_i.enrichNodes[3]
-                    F = root_i.enrichNodes[2]
-                draw_line(image,P1,E)
-                draw_line(image,E,F)
-                draw_line(image,F,P2)
-                    
-        
+                    [t,P,x_is_F_of_y] = Nurbs_SW_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
                  
+                 # vertical case
+                if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    [t,P,x_is_F_of_y] = Nurbs_vertical_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                    
+               # horizontal case 
+                if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
+                    [t,P,x_is_F_of_y] = Nurbs_horizontal_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)         
+                          
 def stress_concentration_constraint(tree_list, masterNode, image):
 
     n = len(tree_list)
@@ -2940,7 +2978,7 @@ def stress_concentration_constraint(tree_list, masterNode, image):
 #             print root_i.index
 #             print list1   
             #===================================================================
-#             process_list(list1,masterNode)
+#             divide_high_stress_elements(list1,masterNode)
             #===================================================================
             full_list.append(list1)
             
@@ -3024,7 +3062,7 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     
 #             print list2
             #===================================================================
-#             masterNode = process_list(list2,masterNode)
+#             masterNode = divide_high_stress_elements(list2,masterNode)
             #===================================================================
             full_list.append(list2)
 
@@ -3042,7 +3080,7 @@ def copy_list_of_sides(sides1):
     return sides2
 
         
-def process_list(full_list, masterNode,image):
+def divide_high_stress_elements(full_list, masterNode,image):
     # processing the list with elements in between interfaces
     
     extra_list = []
@@ -3230,51 +3268,51 @@ if __name__ == "__main__":
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
 ##    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
-#     full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-#     process_list(full_list,rootNode, outputImage)
-#      
-#     masterNode = rootNode
-#         
+#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+#    divide_high_stress_elements(full_list,rootNode, outputImage)
 #     
-#     llist = []
-#     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-   
-#   
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#        print 'No enrichment nodes and hanging nodes in the same element '
-#        totalNumberOfNodes = newTotalNumberOfNodes
-#        masterNode = rootNode
-#        ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
-#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#            
 #    masterNode = rootNode
-#          
+#        
+#    
+#    llist = []
+#    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
+#    
+#    
 #    totalNumberOfNodes = tree.count_nodes(rootNode)
 #    newTotalNumberOfNodes = -1
-#         
 #    while totalNumberOfNodes != newTotalNumberOfNodes:
-#        print 'Rebalancing tree by multiple passes '
-#        masterNode = rootNode
-#        totalNumberOfNodes = newTotalNumberOfNodes
-#        tree_balance(tree,rootNode,masterNode)
-#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#     
+#       print 'No enrichment nodes and hanging nodes in the same element '
+#       totalNumberOfNodes = newTotalNumberOfNodes
+#       masterNode = rootNode
+#       ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
+#       newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#           
+#    masterNode = rootNode
+#         
+#    totalNumberOfNodes = tree.count_nodes(rootNode)
+#    newTotalNumberOfNodes = -1
 #        
+#    while totalNumberOfNodes != newTotalNumberOfNodes:
+#       print 'Rebalancing tree by multiple passes '
+#       masterNode = rootNode
+#       totalNumberOfNodes = newTotalNumberOfNodes
+#       tree_balance(tree,rootNode,masterNode)
+#       newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#    
+#       
 #    masterNode = rootNode
 #    totalNumberOfNodes = tree.count_nodes(rootNode)
 #    newTotalNumberOfNodes = -1
 #    
-#        
+#       
 #    while totalNumberOfNodes != newTotalNumberOfNodes:
-#        print '3 neighbor rule'
-#        totalNumberOfNodes = newTotalNumberOfNodes
-#        masterNode = rootNode
-#        three_neighbor_rule(tree, rootNode, masterNode)
-#        newTotalNumberOfNodes = tree.count_nodes(rootNode)
-         
-    print 'total number of element nodes', newTotalNumberOfNodes
+#       print '3 neighbor rule'
+#       totalNumberOfNodes = newTotalNumberOfNodes
+#       masterNode = rootNode
+#       three_neighbor_rule(tree, rootNode, masterNode)
+#       newTotalNumberOfNodes = tree.count_nodes(rootNode)
+#         
+#    print 'total number of element nodes', newTotalNumberOfNodes
     
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
@@ -3304,39 +3342,40 @@ if __name__ == "__main__":
             
             
 # Commenting out the solver 
-    [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-       
-    print len(p_reg)
-    print len(p_regCList)
-    print lenClist1
-     
-    [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-       
+    if POL_APPROX != 3:
+        [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
            
-    full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
-       
-    set_nsew(llist,masterNode,full_vec)
-       
-    p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
-    # material conductivities
-    k1 = 1
-    k2 = 10
-    # generate Legendre-Gauss nodes and weights:
-    ruleOrder = 4
-    [ui,wi] = lgwt(ruleOrder,-1,1)
+        print len(p_reg)
+        print len(p_regCList)
+        print lenClist1
+         
+        [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
            
-    # get triangular mesh data
-    f = open("multipleinclusions.res", "r")
-    f2 = open("multipleinclusions.ele", "r")
-    [pTri,UTri] = read_p_U(f)
-    tTri = read_corners(f2)
-    f.close()
-    f2.close()
+               
+        full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
            
-            
-    UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
-    aa1 = numpy.array([UU])
-    ww1 = numpy.array(aa1[()])
-    UU = ww1[0].item()[:,:]
-       
-    print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
+        set_nsew(llist,masterNode,full_vec)
+           
+        p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+        # material conductivities
+        k1 = 1
+        k2 = 10
+        # generate Legendre-Gauss nodes and weights:
+        ruleOrder = 4
+        [ui,wi] = lgwt(ruleOrder,-1,1)
+               
+        # get triangular mesh data
+        f = open("multipleinclusions.res", "r")
+        f2 = open("multipleinclusions.ele", "r")
+        [pTri,UTri] = read_p_U(f)
+        tTri = read_corners(f2)
+        f.close()
+        f2.close()
+               
+                
+        UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
+        aa1 = numpy.array([UU])
+        ww1 = numpy.array(aa1[()])
+        UU = ww1[0].item()[:,:]
+           
+        print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)

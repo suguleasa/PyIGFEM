@@ -20,6 +20,7 @@ from findIntersection import *
 import scipy.io
 
 
+global P_quad 
 allnodes = 0
 LIST = []
 D = {}
@@ -2776,140 +2777,7 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
         
     return []
   
-def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
-    
-    n = len(tree_list)
 
-    # for each node in the tree:
-    for i in range(0,n):
-        root_i = get_node_by_id(masterNode,tree_list[i])    
-         
-#             root_i.divideOnce()
-        
-        if len(root_i.enrichNodes) > 1:
-            if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
-                P1 = root_i.enrichNodes[0]
-                P2 = root_i.enrichNodes[1]
-            else:
-                P1 = root_i.enrichNodes[1]
-                P2 = root_i.enrichNodes[0]
-            
-            p1,p2,p3,p4 = root_i.rect
-            
-            l1 = ends_in_same_bin(inImage,p1,p2)
-            l2 = ends_in_same_bin(inImage,p2,p3)
-            l3 = ends_in_same_bin(inImage,p4,p3)
-            l4 = ends_in_same_bin(inImage,p1,p4)
-            
-            if POL_APPROX != 3:
-                if POL_APPROX > 0: # choosing whether or not to activate higher order polynomial approximations at the end 
-                    
-                        
-        #            print 'before all', len(root_i.enrichNodes)
-        
-                    # if no linear, quadratic or cubic polynomial could approximate the interface
-                    # re-do the polynomial approximation for higher order polynomials
-                    
-                    # horizontal case 
-                    if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
-                        vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
-                        if len(vecCoord) > 1: 
-                                root_i.enrichNodes = vecCoord
-                    
-                    # vertical case
-                    if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                        vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
-                        if len(vecCoord) > 1 :
-                            root_i.enrichNodes = vecCoord
-                    
-                    # NW case
-                    if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                        vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
-                        if len(vecCoord) > 1:
-                            root_i.enrichNodes = vecCoord
-                            
-                    # NE case
-                    if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                        vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
-                        if len(vecCoord) > 1:
-                            root_i.enrichNodes = vecCoord
-                            
-                    # SE case                        
-                    if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                        vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
-                        if len(vecCoord) > 1 :
-                            root_i.enrichNodes = vecCoord
-                            
-                    # SW case
-                    if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                        vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
-                        if len(vecCoord) > 1 :
-                            root_i.enrichNodes = vecCoord
-        
-        
-        #            print len(root_i.enrichNodes)
-                    
-                    if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
-                        P1 = root_i.enrichNodes[0]
-                        P2 = root_i.enrichNodes[1]
-                    else:
-                        P1 = root_i.enrichNodes[1]
-                        P2 = root_i.enrichNodes[0]
-                                    
-                if len(root_i.enrichNodes) == 2:
-                    draw_line(image,P1, P2)
-    #                 print 'linears'
-                    
-                if len(root_i.enrichNodes) == 3:
-                    draw_line(image,P1, root_i.enrichNodes[2])
-                    draw_line(image,root_i.enrichNodes[2], P2)
-    #                 draw_line(image,root_i.enrichNodes[1], root_i.enrichNodes[2])
-    #                 draw_line(image,root_i.enrichNodes[2], root_i.enrichNodes[0])
-    #                 print ' quadratics!!!!'
-                if len(root_i.enrichNodes) == 4:
-    #                 print ' cubics!!!!'
-                    if root_i.enrichNodes[2].x <= root_i.enrichNodes[3].x:
-                        E = root_i.enrichNodes[2]
-                        F = root_i.enrichNodes[3]
-                    else:
-                        E = root_i.enrichNodes[3]
-                        F = root_i.enrichNodes[2]
-                    draw_line(image,P1,E)
-                    draw_line(image,E,F)
-                    draw_line(image,F,P2)
-            
-            else:
-            # NURBS!!!
-                # NW case
-                if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y,test_approx] = Nurbs_NW_case(inImage,p1,p2,p3,p4,P2,P1)
-                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
-                                         
-                # NE case
-                if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y,test_approx] = Nurbs_NE_case(inImage,p1,p2,p3,p4,P1,P2)
-                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
-                
-                 # SE case                        
-                if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y,test_approx] = Nurbs_SE_case(inImage,p1,p2,p3,p4,P2,P1)
-                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
-                
-                 # SW case
-                if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y,test_approx] = Nurbs_SW_case(inImage,p1,p2,p3,p4,P2,P1)
-                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
-                 
-                 # vertical case
-                if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y,test_approx] = Nurbs_vertical_case(inImage,p1,p2,p3,p4,P2,P1)
-                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
-                    
-               # horizontal case 
-                if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
-                    [t,P,x_is_F_of_y,test_approx] = Nurbs_horizontal_case(inImage,p1,p2,p3,p4,P2,P1)
-                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)         
-                          
 def stress_concentration_constraint(tree_list, masterNode, image):
 
     n = len(tree_list)
@@ -3226,6 +3094,177 @@ def swap_edges(whichEdge, dirlist):
     else:
         return dirlist[0]
     
+def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
+    
+    n = len(tree_list)
+
+    P_quad = 0
+    P_cub = 0
+    p_extra = []
+    
+    # for each node in the tree:
+    for i in range(0,n):
+        root_i = get_node_by_id(masterNode,tree_list[i])    
+         
+#             root_i.divideOnce()
+        
+        if len(root_i.enrichNodes) > 1:
+            if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
+                P1 = root_i.enrichNodes[0]
+                P2 = root_i.enrichNodes[1]
+            else:
+                P1 = root_i.enrichNodes[1]
+                P2 = root_i.enrichNodes[0]
+            
+            p1,p2,p3,p4 = root_i.rect
+            
+            l1 = ends_in_same_bin(inImage,p1,p2)
+            l2 = ends_in_same_bin(inImage,p2,p3)
+            l3 = ends_in_same_bin(inImage,p4,p3)
+            l4 = ends_in_same_bin(inImage,p1,p4)
+            
+            if POL_APPROX != 3:
+                if POL_APPROX > 0: # choosing whether or not to activate higher order polynomial approximations at the end 
+                    
+                    # if no linear, quadratic or cubic polynomial could approximate the interface
+                    # re-do the polynomial approximation for higher order polynomials
+                    
+                    # horizontal case 
+                    if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
+                        vecCoord = case_horizontal_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1: 
+                                root_i.enrichNodes = vecCoord
+                    
+                    # vertical case
+                    if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_vertical_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1 :
+                            root_i.enrichNodes = vecCoord
+                    
+                    # NW case
+                    if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_NW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1:
+                            root_i.enrichNodes = vecCoord
+                            
+                    # NE case
+                    if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_NE_polynomial_test(inImage,p1,p2,p3,p4,P1,P2, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1:
+                            root_i.enrichNodes = vecCoord
+                            
+                    # SE case                        
+                    if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_SE_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1 :
+                            root_i.enrichNodes = vecCoord
+                            
+                    # SW case
+                    if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                        vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
+                        if len(vecCoord) > 1 :
+                            root_i.enrichNodes = vecCoord
+        
+        
+        #            print len(root_i.enrichNodes)
+                    
+                    if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
+                        P1 = root_i.enrichNodes[0]
+                        P2 = root_i.enrichNodes[1]
+                    else:
+                        P1 = root_i.enrichNodes[1]
+                        P2 = root_i.enrichNodes[0]
+                                    
+                if len(root_i.enrichNodes) == 2:
+                    draw_line(image,P1, P2)
+    #                 print 'linears'
+                    
+                if len(root_i.enrichNodes) == 3:
+                    P_quad += 1 
+                    
+                    nodes6 = Coordinate(0,0)
+                    nodes6.x =  root_i.enrichNodes[2].x / 1000.0
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  root_i.enrichNodes[2].y / 1000.0
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
+                    nodes6.y = 1 - nodes6.y
+    
+                    p_extra = p_extra + [[nodes6.x, nodes6.y]]
+                
+                    draw_line(image,P1, root_i.enrichNodes[2])
+                    draw_line(image,root_i.enrichNodes[2], P2)
+                    
+                if len(root_i.enrichNodes) == 4:
+                    P_cub += 1
+                    if root_i.enrichNodes[2].x <= root_i.enrichNodes[3].x:
+                        E = root_i.enrichNodes[2]
+                        F = root_i.enrichNodes[3]
+                    else:
+                        E = root_i.enrichNodes[3]
+                        F = root_i.enrichNodes[2]
+                        
+                    nodes6 = Coordinate(0,0)
+                    nodes7 = Coordinate(0,0)
+                    
+                    nodes6.x =  E.x / 1000.0
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  nodes6.y / 1000.0
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
+                    nodes6.y = 1 - nodes6.y
+                    
+                    nodes7.x =  F.x / 1000.0
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
+                    nodes7.y =  nodes7.y / 1000.0
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
+                    nodes7.y = 1 - nodes7.y
+               
+                    p_extra = p_extra + [[nodes6.x, nodes6.y]]
+                    p_extra = p_extra + [[nodes7.x, nodes7.y]]
+                    
+                    draw_line(image,P1,E)
+                    draw_line(image,E,F)
+                    draw_line(image,F,P2)
+            
+            else:
+            # NURBS!!!
+                # NW case
+                if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_NW_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                                         
+                # NE case
+                if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_NE_case(inImage,p1,p2,p3,p4,P1,P2)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                
+                 # SE case                        
+                if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_SE_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                
+                 # SW case
+                if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_SW_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                 
+                 # vertical case
+                if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_vertical_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
+                    
+               # horizontal case 
+                if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_horizontal_case(inImage,p1,p2,p3,p4,P2,P1)
+                    draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)         
+                         
+    return P_quad, P_cub, p_extra
+
              
 if __name__ == "__main__":
     print "Reading image in..."
@@ -3354,20 +3393,22 @@ if __name__ == "__main__":
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
-    draw_interface(outputImage, inputImage, tree_list, masterNode, POL_APPROX)  
-    
+    [P_quad,P_cub, p_extra] = draw_interface(outputImage, inputImage, tree_list, masterNode, POL_APPROX)
+    p_extra = numpy.array(p_extra)
 #    llist = []
 #    tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
 #    draw_interface(outputImage, inputImage, tree_list, masterNode, 0)  
     
     
-    print len(llist)
     print 'writing the image out'
  
     
     sitk.WriteImage(outputImage,nameOutputImage);
 
 
+    print 'values', P_quad, P_cub 
+    
+    
 #    n = len(tree_list)
 #
 #    # for each node in the tree:
@@ -3382,10 +3423,6 @@ if __name__ == "__main__":
     if POL_APPROX != 3:
         [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
            
-        print len(p_reg)
-        print len(p_regCList)
-        print lenClist1
-         
         [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
            
                
@@ -3409,10 +3446,9 @@ if __name__ == "__main__":
         f.close()
         f2.close()
                
-                
         UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
         aa1 = numpy.array([UU])
         ww1 = numpy.array(aa1[()])
         UU = ww1[0].item()[:,:]
            
-        print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist)
+        print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist, p_extra, P_quad, P_cub)

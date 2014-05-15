@@ -56,7 +56,6 @@ sum = __builtin__.sum
 #hexagon = [ (A.x,A.y), (B.x,B.y), (C.x,C.y), (D.x,D.y), (E.x,E.y), (F.x,F.y) ]
 
 
-EPS_FACTOR = 1e-2
 
 
 #class Point:
@@ -1516,7 +1515,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
     return  np.array(U) 
 
-def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
+def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P_quad, P_cub):
     print 'compute the L-2 norm ...'
 
     T = len(t)
@@ -1530,7 +1529,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     yloc = 0.1
     #xloc = yloc + 2.0/3.0
 
-    Usolution = np.zeros((len(p),1))
+    Usolution = np.zeros((len(p) + len(p_extra),1))
     polygonList = []
 
     # COMPUTING THE L-2 NORM
@@ -1549,7 +1548,36 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
     
         root = get_node_by_id(masterNode,llist[e])
 
-        
+        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+            nodes6 = Coordinate(0,0)
+            nodes6.x =  root.enrichNodes[2].x / 1000.0
+            if nodes6.x != 0.0:
+                nodes6.x += 0.001
+            nodes6.y =  root.enrichNodes[2].y / 1000.0
+            if nodes6.y != 0.0:
+                nodes6.y += 0.001
+            nodes6.y = 1 - nodes6.y
+#    
+            
+        if POL_APPROX == 2 and len(root.enrichNodes) == 4:
+            nodes6 = Coordinate(0,0)
+            nodes6.x =  root.enrichNodes[2].x / 1000.0
+            if nodes6.x != 0.0:
+                nodes6.x += 0.001
+            nodes6.y =  root.enrichNodes[2].y / 1000.0
+            if nodes6.y != 0.0:
+                nodes6.y += 0.001
+            nodes6.y = 1 - nodes6.y
+            
+            nodes7 = Coordinate(0,0)
+            nodes7.x =  root.enrichNodes[3].x / 1000.0
+            if nodes7.x != 0.0:
+                nodes7.x += 0.001
+            nodes7.y =  root.enrichNodes[3].y / 1000.0
+            if nodes7.y != 0.0:
+                nodes7.y += 0.001
+            nodes7.y = 1 - nodes7.y
+                        
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]
 
@@ -2714,10 +2742,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         tri_nodes3 = [nodes[1],nodes[2],nodes[5]]
                         tri_nodes4 = [nodes[4],nodes[5],nodes[3]] 
     
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
     
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
@@ -2855,6 +2884,23 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
                 
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_4( nodes6.x, nodes6.y )
+                            
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+
+                            
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                            polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+
+
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            
+                            polygonList = polygonList + [[tri_nodes4[0], pt6, tri_nodes4[2]]]
+                            polygonList = polygonList + [[pt6, tri_nodes4[1], tri_nodes4[2]]]
+                            
                         if y0 <= yloc and yloc <= y1:
                             tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
                             tx1 = []
@@ -2897,7 +2943,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                          ):
                         
                         print 'norm computation: SE corner'
-                        
+                            
                         # nodes are [0,1,2,3,4,5] or SW,SE,NE,NW,SMid,EMid (lower right corner cut)
                         tri_nodes1 = [nodes[0],nodes[4],nodes[3]]
                         tri_nodes2 = [nodes[4],nodes[5],nodes[3]]
@@ -2945,11 +2991,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         tri_coords3 = p[tri_nodes3]
                         tri_coords4 = p[tri_nodes4]
         
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-    
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+
                         [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
                         [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
                         [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
@@ -3045,6 +3092,23 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+
+                            polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                            polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+
+
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], pt6]]
+                            polygonList = polygonList + [[pt6, tri_nodes4[1], tri_nodes4[2]]]
+
+                            
     #                    print 'SE - 1 ', uh_elem_1(p[nodes[4],0], p[nodes[4],1])
     #                    print 'SE - 2', uh_elem_2(p[nodes[4],0], p[nodes[4],1])
     #                    print 'SE - 3', uh_elem_3(p[nodes[4],0], p[nodes[4],1])
@@ -3103,11 +3167,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         tri_nodes2 = [nodes[0],nodes[4],nodes[5]]
                         tri_nodes3 = [nodes[0],nodes[1],nodes[4]]
                         tri_nodes4 = [nodes[4],nodes[2],nodes[5]] # the one triangle in a diff material
-        
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+                        
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
     
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
@@ -3241,6 +3306,23 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_4( nodes6.x, nodes6.y )
+                            
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+
+                            
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                            polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+
+
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], pt6]]
+                            polygonList = polygonList + [[pt6, tri_nodes4[1], tri_nodes4[2]]]
+                            
                         if y0 <= yloc and yloc <= y1:
                             tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
                             tx1 = []
@@ -3288,10 +3370,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
                         tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
         
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                        polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
     
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
@@ -3424,6 +3507,22 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_1( nodes6.x, nodes6.y )
+                            
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                            polygonList = polygonList + [[tri_nodes1[0], pt6, tri_nodes1[2]]]
+                            
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+
+
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], pt6]]
+                            polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
+                            
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+                            
                         if y0 <= yloc and yloc <= y1:
                             tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
                             tx1 = []
@@ -3476,9 +3575,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         top_coords = p[top_nodes,:]
                         bottom_coords = p[bottom_nodes,:]
     
-        
-                        polygonList = polygonList + [[top_nodes[0],top_nodes[1],top_nodes[2],top_nodes[3]]]
-                        polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],bottom_nodes[2],bottom_nodes[3]]]
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[top_nodes[0],top_nodes[1],top_nodes[2],top_nodes[3]]]
+                            polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],bottom_nodes[2],bottom_nodes[3]]]
     
                         # build the shape functions at the enrichment nodes
                         Pe_enr_top = np.zeros((4,4))
@@ -3584,6 +3683,20 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         Usolution[nodes[4],0] = uh_elem_B( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_B( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_B( nodes6.x, nodes6.y )
+                            
+                            polygonList = polygonList + [[top_nodes[0],pt6,top_nodes[3]]]
+                            polygonList = polygonList + [[pt6,top_nodes[2],top_nodes[3]]]
+                            polygonList = polygonList + [[pt6,top_nodes[1],top_nodes[2]]]
+                            
+                            polygonList = polygonList + [[bottom_nodes[0],pt6,bottom_nodes[3]]]
+                            polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],pt6]]
+                            polygonList = polygonList + [[pts6,bottom_nodes[1],bottom_nodes[2]]]
+    
+    
                         if y0 <= yloc and yloc <= y1:
         
                             tx = np.arange(coords[0,0],coords[1,0]+0.01,0.001)
@@ -3629,8 +3742,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         # coordinates of the right sub-element or the sub-element number 2
                         right_coords = p[right_nodes,:]
         
-                        polygonList = polygonList + [[left_nodes[0],left_nodes[1],left_nodes[2],left_nodes[3]]]
-                        polygonList = polygonList + [[right_nodes[0],right_nodes[1],right_nodes[2],right_nodes[3]]]
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[left_nodes[0],left_nodes[1],left_nodes[2],left_nodes[3]]]
+                            polygonList = polygonList + [[right_nodes[0],right_nodes[1],right_nodes[2],right_nodes[3]]]
     
                         # build the shape functions at the enrichment nodes
                         Pe_enr_left = np.zeros((4,4))
@@ -3777,6 +3891,18 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
                         Usolution[nodes[4],0] = uh_elem_L( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_L( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_L( nodes6.x, nodes6.y )
+                            
+                            polygonList = polygonList + [[left_nodes[0],left_nodes[1],pt6]]
+                            polygonList = polygonList + [[left_nodes[0],pt6,left_nodes[3]]]
+                            polygonList = polygonList + [[pt6,left_nodes[2],left_nodes[3]]]
+                                                                            
+                            polygonList = polygonList + [[right_nodes[0],right_nodes[1],pt6]]
+                            polygonList = polygonList + [[right_nodes[1],pt6,right_nodes[2]]]
+                            polygonList = polygonList + [[pt6,right_nodes[2],right_nodes[3]]]
     
                         if y0 <= yloc and yloc <= y1:
         
@@ -3800,7 +3926,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 
 #    print Usolution
     print 'Writing VTK file...' 
-    print_vtk_file(p,Usolution,polygonList)
+    print_vtk_file(p,Usolution,polygonList,p_extra)
     print ' Done.'
     rtx = np.arange(0,1,0.01)
     #yidx = []
@@ -3823,29 +3949,25 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist):
 
     return  math.sqrt(all_elems_sum)
 
-def print_vtk_file(p,Usolution,plist):
+def print_vtk_file(p,Usolution,plist,p_extra):
     
     P = len(p)
-    filename = 'dataset' + str(P) + 'points.vtk'
+    filename = 'dataset' + str(P+len(p_extra)) + 'points.vtk'
     target = open(filename,'w')
     target.write('# vtk DataFile Version 3.1 \n')
     target.write('Circle example \n')
     target.write('ASCII \n')
     target.write('DATASET POLYDATA \n')
-    str1 = 'POINTS ' +  str(P) + ' FLOAT \n'
+    str1 = 'POINTS ' +  str(P+len(p_extra)) + ' FLOAT \n'
     target.write(str1)
-
-#    print plist
-#    print '-------------'
-#    print p
-#    print len( sum (plist, [] ) ) + len(plist)
 
     for i in range(0,P):
         stri = str(p[i,0]) + '  ' + str(p[i,1]) + '  ' + str(Usolution[i,0]) + ' \n'
-#        print 'i = ', i, ' and ',stri
         target.write(stri)
     
-
+    for i in range(0,len(p_extra)):
+        stri = str(p_extra[i,0]) + '  ' + str(p_extra[i,1]) + '  ' + str(Usolution[i+P,0]) + ' \n'
+        target.write(stri)
     
     NPolyg = len( sum (plist, [] ) ) + len(plist)
     str2 = '\nPOLYGONS  ' + str(len(plist)) + '   ' + str(NPolyg) + ' \n'
@@ -3858,7 +3980,7 @@ def print_vtk_file(p,Usolution,plist):
         target.write( str(len(plist[j])) + '   ' + strk + ' \n')
         strk = ''
 
-    str3 = '\nPOINT_DATA ' + str(P) + ' \n'
+    str3 = '\nPOINT_DATA ' + str(P+len(p_extra)) + ' \n'
     target.write(str3)
     target.write('SCALARS Temperature FLOAT \n')
     target.write('LOOKUP_TABLE default \n')

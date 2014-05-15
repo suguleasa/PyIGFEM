@@ -1404,59 +1404,61 @@ def Nurbs_NW_case(image,p1,p2,p3,p4,L1,L4):
         # Step 3. Determine the control points
         P = Nurbs_control_points(Q)
         
-        N = Nurbs_basis_fcts(1.0/3.0,P)
-        pt1 =  N(1.0/3.0)
-        pt1 = Coordinate(pt1[0,0], pt1[0,1])
-        
-        N = Nurbs_basis_fcts(2.0/3.0,P)
-        pt2 = N(2.0/3.0)
-        pt2 = Coordinate(pt2[0,0], pt2[0,1])
-                    
+#        N = Nurbs_basis_fcts(1.0/3.0,P)
+#        pt1 =  N(1.0/3.0)
+#        pt1 = Coordinate(pt1[0,0], pt1[0,1])
+#        
+#        N = Nurbs_basis_fcts(2.0/3.0,P)
+#        pt2 = N(2.0/3.0)
+#        pt2 = Coordinate(pt2[0,0], pt2[0,1])
+#                    
         t_step = 1.0 / abs(L1.x-p1.x)
         
-        t = arange(0, 1+t_step, t_step)
-        
-
-#        if find_distance(pt1,E) <= TOL_NURBS and find_distance(pt2,F) <= TOL_NURBS:
-#            return [t,P,x_is_F_of_y, True]
-#        else:
-#            return [t,P,x_is_F_of_y, False]
-        
-        
+        # Step 4. Search for the interface along a vertical line
+        p12 = Coordinate( (p1.x + L1.x)/2.0, p1.y)
+        p34 = Coordinate( p12.x, p4.y)
+        C = log_search(image,p12,p34)
+         
+        Nx = Nurbs_basis_fcts(0.5,P[:,0])
+        Ny = Nurbs_basis_fcts(0.5,P[:,1])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+               
     else:
         
         # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
         p1third14 = Coordinate( p1.x, float ((L4.y - p1.y) / 3.0) + p1.y);
         p1third23 = Coordinate( p2.x, p1third14.y);
-#            E = log_search(image,p1third14,p1third23);
-#            print 'E=', E.x, E.y
-#            print p1third14.x, p1third14.y, p1third23.x, p1third23.y
+        E = log_search(image,p1third14,p1third23);
         
-        E = linear_search(image,p1third14,p1third23);
-        E = E[0]
-
         p2thirds14 = Coordinate( p1.x, float (2.0 * (L4.y - p1.y) / 3.0) + p1.y);
         p2thirds23 = Coordinate( p2.x, p2thirds14.y);
-        F = linear_search(image,p2thirds14,p2thirds23);
-        F = F[0]
+        F = log_search(image,p2thirds14,p2thirds23);
 
         # Step 2. Build the sample points vector   
         Q = [ [L4.y, L4.x], [F.y, F.x], [E.y, E.x], [L1.y, L1.x]]
         
         # Step 3. Determine the control points
         P = Nurbs_control_points(Q)
-        
-        
+
         t_step = 1.0 / abs(L4.y - p1.y)
         
-        t = arange(0, 1+t_step, t_step)
+        # Step 4. Search for the interface along a vertical line
+        p14 = Coordinate( p1.x, (p1.y + L4.y) / 2.0 )
+        p23 = Coordinate( p2.x, p14.y )
+        C = log_search(image,p14,p23)
         
-    return [t,P,x_is_F_of_y]
+        Nx = Nurbs_basis_fcts(0.5,P[:,1])
+        Ny = Nurbs_basis_fcts(0.5,P[:,0])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+        
+#    return [t,P,x_is_F_of_y]
 
-#        if find_distance(pt1,F) <= TOL_NURBS and find_distance(pt2,E) <= TOL_NURBS:
-#            return [t,P,x_is_F_of_y, True]
-#        else:
-#            return [t,P,x_is_F_of_y, False]
+    t = arange(0, 1+t_step, t_step)
+    
+    if find_distance(C,NC) <= TOL_NURBS:
+        return [t,P,x_is_F_of_y, True]
+    else:
+        return [t,P,x_is_F_of_y, False]
 
 
 def Nurbs_NE_case(image,p1,p2,p3,p4,L1,L2):
@@ -1486,7 +1488,14 @@ def Nurbs_NE_case(image,p1,p2,p3,p4,L1,L2):
         
         t_step = 1.0 / abs(p2.x - L1.x)
         
-        t = arange(0, 1+t_step, t_step)
+        p12 = Coordinate( (L1.x + p2.x)/2.0, p2.y )
+        p34 = Coordinate( p12.x, p3.y )
+        C = log_search(image, p12, p34)
+            
+        Nx = Nurbs_basis_fcts(0.5,P[:,0])
+        Ny = Nurbs_basis_fcts(0.5,P[:,1])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+        
         
     else:
         # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
@@ -1506,9 +1515,23 @@ def Nurbs_NE_case(image,p1,p2,p3,p4,L1,L2):
         
         t_step = 1.0 / abs(L2.y - p2.y)
         
-        t = arange(0, 1+t_step, t_step)
-         
-    return [t,P,x_is_F_of_y]
+        p14 = Coordinate( p1.x, (p2.y + L2.y) / 2.0 )
+        p23 = Coordinate( p2.x, p14.y )
+        C = log_search(image, p14, p23)
+            
+        Nx = Nurbs_basis_fcts(0.5,P[:,1])
+        Ny = Nurbs_basis_fcts(0.5,P[:,0])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+        
+    
+    t = arange(0, 1+t_step, t_step)
+    
+    if find_distance(C,NC) <= TOL_NURBS:
+        return [t,P,x_is_F_of_y, True]
+    else:
+        return [t,P,x_is_F_of_y, False]
+    
+#    return [t,P,x_is_F_of_y]
 
 def Nurbs_SE_case(image,p1,p2,p3,p4,L2,L3):
     
@@ -1537,7 +1560,13 @@ def Nurbs_SE_case(image,p1,p2,p3,p4,L2,L3):
         
         t_step = 1.0 / abs(p3.x - L3.x)
         
-        t = arange(0, 1+t_step, t_step)
+        p12 = Coordinate( (L3.x + p3.x)/2.0, p2.y)
+        p34 = Coordinate( p12.x, p3.y)
+        C = log_search(image,p12,p34)
+            
+        Nx = Nurbs_basis_fcts(0.5,P[:,0])
+        Ny = Nurbs_basis_fcts(0.5,P[:,1])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
         
     else:
         # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
@@ -1551,17 +1580,28 @@ def Nurbs_SE_case(image,p1,p2,p3,p4,L2,L3):
 
         # Step 2. Build the sample points vector   
         Q = [ [L3.y, L3.x], [F.y, F.x], [E.y, E.x], [L2.y, L2.x]]
-#        Q = [ [L2.y, L2.x], [E.y, E.x], [F.y, F.x], [L3.y, L3.x]]
         
         # Step 3. Determine the control points
         P = Nurbs_control_points(Q)
     
         t_step = 1.0 / abs(p3.y - L2.y)
         
-        t = arange(0, 1+t_step, t_step)
-        
-                
-    return [t,P,x_is_F_of_y]
+        p14 = Coordinate( p4.x, (L2.y + p3.y) / 2.0 )
+        p23 = Coordinate( p3.x, p14.y)    
+        C = log_search(image,p14,p23)
+            
+        Nx = Nurbs_basis_fcts(0.5,P[:,1])
+        Ny = Nurbs_basis_fcts(0.5,P[:,0])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+    
+    t = arange(0, 1+t_step, t_step)
+    
+    if find_distance(C,NC) <= TOL_NURBS:
+        return [t,P,x_is_F_of_y, True]
+    else:
+        return [t,P,x_is_F_of_y, False]
+                    
+#    return [t,P,x_is_F_of_y]
 
 
 def Nurbs_SW_case(image,p1,p2,p3,p4,L3,L4):
@@ -1593,7 +1633,13 @@ def Nurbs_SW_case(image,p1,p2,p3,p4,L3,L4):
         
         t_step = 1.0 / abs(p4.x - L3.x)
         
-        t = arange(0, 1+t_step, t_step)
+        p12 = Coordinate( (p4.x + L3.x)/2.0, p1.y)
+        p34 = Coordinate( p12.x, p4.y )
+        C = log_search(image,p12,p34)
+            
+        Nx = Nurbs_basis_fcts(0.5,P[:,0])
+        Ny = Nurbs_basis_fcts(0.5,P[:,1])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
         
     else:
         # Step 1. Search for the interface along horizontal lines at 1/3 and 2/3
@@ -1613,9 +1659,23 @@ def Nurbs_SW_case(image,p1,p2,p3,p4,L3,L4):
     
         t_step = 1.0 / abs(p4.y - L4.y)
         
-        t = arange(0, 1+t_step, t_step)
+        p14 = Coordinate( p1.x, (L4.y + p4.y) / 2.0)
+        p23 = Coordinate(p3.x, p14.y)
+        C = log_search(image,p14,p23)
+            
+        Nx = Nurbs_basis_fcts(0.5,P[:,1])
+        Ny = Nurbs_basis_fcts(0.5,P[:,0])
+        NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
 
-    return [t,P,x_is_F_of_y]
+    
+    t = arange(0, 1+t_step, t_step)
+    
+    if find_distance(C,NC) <= TOL_NURBS:
+        return [t,P,x_is_F_of_y, True]
+    else:
+        return [t,P,x_is_F_of_y, False]
+    
+#    return [t,P,x_is_F_of_y]
 
 
 def Nurbs_vertical_case(image,p1,p2,p3,p4,L1,L3):
@@ -1639,9 +1699,22 @@ def Nurbs_vertical_case(image,p1,p2,p3,p4,L1,L3):
 
     t_step = 1.0 / abs(p1.y - p4.y)
     
+    p14 = Coordinate(p1.x, floor( (p1.y + p4.y)/2.0) )
+    p23 = Coordinate(p2.x, floor( (p2.y + p3.y)/2.0) )
+    C = log_search(image, p14, p23)
+        
+    Nx = Nurbs_basis_fcts(0.5,P[:,1])
+    Ny = Nurbs_basis_fcts(0.5,P[:,0])
+    NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+        
     t = arange(0, 1+t_step, t_step)
-                
-    return [t,P,x_is_F_of_y]
+    
+    if find_distance(C,NC) <= TOL_NURBS:
+        return [t,P,x_is_F_of_y, True]
+    else:
+        return [t,P,x_is_F_of_y, False]
+                    
+#    return [t,P,x_is_F_of_y]
 
     
 def Nurbs_horizontal_case(image,p1,p2,p3,p4,L2,L4):
@@ -1670,10 +1743,22 @@ def Nurbs_horizontal_case(image,p1,p2,p3,p4,L2,L4):
 
     t_step = 1.0 / abs(p1.x - p2.x)
     
+    p12 = Coordinate( (p1.x + p2.x)/2.0, p1.y)
+    p34 = Coordinate( (p3.x + p4.x)/2.0, p4.y)
+    C = log_search(image,p12,p34)
+        
+    Nx = Nurbs_basis_fcts(0.5,P[:,0])
+    Ny = Nurbs_basis_fcts(0.5,P[:,1])
+    NC = Coordinate( int(Nx(0.5)) , int(Ny(0.5)) )
+            
     t = arange(0, 1+t_step, t_step)
-                
-    return [t,P,x_is_F_of_y]
-
+    
+    if find_distance(C,NC) <= TOL_NURBS:
+        return [t,P,x_is_F_of_y, True]
+    else:
+        return [t,P,x_is_F_of_y, False]
+    
+#    return [t,P,x_is_F_of_y]
 
                 
 def draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4):

@@ -885,86 +885,123 @@ class CNode(Node):
                             return True
                         elif vecCoord1[0] != -1:
                             self.enrichNodes = vecCoord1#[L1, L4]
-#                    else:
-#                        [t,P,x_is_F_of_y, test_approx]= Nurbs_NW_case(self.inImage,p1,p2,p3,p4,L1,L4)
-#                        print '+++++++++++++0000000000000000000000000000------------'
-#                        if test_approx == False:
-#                            draw_line(self.outImage,cMid12,cMid34)
-#                            draw_line(self.outImage,cMid14,cMid23)
-#                            return True
+                    else:
+                        [t,P,x_is_F_of_y, test_approx]= Nurbs_NW_case(self.inImage,p1,p2,p3,p4,L1,L4)
+                        if test_approx == False:
+                            draw_line(self.outImage,cMid12,cMid34)
+                            draw_line(self.outImage,cMid14,cMid23)
+                            return True
 
 #                        self.mat = 'Fluid'
 #                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
                 # case 2: interface crossing through L1 and L2
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE):
-                    vecCoord2 = case_NE_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L2);
-                    self.ishomog = 0
-                    if(vecCoord2[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
-                    #print "case 2"
-
-                        draw_line(self.outImage,cMid12,cMid34);
-                        draw_line(self.outImage,cMid14,cMid23);
-                        return True
-                    elif vecCoord2[0] != -1:
-                        self.enrichNodes = vecCoord2
-#                        self.mat = 'Fluid'
-                    
+                    if POL_APPROX != 3:
+                        vecCoord2 = case_NE_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L2);
+                        self.ishomog = 0
+                        if(vecCoord2[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE) ):
+                        #print "case 2"
+    
+                            draw_line(self.outImage,cMid12,cMid34);
+                            draw_line(self.outImage,cMid14,cMid23);
+                            return True
+                        elif vecCoord2[0] != -1:
+                            self.enrichNodes = vecCoord2
+    #                        self.mat = 'Fluid'
+                    else:
+                        [t,P,x_is_F_of_y, test_approx]= Nurbs_NE_case(self.inImage,p1,p2,p3,p4,L1,L2)
+                        if test_approx == False:
+                            draw_line(self.outImage,cMid12,cMid34)
+                            draw_line(self.outImage,cMid14,cMid23)
+                            return True
                         
                 # case 3: interface crossing through L2 and L3
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 3"
-                    vecCoord3 = case_SE_polynomial_test(self.inImage,p1,p2,p3,p4,L2,L3);
-                    if(vecCoord3[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
-
-                        draw_line(self.outImage,cMid12,cMid34);
-                        draw_line(self.outImage,cMid14,cMid23);
-                        return True
-                    elif vecCoord3[0].x != -1:
-                        self.enrichNodes = vecCoord3
-#                        self.mat = 'Fluid'
-                    self.ishomog = 0   
+                    if POL_APPROX != 3:
+                        vecCoord3 = case_SE_polynomial_test(self.inImage,p1,p2,p3,p4,L2,L3);
+                        if(vecCoord3[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
+    
+                            draw_line(self.outImage,cMid12,cMid34);
+                            draw_line(self.outImage,cMid14,cMid23);
+                            return True
+                        elif vecCoord3[0].x != -1:
+                            self.enrichNodes = vecCoord3
+    #                        self.mat = 'Fluid'
+                        self.ishomog = 0   
+                    else:
+                        [t,P,x_is_F_of_y, test_approx]= Nurbs_SE_case(self.inImage,p1,p2,p3,p4,L2,L3)
+                        if test_approx == False:
+                            draw_line(self.outImage,cMid12,cMid34)
+                            draw_line(self.outImage,cMid14,cMid23)
+                            return True
                         
                 # case 4: interface crossing through L4 and L3
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 4"
-                    vecCoord4 = case_SW_polynomial_test(self.inImage,p1,p2,p3,p4,L3,L4);
-                    if(vecCoord4[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
- 
-                        draw_line(self.outImage,cMid12,cMid34);
-                        draw_line(self.outImage,cMid14,cMid23);
-                        return True
-                    elif vecCoord4[0].x != -1:
-                        self.enrichNodes = vecCoord4
-#                        self.mat = 'Fluid'
-                    self.ishomog = 0
+                    if POL_APPROX != 3:
+                        vecCoord4 = case_SW_polynomial_test(self.inImage,p1,p2,p3,p4,L3,L4);
+                        if(vecCoord4[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
+     
+                            draw_line(self.outImage,cMid12,cMid34);
+                            draw_line(self.outImage,cMid14,cMid23);
+                            return True
+                        elif vecCoord4[0].x != -1:
+                            self.enrichNodes = vecCoord4
+    #                        self.mat = 'Fluid'
+                        self.ishomog = 0
+                    else:
+                        [t,P,x_is_F_of_y, test_approx]= Nurbs_SW_case(self.inImage,p1,p2,p3,p4,L3,L4)
+                        if test_approx == False:
+                            draw_line(self.outImage,cMid12,cMid34)
+                            draw_line(self.outImage,cMid14,cMid23)
+                            return True
 
                 # case 5: interface crossing through L1 and L3
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                     #print "case 5"
-                    vecCoord5 = case_vertical_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L3);
-                    if(vecCoord5[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
-
-                        draw_line(self.outImage,cMid12,cMid34);
-                        draw_line(self.outImage,cMid14,cMid23);
-                        return True
-                    elif vecCoord5[0].x != -1:
-                        self.enrichNodes = vecCoord5
-#                        self.mat = 'Fluid'
-                    self.ishomog = 0   
+                    if POL_APPROX != 3:
+                        vecCoord5 = case_vertical_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L3);
+                        if(vecCoord5[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
+        
+                            draw_line(self.outImage,cMid12,cMid34);
+                            draw_line(self.outImage,cMid14,cMid23);
+                            return True
+                        elif vecCoord5[0].x != -1:
+                            self.enrichNodes = vecCoord5
+        #                        self.mat = 'Fluid'
+                        self.ishomog = 0   
+                    else:
+                        [t,P,x_is_F_of_y, test_approx]= Nurbs_vertical_case(self.inImage,p1,p2,p3,p4,L1,L3)
+                        print '+++++++++++++0000----VERTICAL------------'
+                        if test_approx == False:
+                            draw_line(self.outImage,cMid12,cMid34)
+                            draw_line(self.outImage,cMid14,cMid23)
+                            return True
+                    
                 # case 6: interface crossing through L4 and L2
                 if (l1==True and l2==False and l3==True and l4==False) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
                 #print "case 6"
-                    vecCoord6 = case_horizontal_polynomial_test(self.inImage,p1,p2,p3,p4,L2,L4);
-                    if(vecCoord6[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
-
-                        draw_line(self.outImage,cMid12,cMid34);
-                        draw_line(self.outImage,cMid14,cMid23);
-                        return True
-                    elif vecCoord6[0].x != -1:
-                        self.enrichNodes = vecCoord6
-                    self.ishomog = 0    
-#                        self.mat = 'Fluid'
+                    if POL_APPROX != 3:
+                        vecCoord6 = case_horizontal_polynomial_test(self.inImage,p1,p2,p3,p4,L2,L4);
+                        if(vecCoord6[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
+    
+                            draw_line(self.outImage,cMid12,cMid34);
+                            draw_line(self.outImage,cMid14,cMid23);
+                            return True
+                        elif vecCoord6[0].x != -1:
+                            self.enrichNodes = vecCoord6
+                        self.ishomog = 0    
+    #                        self.mat = 'Fluid'
+                    else:
+                        [t,P,x_is_F_of_y, test_approx]= Nurbs_horizontal_case(self.inImage,p1,p2,p3,p4,L2,L4)
+                        print '+++++++++++++HORIZONTAL-----------'
+                        if test_approx == False:
+                            draw_line(self.outImage,cMid12,cMid34)
+                            draw_line(self.outImage,cMid14,cMid23)
+                            return True
+                        
                                             
                  # case 7: one line crossing through L1 and L4 and one line crossing through L2 and L3
                  # 2-2 non adjacent corners are the same color (diagonally opposed)
@@ -2845,32 +2882,32 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
             # NURBS!!!
                 # NW case
                 if (l1==0 and l2==1 and l3==1 and l4==0) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y] = Nurbs_NW_case(inImage,p1,p2,p3,p4,P2,P1)
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_NW_case(inImage,p1,p2,p3,p4,P2,P1)
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
                                          
                 # NE case
                 if (l1==0 and l2==0 and l3==1 and l4==1) and find_distance(P1,P2) > 2  and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y] = Nurbs_NE_case(inImage,p1,p2,p3,p4,P1,P2)
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_NE_case(inImage,p1,p2,p3,p4,P1,P2)
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
                 
                  # SE case                        
                 if(l1==1 and l2==0 and l3==0 and l4==1) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y] = Nurbs_SE_case(inImage,p1,p2,p3,p4,P2,P1)
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_SE_case(inImage,p1,p2,p3,p4,P2,P1)
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
                 
                  # SW case
                 if (l1==1 and l2==1 and l3==0 and l4==0) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y] = Nurbs_SW_case(inImage,p1,p2,p3,p4,P2,P1)
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_SW_case(inImage,p1,p2,p3,p4,P2,P1)
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
                  
                  # vertical case
                 if (l1==0 and l2==1 and l3==0 and l4==1 ) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):
-                    [t,P,x_is_F_of_y] = Nurbs_vertical_case(inImage,p1,p2,p3,p4,P2,P1)
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_vertical_case(inImage,p1,p2,p3,p4,P2,P1)
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)
                     
                # horizontal case 
                 if (l1==True and l2==False and l3==True and l4==False) and find_distance(P1,P2) > 2 and (P1.x != P2.x and P1.y != P2.y):   
-                    [t,P,x_is_F_of_y] = Nurbs_horizontal_case(inImage,p1,p2,p3,p4,P2,P1)
+                    [t,P,x_is_F_of_y,test_approx] = Nurbs_horizontal_case(inImage,p1,p2,p3,p4,P2,P1)
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)         
                           
 def stress_concentration_constraint(tree_list, masterNode, image):

@@ -1626,7 +1626,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 #         if len(nodes) == 4 and root.ishomog == 1:
         if (len(nodes) == 4 or  root.ishomog == 1) or thru_corner == True:
             
-#             print 'element: e',e
             x_coords = coords[:,0]
             y_coords = coords[:,1]
 
@@ -1810,19 +1809,19 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 #     
                   
 # canceling the norm computation
-#             # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-#             # for transformation from the parametric element to phisycal element
-#             # of the Gauss nodes ui
-#             [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
-# 
-#             Jac = jacobian_mat( coords[:,0], coords[:,1] )
-#             detJ = lambda eps,niu: determinant(Jac)(eps,niu)
-# 
-#     #            el_sum =  gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_fct_HN,y_fct_HN,uh_elem,det_Jac)
-#                 
-#                 #el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
-#             el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
-#             all_elems_sum = all_elems_sum + el_sum;
+             # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+             # for transformation from the parametric element to phisycal element
+             # of the Gauss nodes ui
+            [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
+ 
+            Jac = jacobian_mat( coords[:,0], coords[:,1] )
+            detJ = lambda eps,niu: determinant(Jac)(eps,niu)
+ 
+     #            el_sum =  gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_fct_HN,y_fct_HN,uh_elem,det_Jac)
+                 
+                 #el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+            el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+            all_elems_sum = all_elems_sum + el_sum;
     
     
     #             if y0 <= yloc and yloc <= y1:
@@ -2024,17 +2023,17 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                     polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
 
 # canceling the norm computation
-#                     # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-#                     # for transformation from the parametric element to phisycal element
-#                     # of the Gauss nodes ui
-#                     [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
-# 
-#                     Jac = jacobian_mat( coords[:,0], coords[:,1] )
-#                     detJ = lambda eps,niu: determinant(Jac)(eps,niu)
-# 
-#                     el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
-# 
-#                     all_elems_sum = all_elems_sum + el_sum;
+                     # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                     # for transformation from the parametric element to phisycal element
+                     # of the Gauss nodes ui
+                    [x_transform_fct,y_transform_fct] = xy_fct(x_coords,y_coords)            
+ 
+                    Jac = jacobian_mat( coords[:,0], coords[:,1] )
+                    detJ = lambda eps,niu: determinant(Jac)(eps,niu)
+ 
+                    el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+ 
+                    all_elems_sum = all_elems_sum + el_sum;
 
 
 #                     if y0 <= yloc and yloc <= y1:
@@ -2163,12 +2162,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt6, nodes_trid2[1], nodes_trid2[2] ]]
                               
 # canceling the norm computation    
-#                     [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
-#                     Jac_trid1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
-#                     detJ_trid1 = lambda eps,niu: determinant(Jac_trid1)(eps,niu)
-#             
-#                     el_sum_trid1 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid1,y_transform_fct_trid1,uh_elem_trid1,detJ_trid1)
-#                     all_elems_sum = all_elems_sum + el_sum_trid1;
+                    [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
+                    Jac_trid1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
+                    detJ_trid1 = lambda eps,niu: determinant(Jac_trid1)(eps,niu)
+             
+                    el_sum_trid1 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid1,y_transform_fct_trid1,uh_elem_trid1,detJ_trid1)
+                    all_elems_sum = all_elems_sum + el_sum_trid1;
     
     #                     if y0 <= yloc and yloc <= y1:
     #                         tx_trid1 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
@@ -2185,12 +2184,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             
                             
 # canceling the norm computation    
-#                     [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct(x_coords_trid2,y_coords_trid2)            
-#                     Jac_trid2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
-#                     detJ_trid2 = lambda eps,niu: determinant(Jac_trid2)(eps,niu)
-#         
-#                     el_sum_trid2 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid2,y_transform_fct_trid2,uh_elem_trid2,detJ_trid2)
-#                     all_elems_sum = all_elems_sum + el_sum_trid2
+                    [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct(x_coords_trid2,y_coords_trid2)            
+                    Jac_trid2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
+                    detJ_trid2 = lambda eps,niu: determinant(Jac_trid2)(eps,niu)
+         
+                    el_sum_trid2 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid2,y_transform_fct_trid2,uh_elem_trid2,detJ_trid2)
+                    all_elems_sum = all_elems_sum + el_sum_trid2
     
     #                     if y0 <= yloc and yloc <= y1:
     #                         tx_trid2 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
@@ -2287,7 +2286,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_N )
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -2297,7 +2296,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
                                                 
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
                         uh_elem_3 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -2306,9 +2305,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
 # canceling the norm computation        
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-#        
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+        
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_2( p[nodes[1],0], p[nodes[1],1]  )
@@ -2457,7 +2456,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
             
         
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -2467,7 +2466,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_S )
         
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
         
                         uh_elem_3 = lambda x,y: (
@@ -2477,9 +2476,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S )
 # canceling the norm computation    
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
 #         
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
     
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
@@ -2557,7 +2556,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         else:
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
     
-#                         print 'element ',e, west_nodes
                         tri_nodes1 = [west_nodes[0],west_nodes[1],west_nodes[4]]
                         tri_nodes2 = [west_nodes[1],west_nodes[2],west_nodes[4]]
                         tri_nodes3 = [west_nodes[4],west_nodes[2],west_nodes[3]] 
@@ -2631,7 +2629,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -2641,7 +2639,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_W )
                                                 
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
                         uh_elem_3 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -2650,7 +2648,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_W)
 # canceling the norm computation        
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
         
 #                         print U[tri_nodes1[2],0], U[tri_nodes2[2],0], U[tri_nodes3[0],0]    
 #                         print tri_nodes2
@@ -2803,7 +2801,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
             
         
 # canceling the norm computation
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -2813,7 +2811,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E )
         
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
         
                         uh_elem_3 = lambda x,y: (
@@ -2823,9 +2821,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
 # canceling the norm computation    
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
-#         
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+         
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
@@ -3005,7 +3003,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3016,7 +3014,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
                                                 
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
                         uh_elem_3 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3025,7 +3023,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
 # canceling the norm computation        
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
         
                         uh_elem_4 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3035,9 +3033,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_W +
                                                 U[tri_nodes4[1],0] * Nbasis_tri4[1](x,y) * factor_N )
 # canceling the norm computation        
-#                         el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-#         
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+         
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
@@ -3211,7 +3209,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
             
         
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3222,7 +3220,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E ) 
         
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
                         uh_elem_3 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3232,7 +3230,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
         
 # canceling the norm computation        
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
         
                         uh_elem_4 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3242,9 +3240,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S +
                                                 U[tri_nodes4[2],0] * Nbasis_tri4[2](x,y) * factor_E )
 # canceling the norm computation
-#                         el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-#         
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+         
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
         
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
@@ -3428,7 +3426,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_N ) 
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                     
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3438,7 +3436,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes2[1],0] * Nbasis_tri2[1](x,y) * factor_E +
                                                 U[tri_nodes2[2],0] * Nbasis_tri2[2](x,y) * factor_N )
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                     
                         uh_elem_3 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3447,7 +3445,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_E)
 # canceling the norm computation        
-#                         el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
+                        el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
         
                         uh_elem_4 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3457,9 +3455,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_E +
                                                     U[tri_nodes4[2],0] * Nbasis_tri4[2](x,y) * factor_N )
 # canceling the norm computation        
-#                         el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-#         
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+         
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
@@ -3630,7 +3628,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes1[1],0] * Nbasis_tri1[1](x,y) * factor_S+
                                                 U[tri_nodes1[2],0] * Nbasis_tri1[2](x,y) * factor_W )
 # canceling the norm computation        
-#                         el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
+                        el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
         
                         uh_elem_2 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3639,7 +3637,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes2[0],0] * Nbasis_tri2[0](x,y) * factor_W )
 # canceling the norm computation        
-#                         el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
+                        el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
         
                         uh_elem_3 = lambda x,y: (
                                                 U[nodes[0],0] * Nbasis[0](x,y) +
@@ -3658,9 +3656,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[nodes[3],0] * Nbasis[3](x,y) +
                                                 U[tri_nodes4[0],0] * Nbasis_tri4[0](x,y) * factor_S )
 # canceling the norm computation        
-#                         el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-#         
-#                         all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                        el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
+         
+                        all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
                     
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
@@ -3813,12 +3811,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         x_coords_T = top_coords[:,0]
                         y_coords_T = top_coords[:,1]
 # canceling the norm computation        
-#                         # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-#                         # for transformation from the parametric element to phisycal element
-#                         # of the Gauss nodes ui
-#                         [x_transform_fct_T,y_transform_fct_T] = xy_fct(x_coords_T,y_coords_T)            
-#                         el_sum_T =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
-#         
+                         # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                         # for transformation from the parametric element to phisycal element
+                         # of the Gauss nodes ui
+                        [x_transform_fct_T,y_transform_fct_T] = xy_fct(x_coords_T,y_coords_T)            
+                        el_sum_T =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
+         
                         # on the bottom of the interface
                         uh_elem_B = lambda x,y: (
                                                 U[bottom_nodes[3],0] * psi_left_B(x,y) * factor_W +
@@ -3833,10 +3831,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         x_coords_B = bottom_coords[:,0]
                         y_coords_B = bottom_coords[:,1]
 # canceling the norm computation            
-#                         [x_transform_fct_B,y_transform_fct_B] = xy_fct(x_coords_B,y_coords_B)            
-#                         el_sum_B =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
-#         
-#                         all_elems_sum = all_elems_sum + el_sum_T + el_sum_B;
+                        [x_transform_fct_B,y_transform_fct_B] = xy_fct(x_coords_B,y_coords_B)            
+                        el_sum_B =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
+         
+                        all_elems_sum = all_elems_sum + el_sum_T + el_sum_B
                     
                         Usolution[nodes[0],0] = uh_elem_B( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_B( p[nodes[1],0], p[nodes[1],1]  )
@@ -3999,14 +3997,14 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         x_coords_L = left_coords[:,0]
                         y_coords_L = left_coords[:,1]
 # canceling the norm computation
-#                         # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-#                         # for transformation from the parametric element to phisycal element
-#                         # of the Gauss nodes ui
-#                         [x_transform_fct_L,y_transform_fct_L] = xy_fct(x_coords_L,y_coords_L)            
-#         
-#                         el_sum_L =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
-#         
-#             
+                         # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                         # for transformation from the parametric element to phisycal element
+                         # of the Gauss nodes ui
+                        [x_transform_fct_L,y_transform_fct_L] = xy_fct(x_coords_L,y_coords_L)            
+         
+                        el_sum_L =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
+         
+             
         
                         #tmp_array = np.arange(coords[0,0],left_coords[1,0],0.01)
                         #tx_L = np.append(tmp_array,left_coords[1,0])
@@ -4033,11 +4031,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         y_coords_R = right_coords[:,1]
 
 # canceling the norm computation            
-#                         [x_transform_fct_R,y_transform_fct_R] = xy_fct(x_coords_R,y_coords_R)            
-#                 
-#                 
-#                         el_sum_R =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
-#         
+                        [x_transform_fct_R,y_transform_fct_R] = xy_fct(x_coords_R,y_coords_R)            
+                 
+                 
+                        el_sum_R =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
+         
         
                         #tx_R = np.arange(left_coords[1,0],coords[1,0]+0.01,0.01)
                         #sfct_R = uh_elem_R(tx_R,0.03*yloc+0.57)

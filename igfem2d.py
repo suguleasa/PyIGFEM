@@ -2083,11 +2083,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         nodes_trid2 = [nodes[0], nodes[2], nodes[3]]
                         tc1 = [0,1,2]
                         tc2 = [0,2,3]
+                        even_diag = True
                     else:
                         nodes_trid1 = [nodes[0], nodes[1], nodes[3]]
                         nodes_trid2 = [nodes[1], nodes[2], nodes[3]]
                         tc1 = [0,1,3]
                         tc2 = [1,2,3]
+                        even_diag = False
 
                     print 'Diagonal', e
                     coords_trid1 = p[nodes_trid1]
@@ -2137,8 +2139,29 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                     Usolution[nodes_trid1[0],0] = uh_elem_trid1(p[nodes_trid1[0],0],p[nodes_trid1[0],1])
                     Usolution[nodes_trid1[1],0] = uh_elem_trid1(p[nodes_trid1[1],0],p[nodes_trid1[1],1])
                     Usolution[nodes_trid1[2],0] = uh_elem_trid1(p[nodes_trid1[2],0],p[nodes_trid1[2],1])
-                    polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], nodes_trid1[2] ]]
+                    
+                    if len(root.enrichNodes) < 3:
+                        polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], nodes_trid1[2] ]]
   
+                    if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                        index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                        pt6 = index6[0][0] + len(p)
+                        Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                        if even_diag == True:
+                            polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], pt6 ]]
+                            polygonList = polygonList + [[pt6, nodes_trid1[1], nodes_trid1[2] ]]
+                                
+                            polygonList = polygonList + [[nodes_trid2[0], pt6, nodes_trid2[2] ]]
+                            polygonList = polygonList + [[pt6, nodes_trid2[1], nodes_trid2[2] ]]
+                        else:
+                            
+                            polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], pt6 ]]
+                            polygonList = polygonList + [[pt6, nodes_trid1[0], nodes_trid1[2] ]]
+                                
+                            polygonList = polygonList + [[nodes_trid2[0], pt6, nodes_trid2[1] ]]
+                            polygonList = polygonList + [[pt6, nodes_trid2[1], nodes_trid2[2] ]]
+                              
 # canceling the norm computation    
 #                     [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
 #                     Jac_trid1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
@@ -2155,8 +2178,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                     Usolution[nodes_trid2[0],0] = uh_elem_trid2(p[nodes_trid2[0],0],p[nodes_trid2[0],1])
                     Usolution[nodes_trid2[1],0] = uh_elem_trid2(p[nodes_trid2[1],0],p[nodes_trid2[1],1])
                     Usolution[nodes_trid2[2],0] = uh_elem_trid2(p[nodes_trid2[2],0],p[nodes_trid2[2],1])
-                    polygonList = polygonList + [[nodes_trid2[0], nodes_trid2[1], nodes_trid2[2] ]]
+                    
+                    if len(root.enrichNodes) < 3:
+                        polygonList = polygonList + [[nodes_trid2[0], nodes_trid2[1], nodes_trid2[2] ]]
     
+                            
+                            
 # canceling the norm computation    
 #                     [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct(x_coords_trid2,y_coords_trid2)            
 #                     Jac_trid2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
@@ -2175,6 +2202,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                           ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
                         print 'norm computation: North edge'
     
+                        if ( ( (enrich1[1] == y0 and enrich2[1] == y1) and (enrich1[0] == x0) and (enrich2[0] != x0 and enrich2[0] != x1)) or
+                          ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
+                            triangle_1 = True
+                        else:
+                            triangle_1 = False
+                            
+                            
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)):
                         if not(on_corners(enrich2,coords)):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
@@ -2185,9 +2219,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [north_nodes[0],north_nodes[1],north_nodes[4]]
                         tri_nodes3 = [north_nodes[1],north_nodes[2],north_nodes[4]]
                         
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
     
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
@@ -2281,6 +2316,31 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
                     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], pt6, tri_nodes1[2]]]
+                                polygonList = polygonList + [[pt6, tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[1]]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[1]]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
+                                
+                                
                         if y0 <= yloc and yloc <= y1:
                             tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
                             tx1 = []
@@ -2311,6 +2371,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                           ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
                         print 'norm computation: South edge'
                         
+                        if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
+                          ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
+                            triangle_1 = True
+                        else:
+                            triangle_1 = False
+
+                        
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
                         if not(on_corners(enrich2,coords)) :
                           south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
@@ -2321,10 +2388,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [south_nodes[4],south_nodes[2],south_nodes[3]]
                         tri_nodes3 = [south_nodes[4],south_nodes[1],south_nodes[2]] # the one triangle in a diff material
                         
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-    
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+        
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -2419,6 +2487,30 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
         
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes1[0], pt6, tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
+
                         txP = np.arange(x0,x1+0.00001,0.001)
             
                         if y0 <= yloc and yloc <= y1:
@@ -2448,6 +2540,17 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                     if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
                           ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
                         print 'norm computation: West edge'
+                        
+                        
+                        if ( 
+                            ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1))
+                             or
+                            ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  )
+                             ) :
+                            triangle_1 = True
+                        else:
+                            triangle_1 = False  
+                        
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
                         if not(on_corners(enrich2,coords)) :
                           west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
@@ -2459,10 +2562,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [west_nodes[1],west_nodes[2],west_nodes[4]]
                         tri_nodes3 = [west_nodes[4],west_nodes[2],west_nodes[3]] 
         
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-    
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+        
     
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
@@ -2558,6 +2662,31 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
                     
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes1[0], pt6, tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[2]]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
+                                
+                                
                         if y0 <= yloc and yloc <= y1:
                             tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
                             tx1 = []
@@ -2588,6 +2717,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                           ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
                         print 'norm computation: East edge'
     
+                        if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)) or
+                          ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
+                            triangle_1 = True
+                        else:
+                            triangle_1 = False
+    
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
                         if not(on_corners(enrich2,coords)) :
                           east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
@@ -2599,9 +2734,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [east_nodes[0],east_nodes[4],east_nodes[3]]
                         tri_nodes3 = [east_nodes[4],east_nodes[2],east_nodes[3]] # the one triangle in a diff material
         
-                        polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                        polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                        polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
     
     
                         Pe1 = np.zeros((3,3))
@@ -2696,6 +2832,32 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
                         Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
+                        
+                        if POL_APPROX == 1 and len(root.enrichNodes) == 3:
+                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[1]]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
+                                
+                        
                         txP = np.arange(x0,x1+0.00001,0.001)
             
                         if y0 <= yloc and yloc <= y1:
@@ -3694,7 +3856,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             
                             polygonList = polygonList + [[bottom_nodes[0],pt6,bottom_nodes[3]]]
                             polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],pt6]]
-                            polygonList = polygonList + [[pts6,bottom_nodes[1],bottom_nodes[2]]]
+                            polygonList = polygonList + [[pt6,bottom_nodes[1],bottom_nodes[2]]]
     
     
                         if y0 <= yloc and yloc <= y1:

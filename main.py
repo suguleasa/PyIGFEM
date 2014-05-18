@@ -1704,10 +1704,10 @@ def process_list_of_elements(llist,root):
     for i in range(0, len(coordsList1)):
         coordsList1[i][0] = coordsList1[i][0] / 1000.0
         coordsList1[i][1] = coordsList1[i][1] / 1000.0
-        if coordsList1[i][0] != 0.0:
-            coordsList1[i][0] += 0.001
-        if coordsList1[i][1] != 0.0:
-            coordsList1[i][1] += 0.001
+#        if coordsList1[i][0] != 0.0:
+#            coordsList1[i][0] += 0.001
+#        if coordsList1[i][1] != 0.0:
+#            coordsList1[i][1] += 0.001
              
         coordsList1[i][1] = 1 - coordsList1[i][1] 
         
@@ -1738,10 +1738,10 @@ def process_list_of_elements(llist,root):
     for i in range(0, len(coordsList2)):
         coordsList2[i][0] = coordsList2[i][0] / 1000.0
         coordsList2[i][1] = coordsList2[i][1] / 1000.0
-        if coordsList2[i][0] != 0.0:
-            coordsList2[i][0] += 0.001
-        if coordsList2[i][1] != 0.0:
-            coordsList2[i][1] += 0.001
+#        if coordsList2[i][0] != 0.0:
+#            coordsList2[i][0] += 0.001
+#        if coordsList2[i][1] != 0.0:
+#            coordsList2[i][1] += 0.001
              
         coordsList2[i][1] = 1 - coordsList2[i][1] 
 
@@ -2005,10 +2005,10 @@ def numbering(pvec,pvecCList, llist, masterNode):
             old_coords = pvecCList[tind]
             
             new_coords = old_coords/1000.0
-            if new_coords[1] != 0.0:
-                new_coords[1] += 0.001
-            if new_coords[0] != 0.0:
-                new_coords[0] += 0.001
+#            if new_coords[1] != 0.0:
+#                new_coords[1] += 0.001
+#            if new_coords[0] != 0.0:
+#                new_coords[0] += 0.001
             new_coords[1] = 1 - new_coords[1]
             
     
@@ -2073,10 +2073,10 @@ def set_nsew(llist, masterNode, full_vec):
                 p1wchild1,p2wchild1,p3wchild1,p4wchild1 = west_neighbor.children[1].rect
                 x1 = p3wchild1.x / 1000.0
                 y1 = p3wchild1.y / 1000.0
-                if x1 != 0.0:
-                    x1 += 0.001
-                if y1 != 0.0:
-                    y1 += 0.001            
+#                if x1 != 0.0:
+#                    x1 += 0.001
+#                if y1 != 0.0:
+#                    y1 += 0.001            
                 y1 = 1 -  y1    
                 x1 = find_nearest(full_vec,x1)
                 y1 = find_nearest(full_vec,y1)  
@@ -2093,10 +2093,10 @@ def set_nsew(llist, masterNode, full_vec):
                 p1echild0, p2echild0, p3echild0, p4echild0 = east_neighbor.children[0].rect
                 x4 = p4echild0.x / 1000.0
                 y4 = p4echild0.y / 1000.0
-                if x4 != 0.0:
-                    x4 += 0.001
-                if y4 != 0.0:
-                    y4 += 0.001            
+#                if x4 != 0.0:
+#                    x4 += 0.001
+#                if y4 != 0.0:
+#                    y4 += 0.001            
                 y4 = 1 - y4     
                 x4 = find_nearest(full_vec,x4)
                 y4 = find_nearest(full_vec,y4)
@@ -2113,10 +2113,10 @@ def set_nsew(llist, masterNode, full_vec):
                 p1schild0, p2schild0, p3schild0, p4schild0 = south_neighbor.children[0].rect
                 x2 = p2schild0.x / 1000.0
                 y2 = p2schild0.y / 1000.0
-                if x2 != 0.0:
-                    x2 += 0.001
-                if y2 != 0.0:
-                    y2 += 0.001            
+#                if x2 != 0.0:
+#                    x2 += 0.001
+#                if y2 != 0.0:
+#                    y2 += 0.001            
                 y2 = 1 - y2
                 x2 = find_nearest(full_vec,x2)
                 y2 = find_nearest(full_vec,y2)
@@ -2132,10 +2132,10 @@ def set_nsew(llist, masterNode, full_vec):
                 p1nchild2, p2nchild2, p3nchild2, p4nchild2 = north_neighbor.children[2].rect
                 x3 = p3nchild2.x / 1000.0
                 y3 = p3nchild2.y / 1000.0
-                if x3 != 0.0:
-                    x3 += 0.001
-                if y3 != 0.0:
-                    y3 += 0.001            
+#                if x3 != 0.0:
+#                    x3 += 0.001
+#                if y3 != 0.0:
+#                    y3 += 0.001            
                 y3 = 1 - y3
                 x3 = find_nearest(full_vec,x3)
                 y3 = find_nearest(full_vec,y3)
@@ -2261,10 +2261,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             if ( not(on_corners(enrich1,coords)) and (on_corners(enrich2,coords)) ):
                 x1 = enrich1[0] / 1000.0
                 y1 = enrich1[1] / 1000.0
-                if x1 != 0.0:
-                    x1 += 0.001
-                if y1 != 0.0:
-                    y1 += 0.001            
+#                if x1 != 0.0:
+#                    x1 += 0.001
+#                if y1 != 0.0:
+#                    y1 += 0.001            
                 y1 = 1 - y1
                 
                         
@@ -2303,10 +2303,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             if ( on_corners(enrich1,coords) and not(on_corners(enrich2,coords)) ):
                 x1 = enrich2[0] / 1000.0
                 y1 = enrich2[1] / 1000.0
-                if x1 != 0.0:
-                    x1 += 0.001
-                if y1 != 0.0:
-                    y1 += 0.001            
+#                if x1 != 0.0:
+#                    x1 += 0.001
+#                if y1 != 0.0:
+#                    y1 += 0.001            
                 y1 = 1 - y1
                 
                 if  ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
@@ -2341,10 +2341,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 
                 x1 = enrich1[0] / 1000.0
                 y1 = enrich1[1] / 1000.0
-                if x1 != 0.0:
-                    x1 += 0.001
-                if y1 != 0.0:
-                    y1 += 0.001            
+#                if x1 != 0.0:
+#                    x1 += 0.001
+#                if y1 != 0.0:
+#                    y1 += 0.001            
                 y1 = 1 - y1
                 
                         
@@ -2394,10 +2394,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                         
                 x1 = enrich2[0] / 1000.0
                 y1 = enrich2[1] / 1000.0
-                if x1 != 0.0:
-                    x1 += 0.001
-                if y1 != 0.0:
-                    y1 += 0.001            
+#                if x1 != 0.0:
+#                    x1 += 0.001
+#                if y1 != 0.0:
+#                    y1 += 0.001            
                 y1 = 1 - y1
                 
                 if ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
@@ -3184,11 +3184,11 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                     
                     nodes6 = Coordinate(0,0)
                     nodes6.x =  root_i.enrichNodes[2].x / 1000.0
-                    if nodes6.x != 0.0:
-                        nodes6.x += 0.001
+#                    if nodes6.x != 0.0:
+#                        nodes6.x += 0.001
                     nodes6.y =  root_i.enrichNodes[2].y / 1000.0
-                    if nodes6.y != 0.0:
-                        nodes6.y += 0.001
+#                    if nodes6.y != 0.0:
+#                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
     
                     p_extra = p_extra + [[nodes6.x, nodes6.y]]
@@ -3209,19 +3209,20 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                     nodes7 = Coordinate(0,0)
                     
                     nodes6.x =  E.x / 1000.0
-                    if nodes6.x != 0.0:
-                        nodes6.x += 0.001
-                    nodes6.y =  nodes6.y / 1000.0
-                    if nodes6.y != 0.0:
-                        nodes6.y += 0.001
+#                    if nodes6.x != 0.0:
+#                        nodes6.x += 0.001
+                        
+                    nodes6.y =  E.y / 1000.0
+#                    if nodes6.y != 0.0:
+#                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
                     
                     nodes7.x =  F.x / 1000.0
-                    if nodes7.x != 0.0:
-                        nodes7.x += 0.001
-                    nodes7.y =  nodes7.y / 1000.0
-                    if nodes7.y != 0.0:
-                        nodes7.y += 0.001
+#                    if nodes7.x != 0.0:
+#                        nodes7.x += 0.001
+                    nodes7.y =  F.y / 1000.0
+#                    if nodes7.y != 0.0:
+#                        nodes7.y += 0.001
                     nodes7.y = 1 - nodes7.y
                
                     p_extra = p_extra + [[nodes6.x, nodes6.y]]
@@ -3423,6 +3424,7 @@ if __name__ == "__main__":
     if POL_APPROX != 3:
         [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
            
+        
         [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
            
                
@@ -3434,13 +3436,14 @@ if __name__ == "__main__":
         # material conductivities
         k1 = 1
         k2 = 10
+#        print 'HOMOGENEOUS'
         # generate Legendre-Gauss nodes and weights:
         ruleOrder = 4
         [ui,wi] = lgwt(ruleOrder,-1,1)
                
         # get triangular mesh data
-        f = open("multipleinclusions.res", "r")
-        f2 = open("multipleinclusions.ele", "r")
+        f = open("multipleinclusionShifted.res", "r")
+        f2 = open("multipleinclusionShifted.1.ele", "r")
         [pTri,UTri] = read_p_U(f)
         tTri = read_corners(f2)
         f.close()
@@ -3451,4 +3454,14 @@ if __name__ == "__main__":
         ww1 = numpy.array(aa1[()])
         UU = ww1[0].item()[:,:]
            
+        print p_reg
+        
         print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist, p_extra, P_quad, P_cub)
+
+        print MAX_SIZE_X, MIN_SIZE
+        if POL_APPROX == 0:
+            print 'LINEAR Polynomials'
+        if POL_APPROX == 1:
+            print 'QUADRATIC Polynomials'
+        if POL_APPROX == 2:
+            print 'CUBIC Polynomials'

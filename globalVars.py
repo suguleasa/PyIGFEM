@@ -8,9 +8,9 @@ PROB = 0.05
 #MIN_SIZE = 20#6
 
 # fake data
-MAX_SIZE_X = 256
-MAX_SIZE_Y = 256    
-MIN_SIZE = 125
+MAX_SIZE_X = 128
+MAX_SIZE_Y = 128 
+MIN_SIZE = 128
 
 ALT_MIN_SIZE = 16
 TOL_LINEARS = 2.0
@@ -32,3 +32,6 @@ EPS_FACTOR = 1e-2
 # 2 for cubics
 # 3 for NURBS - not yet implemented
 POL_APPROX = 0
+
+# activate norm computation: 1, else 0
+NORM_COMP = 1

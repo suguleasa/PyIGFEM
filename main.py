@@ -2984,11 +2984,39 @@ def copy_list_of_sides(sides1):
     
     return sides2
 
-        
+def divide_twice(node):
+    
+    for j in range(0,4):
+        if node.has_children:
+            node.children[j].divideOnce()
+                    
+def divide_thrice(node):
+    
+    for j in range(0,4):
+        if node.has_children:
+            node.children[j].divideOnce()
+            for i in range(0,4):
+                node.children[j].children[i].divideOnce()
+     
+def divide_four_times(node):
+    
+    for k in range(0,4):
+        if node.has_children:
+            node.children[k].divideOnce()
+        for j in range(0,4):
+                node.children[k].children[j].divideOnce()
+                for i in range(0,4):
+                    node.children[k].children[j].children[i].divideOnce()
+            
+                        
+            
 def divide_high_stress_elements(full_list, masterNode,image):
     # processing the list with elements in between interfaces
     
     extra_list = []
+    extra_list2 = []
+    extra_list3 = []
+    
     for k in range(0, len(full_list)):
         llist = full_list[k]
         
@@ -2998,15 +3026,48 @@ def divide_high_stress_elements(full_list, masterNode,image):
             if not(last_node.ishomog): 
             
                 if len(llist) == 2:
+                    
                     node1 = get_node_by_id(masterNode, [str(llist[0])])
                     node1.divideOnce()
                     node2 = get_node_by_id(masterNode, [str(llist[1])])
                     node2.divideOnce()
+                        
+                    if STRESS_MIN == 3 or STRESS_MIN == 4:
+                        # equivalent of dividing twice each node
+                        divide_twice(node1)
+                        divide_twice(node2)
+                        
+                    if STRESS_MIN == 5 or STRESS_MIN == 6:
+                        # equivalent of dividing thrice each node
+                        divide_thrice(node1)
+                        divide_thrice(node2)
+                        
+                    if STRESS_MIN == 7 or STRESS_MIN == 8:
+                        # equivalent of dividing four times each node
+                        divide_four_times(node1)
+                        divide_four_times(node2)
+                        
+                        
                 if len(llist) == 2 + 1:
     #                 print 'only one homog elem in between'
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
                     node1.divideOnce()
-                    extra_list.append(node1)
+#                    extra_list.append(node1)
+
+                    if STRESS_MIN == 2:
+                        divide_twice(node1)
+                    
+                    if STRESS_MIN == 3 or STRESS_MIN == 4:
+#                        node0 = get_node_by_id(masterNode, [str(llist[0])])
+#                        node2 = get_node_by_id(masterNode, [str(llist[2])])
+#                        divide_twice(node0)
+#                        divide_twice(node1)
+#                        divide_twice(node2)
+                        divide_thrice(node1)
+                        
+                    if STRESS_MIN == 5 or STRESS_MIN == 6 or STRESS_MIN == 7 or STRESS_MIN == 8:
+                        divide_four_times(node1)
+
                     
                         
                 if len(llist) == 2 + 2:
@@ -3016,6 +3077,10 @@ def divide_high_stress_elements(full_list, masterNode,image):
                     node2 =  get_node_by_id(masterNode, [str(llist[2])])
                     node2.divideOnce()
                     
+                    if STRESS_MIN == 5 or STRESS_MIN == 6 or STRESS_MIN == 7 or STRESS_MIN == 8:
+                        divide_twice(node1)
+                        divide_twice(node2)
+                        
                 if len(llist) == 2 + 3:
     #                 print 'only 3 homog elems in between'
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
@@ -3025,16 +3090,34 @@ def divide_high_stress_elements(full_list, masterNode,image):
                     node1.divideOnce()
                     node2.divideOnce()
                     node3.divideOnce()
-
-    for j in range(0, len(extra_list)):
-        node1 = extra_list[j]
-        if node1.has_children:
-            node1.children[0].divideOnce()
-            node1.children[1].divideOnce()
-            node1.children[2].divideOnce()
-            node1.children[3].divideOnce()
+                    
+                    if STRESS_MIN == 7 or STRESS_MIN == 8:
+                        divide_twice(node2)
+                        
+                if len(llist) == 2 + 4:
+    #                 print 'only 4 homog elems in between'
+                    node1 = get_node_by_id(masterNode, [str(llist[1])])
+                    node2 = get_node_by_id(masterNode, [str(llist[2])])
+                    node3 = get_node_by_id(masterNode, [str(llist[3])])
+                    node4 = get_node_by_id(masterNode, [str(llist[4])])
+                    
+                    node1.divideOnce()
+                    node2.divideOnce()
+                    node3.divideOnce()
+                    node4.divideOnce()
+                    
+                                                                                           
                     
 
+#    for j in range(0, len(extra_list)):
+#        node1 = extra_list[j]
+#        if node1.has_children:
+#            node1.children[0].divideOnce()
+#            node1.children[1].divideOnce()
+#            node1.children[2].divideOnce()
+#            node1.children[3].divideOnce()
+                    
+                        
 def swap_directions(dirlistN,sides,sidesN):
 #   
 #    print 'inside swap_direction'
@@ -3271,8 +3354,11 @@ if __name__ == "__main__":
     print "Reading image in..."
 #     inputImage = sitk.ReadImage("images/channelsCircles.png");
 #     outputImage = sitk.ReadImage("images/channelsCircles.png");
-    inputImage = sitk.ReadImage("images/circles.png");
-    outputImage = sitk.ReadImage("images/circles.png");
+#    inputImage = sitk.ReadImage("images/circles.png");
+#    outputImage = sitk.ReadImage("images/circles.png");
+    inputImage = sitk.ReadImage("images/horseshoe.png");
+    outputImage = sitk.ReadImage("images/horseshoe.png");
+#   
 #    inputImage = sitk.ReadImage("images/channelsSharp.png");
 #    outputImage = sitk.ReadImage("images/channelsSharp.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
@@ -3344,9 +3430,9 @@ if __name__ == "__main__":
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
-##    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
-#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-#    divide_high_stress_elements(full_list,rootNode, outputImage)
+#    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
+    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+    divide_high_stress_elements(full_list,rootNode, outputImage)
 #     
 #    masterNode = rootNode
 #        
@@ -3421,21 +3507,27 @@ if __name__ == "__main__":
             
             
 # Commenting out the solver 
-    if POL_APPROX != 3:
+    if POL_APPROX != 3 and NORM_COMP != 0:
         [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
            
-        
         [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
            
                
-        full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
+        full_vec = numpy.linspace(0,0.999, pow(2,masterNode.MAX_DEPTH)+1)
            
         set_nsew(llist,masterNode,full_vec)
            
+        print p_reg
         p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
+        
+        for i in range(0,len(p_reg)):
+            p_reg[i,0] = int(p_reg[i,0] * 1000) / 1000.0
+            p_reg[i,1] = int(p_reg[i,1] * 1000) / 1000.0
+            
+        print p_reg
         # material conductivities
-        k1 = 1
-        k2 = 10
+        k1 = 10
+        k2 = 1
 #        print 'HOMOGENEOUS'
         # generate Legendre-Gauss nodes and weights:
         ruleOrder = 4
@@ -3454,8 +3546,6 @@ if __name__ == "__main__":
         ww1 = numpy.array(aa1[()])
         UU = ww1[0].item()[:,:]
            
-        print p_reg
-        
         print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist, p_extra, P_quad, P_cub)
 
         print MAX_SIZE_X, MIN_SIZE

@@ -65,10 +65,30 @@ sum = __builtin__.sum
 
 # Use Simpson Rule for integration over isoparametric elements
 def simpson_rule(f):
-# Gauss Rule with 3 points: exact for polynomial of degree 2
 
-  I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
-  return I
+    I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
+    return I
+def gauss_quadrat(f,ui,wi):
+    J = 0
+    L = ui.size
+    for i in range(0,L):
+        for j in range(0,L):
+            J = J + wi[i] * wi[j] * f(ui[i],ui[j])
+
+    return J
+
+def my_gauss_rule(f,ui,wi):
+# Gauss Rule with 3 points: exact for polynomial of degree 2
+#    J = 0
+#    L = ui.size
+#    for i in range(0,L):
+#        for j in range(0,L):
+#            J = J + wi[i] * wi[j] * f(ui[i],ui[j])
+#                                              
+##  I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
+##  return I
+#    return J
+    return simpson_rule4(f)
 
 
 def simpson_rule4(f):
@@ -383,7 +403,7 @@ def Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N,S,E,W):
     
     return [N1,N2,N3,N4]
 
-def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
+def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #def myquad(m,n,k1,k2,loc,ui,wi,p,t,UConf,pConf,tConf):
     
     #definition of rhombus corners
@@ -416,7 +436,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     bbcs = []
     lbcs = []
     rbcs = []
-    for i in range(0, len(p)):
+#    for i in range(0, len(p)):
+    for i in range(0,lenGridPts):
          # bottom boundary
         if p[i,1] == 0.0 and (p[i,0] != 0.0 and p[i,0] != 1.0):
             bbcs = bbcs + [i]
@@ -432,11 +453,10 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     # right boundary
                     if p[i,0] == 1.0:
                         rbcs = rbcs + [i]
-                            
-#     print 'tbcs', tbcs
-#     print 'lbcs', lbcs
-#     print 'rbcs', rbcs
-#     print 'bbcs', bbcs
+    print 'tbcs', tbcs
+    print 'lbcs', lbcs
+    print 'rbcs', rbcs
+    print 'bbcs', bbcs
 
     # temperatures for Dirichlet BCs
     leftDirich = 1
@@ -493,18 +513,41 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
         
         root = get_node_by_id(masterNode,llist[e])
         
-        
         p1,p2,p3,p4 = root.rect
+        
+        nodes6 = Coordinate(0,0)
+        
+        if len(root.enrichNodes) == 3:
+            
+            nodes6.x =  root.enrichNodes[2].x / 1000.0
+            if nodes6.x != 0.0:
+                nodes6.x += 0.001
+            nodes6.y =  root.enrichNodes[2].y / 1000.0
+            if nodes6.y != 0.0:
+                nodes6.y += 0.001
+            nodes6.y = 1 - nodes6.y
     
-        pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-        pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-        pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-        pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+            old_node6 = Coordinate(nodes6.x, nodes6.y)
+            [c_center, c_rad] = which_circle(nodes6)
+            new_nodes6 = Coordinate(0.0,0.0)
+            new_nodes6.x = c_center.x + c_rad * ( nodes6.x - c_center.x) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            new_nodes6.y = c_center.y + c_rad * ( nodes6.y - c_center.y) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            nodes6 = Coordinate(new_nodes6.x, new_nodes6.y)
+            
+            
+        pxVal1 = image.GetPixel(int(p1.x), int(p1.y))
+        pxVal2 = image.GetPixel(int(p2.x), int(p2.y))
+        pxVal3 = image.GetPixel(int(p3.x), int(p3.y))
+        pxVal4 = image.GetPixel(int(p4.x), int(p4.y))
     
-
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
 
+        coords[0,:] = p[nodes[0]]
+        coords[1,:] = p[nodes[1]]
+        coords[2,:] = p[nodes[2]]
+        coords[3,:] = p[nodes[3]]
+        
         Pe = np.zeros((4,4))
         Pe[:,0] = np.ones((4,1)).transpose()
         Pe[:,1] = p[nodes[0:4],0]
@@ -622,7 +665,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
             Ke = np.zeros((4,4))
             Fe = np.zeros((4,1))
             
-
             # slanted interface
             # set the coefficient of the conductivity
 #            if coords[0,0] <= interface_fcn(coords[0,1]) and coords[1,0]<= interface_fcn(coords[0,1]) and k1!=k2:
@@ -690,9 +732,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     else:
                         K_cst = k2                                                
                 
-
-                
-
 #            # multiple inclusions:
 #            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 
 #                (cornerA_c1>R1*R1 and cornerB_c1>R1*R1 and cornerC_c1>R1*R1 and cornerD_c1>R1*R1) and 
@@ -806,7 +845,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                 fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
                 Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
 
-
+            
             # add the local stiffness matrix and local load vector to the global K and F
             for i in range(0,4):
                 for j in range(0,4):
@@ -977,10 +1016,12 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                     
                     if len(root.enrichNodes) == 3:
                                 
-                        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
+#                        midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
                 
-                        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-                               
+#                        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#                        coord_enrich = coord_enrich_comp_quad(root)    
+                        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+                          
                         if(corner0 == True and corner2 == True): 
                         # even diagonal: SW - NE
                             lOrd = [1,2,0] 
@@ -1194,7 +1235,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NW corner"
-                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image)
+                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
 
                         
                         # add the local stiffness matrix and local load vector to the global K and F
@@ -1217,7 +1258,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         ):
                         print 'SE corner'
                         
-                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image)
+                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -1237,7 +1278,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NE corner"
-                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image)
+                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -1257,7 +1298,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "SW corner"
-                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image)
+                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
         
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -1280,7 +1321,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
                         [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image)
 
-                        print nodes
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
                             for j in range(0,5):
@@ -1301,7 +1341,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
                         [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image)
 
-                        print north_nodes
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
                             for j in range(0,5):
@@ -1392,6 +1431,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
                         print "horizontal slide: quad-quad"
                         [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
                     
+                        print Ke_Horiz, Fe_Horiz
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
@@ -1422,7 +1462,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     # Dirichlet: b,c = 0, homogeneous Dirichlet: b,c = 0, d = 0
     # Neumann: a = 0, and b or c may be 0, but not both
 
-    print N
     U = sparse.lil_matrix((N,1))
 
     # Setting Dirichlet BCs
@@ -1475,6 +1514,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     arr_mypoints = numpy.array(mypoints)
     #unique_nodes = range(0,len(p))#arr_mypoints[:,2]
     unique_nodes = arr_mypoints[:,2]
+    
 
     extraNodes = []
     # from all the nodes remove those corresponding to the left and right boundary
@@ -1504,7 +1544,6 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
     Fbreduced = Fb[FreeNodes,0]
     scipy.io.savemat('Fedge.mat', mdict={'Fbreduced': Fbreduced})
     
-    
     # Getting the analytical solution and its vector form
     #uexact = lambda x,y: ufct(x,loc,k1,k2) 
 
@@ -1515,6 +1554,37 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image):
 
     return  np.array(U) 
 
+# semi-circle def:
+def f_circle_s(x,y):
+  return (x-1.0)**2 + (y-0.0)**2
+
+# circle 1 def:
+def f_circle1(x,y):
+  return (x-0.25)**2 + (y-0.25)**2
+
+#circle 2 def:
+def f_circle2(x,y):
+  return (x-0.5)**2 + (y-0.75)**2
+  
+def which_circle(node):
+    A = abs( f_circle_s(node.x, node.y) - Rs**2)
+    B = abs( f_circle1(node.x, node.y) - R1**2)
+    C = abs( f_circle2(node.x, node.y) - R2**2)
+    
+    my_min = min(A,B,C)
+#    print node.x, node.y
+#    print 'minimum', A,B,C
+    if my_min == A:
+        c_rad = Rs
+        c_center = Coordinate(1.0, 0.0)
+    if my_min == B:
+        c_rad = R1
+        c_center = Coordinate(0.25, 0.25)
+    if my_min == C:
+        c_rad = R2
+        c_center = Coordinate(0.5, 0.75)
+    return [c_center, c_rad]  
+  
 def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P_quad, P_cub):
     print 'compute the L-2 norm ...'
 
@@ -1531,17 +1601,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 
     Usolution = np.zeros((len(p) + len(p_extra),1))
     polygonList = []
+    
+#    p_points6 = []
 
     # COMPUTING THE L-2 NORM
     for e in range(0,T):
-#     for e in range(800, T):
-#     for e in range(833,T):
-#     for e in range(1814,T):
-
-#    for e in range(34,51):
-#     for e in [35,37,38,40,43,44,47,48,49,50]:
-#    for e in [38, 102, 122]:
-#    for e in [96,97,100,102,103,105]: 
+#    for e in [1,4,3,6,8,9,10,11,14,15,13]:
+#    for e in [4]:
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         nodes = np.array(nodes)
@@ -1551,13 +1617,22 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
         if len(root.enrichNodes) == 3:
             nodes6 = Coordinate(0,0)
             nodes6.x =  root.enrichNodes[2].x / 1000.0
-#            if nodes6.x != 0.0:
-#                nodes6.x += 0.001
+            if nodes6.x != 0.0:
+                nodes6.x += 0.001
             nodes6.y =  root.enrichNodes[2].y / 1000.0
-#            if nodes6.y != 0.0:
-#                nodes6.y += 0.001
+            if nodes6.y != 0.0:
+                nodes6.y += 0.001
             nodes6.y = 1 - nodes6.y
-#    
+    
+            old_node6 = Coordinate(nodes6.x, nodes6.y)
+            [c_center, c_rad] = which_circle(nodes6)
+            new_nodes6 = Coordinate(0.0,0.0)
+            new_nodes6.x = c_center.x + c_rad * ( nodes6.x - c_center.x) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            new_nodes6.y = c_center.y + c_rad * ( nodes6.y - c_center.y) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            nodes6 = Coordinate(new_nodes6.x, new_nodes6.y)
+            
+#            p_points6 = p_points6 + [[nodes6.x, nodes6.y]]
+            
             
         if len(root.enrichNodes) == 4:
             
@@ -1565,82 +1640,99 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                 if root.enrichNodes[2].x <= root.enrichNodes[3].x: 
                     nodes6 = Coordinate(0,0)
                     nodes6.x =  root.enrichNodes[2].x / 1000.0
-#                    if nodes6.x != 0.0:
-#                        nodes6.x += 0.001
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
                     nodes6.y =  root.enrichNodes[2].y / 1000.0
-#                    if nodes6.y != 0.0:
-#                        nodes6.y += 0.001
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
                     
                     nodes7 = Coordinate(0,0)
                     nodes7.x =  root.enrichNodes[3].x / 1000.0
-#                    if nodes7.x != 0.0:
-#                        nodes7.x += 0.001
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
                     nodes7.y =  root.enrichNodes[3].y / 1000.0
-#                    if nodes7.y != 0.0:
-#                        nodes7.y += 0.001
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
                     nodes7.y = 1 - nodes7.y
                     
                 else:
                     nodes6 = Coordinate(0,0)
                     nodes6.x =  root.enrichNodes[3].x / 1000.0
-#                    if nodes6.x != 0.0:
-#                        nodes6.x += 0.001
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
                     nodes6.y =  root.enrichNodes[3].y / 1000.0
-#                    if nodes6.y != 0.0:
-#                        nodes6.y += 0.001
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
                     
                     nodes7 = Coordinate(0,0)
                     nodes7.x =  root.enrichNodes[2].x / 1000.0
-#                    if nodes7.x != 0.0:
-#                        nodes7.x += 0.001
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
                     nodes7.y =  root.enrichNodes[2].y / 1000.0
-#                    if nodes7.y != 0.0:
-#                        nodes7.y += 0.001
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
                     nodes7.y = 1 - nodes7.y
             else:
                 if root.enrichNodes[2].y >= root.enrichNodes[3].y:
                     nodes6 = Coordinate(0,0)
                     nodes6.x =  root.enrichNodes[2].x / 1000.0
-#                    if nodes6.x != 0.0:
-#                        nodes6.x += 0.001
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
                     nodes6.y =  root.enrichNodes[2].y / 1000.0
-#                    if nodes6.y != 0.0:
-#                        nodes6.y += 0.001
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
                     
                     nodes7 = Coordinate(0,0)
                     nodes7.x =  root.enrichNodes[3].x / 1000.0
-#                    if nodes7.x != 0.0:
-#                        nodes7.x += 0.001
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
                     nodes7.y =  root.enrichNodes[3].y / 1000.0
-#                    if nodes7.y != 0.0:
-#                        nodes7.y += 0.001
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
                     nodes7.y = 1 - nodes7.y
                 else:
                     nodes6 = Coordinate(0,0)
                     nodes6.x =  root.enrichNodes[3].x / 1000.0
-#                    if nodes6.x != 0.0:
-#                        nodes6.x += 0.001
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
                     nodes6.y =  root.enrichNodes[3].y / 1000.0
-#                    if nodes6.y != 0.0:
-#                        nodes6.y += 0.001
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
                     
                     nodes7 = Coordinate(0,0)
                     nodes7.x =  root.enrichNodes[2].x / 1000.0
-#                    if nodes7.x != 0.0:
-#                        nodes7.x += 0.001
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
                     nodes7.y =  root.enrichNodes[2].y / 1000.0
-#                    if nodes7.y != 0.0:
-#                        nodes7.y += 0.001
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
                     nodes7.y = 1 - nodes7.y
                     
-                        
+            old_node6 = Coordinate(nodes6.x, nodes6.y)
+            [c_center, c_rad] = which_circle(nodes6)
+            new_nodes6 = Coordinate(0.0,0.0)
+            new_nodes6.x = c_center.x + c_rad * ( nodes6.x - c_center.x) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            new_nodes6.y = c_center.y + c_rad * ( nodes6.y - c_center.y) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            nodes6 = Coordinate(new_nodes6.x, new_nodes6.y)
+            
+            old_node7 = Coordinate(nodes7.x, nodes7.y)
+            [c_center, c_rad] = which_circle(nodes7)
+            new_nodes7 = Coordinate(0.0,0.0)
+            new_nodes7.x = c_center.x + c_rad * ( nodes7.x - c_center.x) / math.sqrt( math.pow(nodes7.x - c_center.x, 2) + math.pow( nodes7.y - c_center.y,2) )
+            new_nodes7.y = c_center.y + c_rad * ( nodes7.y - c_center.y) / math.sqrt( math.pow(nodes7.x - c_center.x, 2) + math.pow( nodes7.y - c_center.y,2) )
+            nodes7 = Coordinate(new_nodes7.x, new_nodes7.y)
+           
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]
 
+#        root.printRect()
+#        print coords
+#        print nodes6.x, nodes6.y
+        
         Pe = np.zeros((4,4))
         Pe[:,0] = np.ones((4,1)).transpose()
         Pe[:,1] = p[nodes[0:4],0]
@@ -1704,12 +1796,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
             Usolution[nodes[2],0] = uh_elem(p[nodes[2],0],p[nodes[2],1])
             Usolution[nodes[3],0] = uh_elem(p[nodes[3],0],p[nodes[3],1])
             
-            if e == 0:
-                print root.printRect()
-                print Usolution[nodes[0],0],Usolution[nodes[1],0],Usolution[nodes[2],0],Usolution[nodes[3],0]
-                
-                
-                
             polygonList = polygonList + [[nodes[0], nodes[1], nodes[2], nodes[3] ]]
 
 #             p1h,p2h,p3h,p4h = root.hn
@@ -1890,9 +1976,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                      #el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
                 el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
                 
-                if e == 0:
-                    print 'suma in primul element', el_sum
-                all_elems_sum = all_elems_sum + el_sum;
+                all_elems_sum = all_elems_sum + el_sum
         
     
     #             if y0 <= yloc and yloc <= y1:
@@ -1901,7 +1985,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
     #                 pylab.plot(tx,sfct)
             
                     
- 
+                print 'element e',e,' norm is :', el_sum
         else: # element has more than 4 nodes, meaning it is an element that needs enrichment at these additional nodes
 
             enrich1 = np.array(p[nodes[4]])
@@ -2059,7 +2143,8 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], nodes_trid1[2] ]]
   
                     if len(root.enrichNodes) == 3:
-                        index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                        index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+#                        index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
                         pt6 = index6[0][0] + len(p)
                         Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
@@ -2076,7 +2161,37 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 
                             polygonList = polygonList + [[nodes_trid2[0], pt6, nodes_trid2[1] ]]
                             polygonList = polygonList + [[pt6, nodes_trid2[1], nodes_trid2[2] ]]
+                           
+                    if len(root.enrichNodes) == 4:
+                        index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+#                        index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                        pt6 = index6[0][0] + len(p)
+                        Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                        
+                        index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
+#                        index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                        pt7 = index7[0][0] + len(p)
+                        Usolution[pt7] = uh_elem_2( nodes7.x, nodes7.y )
+                            
+                        if even_diag == True:
+                            polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], pt6 ]]
+                            polygonList = polygonList + [[pt6, nodes_trid1[1], pt7 ]]
+                            polygonList = polygonList + [[pt7, nodes_trid1[1], nodes_trid1[2] ]]
+                                
+                            polygonList = polygonList + [[nodes_trid2[0], pt6, nodes_trid2[2] ]]
+                            polygonList = polygonList + [[pt6, pt7, nodes_trid2[2] ]]
+                            polygonList = polygonList + [[pt7, nodes_trid2[1], nodes_trid2[2] ]]
+                        else:
+                            
+                            polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], pt6 ]]
+                            polygonList = polygonList + [[pt6, nodes_trid1[0], pt7 ]]
+                            polygonList = polygonList + [[pt7, nodes_trid1[0], nodes_trid1[2] ]]
+                                
+                            polygonList = polygonList + [[nodes_trid2[0], pt6, nodes_trid2[1] ]]
+                            polygonList = polygonList + [[pt6, nodes_trid2[1], pt7 ]]
+                            polygonList = polygonList + [[pt7, nodes_trid2[1], nodes_trid2[2] ]]
                               
+                                 
 # canceling the norm computation
                     if NORM_COMP == 1:   
                         [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
@@ -2136,11 +2251,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [north_nodes[0],north_nodes[1],north_nodes[4]]
                         tri_nodes3 = [north_nodes[1],north_nodes[2],north_nodes[4]]
                         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-    
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -2230,9 +2340,15 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
                         Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
-                    
+    
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+    
+                        
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
@@ -2255,27 +2371,58 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[1]]]
                                 polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
                                 
+                        if len(root.enrichNodes) == 4:
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
+                            pt7 = index7[0][0] + len(p)
+                            Usolution[pt7] = uh_elem_2( nodes7.x, nodes7.y )
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], pt6, tri_nodes1[2]]]
+                                polygonList = polygonList + [[pt6, pt7, tri_nodes1[2]]]
+                                polygonList = polygonList + [[pt7, tri_nodes1[1], tri_nodes1[2]]]
                                 
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[1]]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], pt7 ]]
+                                polygonList = polygonList + [[pt7, tri_nodes2[1], tri_nodes2[2]]]
                                 
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
                                 
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, pt7 ]]
+                                polygonList = polygonList + [[tri_nodes2[0], pt7, tri_nodes2[2]]]
                                 
-        
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
+                                polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[1]]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], pt7 ]]
+                                polygonList = polygonList + [[pt7, tri_nodes3[1], tri_nodes3[2]]]
+                                     
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#        
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -2303,11 +2450,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [south_nodes[4],south_nodes[2],south_nodes[3]]
                         tri_nodes3 = [south_nodes[4],south_nodes[1],south_nodes[2]] # the one triangle in a diff material
                         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-        
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -2399,8 +2541,14 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[3],0] = uh_elem_1( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
         
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+        
+        
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
@@ -2423,27 +2571,62 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], pt6]]
                                 polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
 
-                        txP = np.arange(x0,x1+0.00001,0.001)
-            
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            for idx in range(0,len(tx)):
-            
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
-                                
+
+                        if len(root.enrichNodes) == 4:
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
+                            pt7 = index7[0][0] + len(p)
+                            Usolution[pt7] = uh_elem_2( nodes7.x, nodes7.y )
+                            
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes1[0], pt6, pt7]]
+                                polygonList = polygonList + [[tri_nodes1[0], pt7, tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], pt7 ]]
+                                polygonList = polygonList + [[pt7, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                                polygonList = polygonList + [[pt6, pt7, tri_nodes2[2]]]
+                                polygonList = polygonList + [[pt7, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], pt7]]
+                                polygonList = polygonList + [[pt7, tri_nodes3[1], tri_nodes3[2]]]
+
+
+#                        txP = np.arange(x0,x1+0.00001,0.001)
+            
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            for idx in range(0,len(tx)):
+#            
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#                            
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -2473,12 +2656,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [west_nodes[1],west_nodes[2],west_nodes[4]]
                         tri_nodes3 = [west_nodes[4],west_nodes[2],west_nodes[3]] 
         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-        
-    
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -2568,9 +2745,15 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[2],0] = uh_elem_3( p[nodes[2],0], p[nodes[2],1]  )
                         Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
-                    
+                        
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+        
+        
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
@@ -2593,26 +2776,58 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[2]]]
                                 polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
                                 
+                        if len(root.enrichNodes) == 4:
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
+                            
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
+                            pt7 = index7[0][0] + len(p)
+                            Usolution[pt7] = uh_elem_2( nodes7.x, nodes7.y )
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes1[0], pt6, pt7 ]]
+                                polygonList = polygonList + [[tri_nodes1[0], pt7, tri_nodes1[2]]]
                                 
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], pt7]]
+                                polygonList = polygonList + [[pt7, tri_nodes2[1], tri_nodes2[2]]]
                                 
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
                                 
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt7]]
+                                polygonList = polygonList + [[pt6, pt7, tri_nodes2[0]]]
+                                polygonList = polygonList + [[pt6, tri_nodes2[1], tri_nodes2[2]]]
                                 
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
+                                polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[2]]]
+                                polygonList = polygonList + [[pt6, pt7, tri_nodes3[2]]]
+                                polygonList = polygonList + [[pt7, tri_nodes3[1], tri_nodes3[2]]]
+                                
+                                        
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -2641,12 +2856,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [east_nodes[0],east_nodes[4],east_nodes[3]]
                         tri_nodes3 = [east_nodes[4],east_nodes[2],east_nodes[3]] # the one triangle in a diff material
         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-    
-    
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -2735,8 +2944,14 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[3],0] = uh_elem_3( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_2( p[nodes[4],0], p[nodes[4],1]  )
                         
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+    
+    
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
@@ -2760,28 +2975,63 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 polygonList = polygonList + [[pt6, tri_nodes3[1], tri_nodes3[2]]]
                                 
                         
-                        txP = np.arange(x0,x1+0.00001,0.001)
-            
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            for idx in range(0,len(tx)):
-            
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
-    
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
-                                
+                        if len(root.enrichNodes) == 4:
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+                            pt6 = index6[0][0] + len(p)
+                            Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
+                            pt7 = index7[0][0] + len(p)
+                            Usolution[pt7] = uh_elem_2( nodes7.x, nodes7.y )
+                            
+                            
+                            if triangle_1 == True:
+                                # triangle 1 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], pt6]]
+                                polygonList = polygonList + [[pt6, tri_nodes1[1], pt7]]
+                                polygonList = polygonList + [[pt7, tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, tri_nodes2[2]]]
+                                polygonList = polygonList + [[pt6, pt7, tri_nodes2[2]]]
+                                polygonList = polygonList + [[pt7, tri_nodes2[1], tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            else:
+                                # triangle 3 is curved
+                                polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], pt6]]
+                                polygonList = polygonList + [[tri_nodes2[0], pt6, pt7]]
+                                polygonList = polygonList + [[tri_nodes2[0], pt7, tri_nodes2[2]]]
+                                
+                                polygonList = polygonList + [[tri_nodes3[0], pt6, tri_nodes3[1]]]
+                                polygonList = polygonList + [[pt6, tri_nodes3[1], pt7]]
+                                polygonList = polygonList + [[pt7 , tri_nodes3[1], tri_nodes3[2]]]
+                                
+                        
+                            
+#                        txP = np.arange(x0,x1+0.00001,0.001)
+            
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            for idx in range(0,len(tx)):
+#            
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#    
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#                            
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -2805,12 +3055,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes2 = [nodes[4],nodes[1],nodes[5]]
                         tri_nodes3 = [nodes[1],nodes[2],nodes[5]]
                         tri_nodes4 = [nodes[4],nodes[5],nodes[3]] 
-    
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
     
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
@@ -2925,7 +3169,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
                             J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
                             
-                            if len(root.enrichNodes) <= 3:
+                            if len(root.enrichNodes) < 3:
                                 
                                 [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
                                 [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
@@ -2933,9 +3177,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
                                 J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
                             
-                            if len(root.enrichNodes) == 33:
-                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-        
+                            if len(root.enrichNodes) == 3:
+#                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                
                                 lOrd = [1,2,0] # local order 
                                 vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
                                 vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
@@ -2959,9 +3204,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
-         
-                            all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
                             
+                            print 'NW element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
+                            print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                            
+                            
+                            all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                            print 'all_elems_sum = ', all_elems_sum
                             
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
@@ -2970,8 +3219,16 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
                 
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+    
+    
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+                            #index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_4( nodes6.x, nodes6.y )
                             
@@ -2988,11 +3245,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt6, tri_nodes4[1], tri_nodes4[2]]]
                             
                         if len(root.enrichNodes) == 4:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_4( nodes6.x, nodes6.y )
                             
-                            index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
                             pt7 = index7[0][0] + len(p)
                             Usolution[pt7] = uh_elem_4( nodes7.x, nodes7.y )
                             
@@ -3010,30 +3267,30 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt7, pt6, tri_nodes4[2]]]
                             polygonList = polygonList + [[pt7, tri_nodes4[1], tri_nodes4[2]]]
                             
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            tx4 = []
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                    tx4.append(tx[idx])
-        
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
-                            tx4 = np.array(tx4)
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            tx4 = []
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+#                                    tx4.append(tx[idx])
+#        
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
+#                            tx4 = np.array(tx4)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -3100,13 +3357,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_coords3 = p[tri_nodes3]
                         tri_coords4 = p[tri_nodes4]
         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-
-                        
         
                         #Nbasis_1 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri1[1],lambda x,y: 0]
                         #Nbasis_2 = [Nbasis[0],Nbasis[1],Nbasis[2],Nbasis[3],Nbasis_tri2[0],Nbasis_tri2[1]]
@@ -3174,7 +3424,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
                             J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
                             
-                            if len(root.enrichNodes) <= 3:
+                            if len(root.enrichNodes) < 3:
                                 
                                 [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
                                 [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
@@ -3182,9 +3432,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
                                 J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
 
-                            if len(root.enrichNodes) == 33:
+                            if len(root.enrichNodes) == 3:
 
-                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                
                                 
                                 lOrd = [2,0,1] # local order    
                                 vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
@@ -3212,8 +3464,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
              
+                            print 'SE element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
+                            print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-            
+                            print 'all_elems_sum = ', all_elems_sum
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
@@ -3222,8 +3476,16 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+
+                        
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+#                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
@@ -3239,11 +3501,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt6, tri_nodes4[1], tri_nodes4[2]]]
 
                         if len(root.enrichNodes) == 4:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_2( nodes6.x, nodes6.y )
                             
-                            index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
                             pt7 = index7[0][0] + len(p)
                             Usolution[pt7] = uh_elem_2( nodes7.x, nodes7.y )
                           
@@ -3261,31 +3523,31 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt7, tri_nodes4[1], tri_nodes4[2]]]
                             
     
-                        txP = np.arange(x0,x1+0.00001,0.001)
-            
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            tx4 = []
-                            for idx in range(0,len(tx)):
-            
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                    tx4.append(tx[idx])
-                            
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
-                            tx4 = np.array(tx4)
+#                        txP = np.arange(x0,x1+0.00001,0.001)
+#            
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            tx4 = []
+#                            for idx in range(0,len(tx)):
+#            
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+#                                    tx4.append(tx[idx])
+#                            
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
+#                            tx4 = np.array(tx4)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -3309,12 +3571,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes3 = [nodes[0],nodes[1],nodes[4]]
                         tri_nodes4 = [nodes[4],nodes[2],nodes[5]] # the one triangle in a diff material
                         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-    
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -3423,7 +3679,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
                             J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
                             
-                            if len(root.enrichNodes) <= 3:
+                            if len(root.enrichNodes) < 3:
                                 
                                 [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
                                 [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
@@ -3432,10 +3688,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
                                 J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
         
-                            if len(root.enrichNodes) == 33:
+                            if len(root.enrichNodes) == 3:
         
-                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-                                           
+#                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                         
                                 lOrd = [0,1,2] # local order 
                                 vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
                                 vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
@@ -3463,8 +3720,12 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
              
+                            print 'NE corner: element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
+                            print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                            
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-        
+                            print 'all_elems_sum = ', all_elems_sum
+                            
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
                         Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
@@ -3472,8 +3733,16 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[4],0] = uh_elem_4( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_4( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+    
+    
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+#                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_4( nodes6.x, nodes6.y )
                             
@@ -3490,11 +3759,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt6, tri_nodes4[1], tri_nodes4[2]]]
                         
                         if len(root.enrichNodes) == 4:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_4( nodes6.x, nodes6.y )
                             
-                            index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
                             pt7 = index7[0][0] + len(p)
                             Usolution[pt7] = uh_elem_4( nodes7.x, nodes7.y )
                             
@@ -3512,30 +3781,30 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt7, tri_nodes4[1], tri_nodes4[2]]]
                         
                                                         
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            tx4 = []
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
-                                    
-                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                    tx4.append(tx[idx])
-                            
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
-                            tx4 = np.array(tx4)
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            tx4 = []
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                    
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+#                                    tx4.append(tx[idx])
+#                            
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
+#                            tx4 = np.array(tx4)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -3559,12 +3828,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_nodes3 = [nodes[4],nodes[2],nodes[5]]
                         tri_nodes4 = [nodes[4],nodes[1],nodes[2]] # the one triangle in a diff material
         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
-                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
-                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
-                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
-    
                         Pe1 = np.zeros((3,3))
                         Pe1[:,0] = np.ones((3,1)).transpose()
                         Pe1[:,1] = p[tri_nodes1[0:3],0]
@@ -3666,24 +3929,24 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 # canceling the norm computation        
                         if NORM_COMP == 1:
                             
-                            
                             [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
                             [x_fct_4, y_fct_4] = tri_xy_fct( tri_coords4[:,0], tri_coords4[:,1] )
                             
                             J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
                             J_tri4 = tri_jacobian_mat( tri_coords4[:,0], tri_coords4[:,1] )
                             
-                            if len(root.enrichNodes) <= 3:
+                            if len(root.enrichNodes) < 3:
                                 [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
                                 [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
                             
                                 J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
                                 J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
                     
-                            if len(root.enrichNodes) == 33:
+                            if len(root.enrichNodes) == 3:
 
-                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-                                        
+#                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                   
                                 lOrd = [0,1,2] # local order 
                                 vec1_x = [ tri_coords1[ lOrd[0],0], tri_coords1[lOrd[1],0], tri_coords1[lOrd[2],0], (tri_coords1[ lOrd[0],0] + tri_coords1[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords1[lOrd[0],0] + tri_coords1[lOrd[2],0])/2.0  ]
                                 vec1_y = [ tri_coords1[ lOrd[0],1], tri_coords1[lOrd[1],1], tri_coords1[lOrd[2],1], (tri_coords1[ lOrd[0],1] + tri_coords1[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords1[lOrd[0],1] + tri_coords1[lOrd[2],1])/2.0  ]
@@ -3710,18 +3973,29 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)                            
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
          
+                            print 'SW element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
+                            print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
+                            
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                    
-                    
+                            print 'all_elems_sum = ', all_elems_sum
+                        
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
                         Usolution[nodes[2],0] = uh_elem_4( p[nodes[2],0], p[nodes[2],1]  )
                         Usolution[nodes[3],0] = uh_elem_2( p[nodes[3],0], p[nodes[3],1]  )
                         Usolution[nodes[4],0] = uh_elem_1( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_1( p[nodes[5],0], p[nodes[5],1]  )
+                        
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[tri_nodes1[0], tri_nodes1[1], tri_nodes1[2]]]
+                            polygonList = polygonList + [[tri_nodes2[0], tri_nodes2[1], tri_nodes2[2]]]
+                            polygonList = polygonList + [[tri_nodes3[0], tri_nodes3[1], tri_nodes3[2]]]
+                            polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
+    
     
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+#                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_1( nodes6.x, nodes6.y )
                             
@@ -3737,11 +4011,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
                          
                         if len(root.enrichNodes) == 4:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_1( nodes6.x, nodes6.y )
                             
-                            index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
                             pt7 = index7[0][0] + len(p)
                             Usolution[pt7] = uh_elem_1( nodes7.x, nodes7.y )
                             
@@ -3758,30 +4032,30 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[tri_nodes4[0], tri_nodes4[1], tri_nodes4[2]]]
                             
                                
-                        if y0 <= yloc and yloc <= y1:
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            tx1 = []
-                            tx2 = []
-                            tx3 = []
-                            tx4 = []
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
-                                    tx1.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
-                                    tx2.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
-                                    tx3.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
-                                    tx4.append(tx[idx])
-        
-                            tx1 = np.array(tx1)
-                            tx2 = np.array(tx2)
-                            tx3 = np.array(tx3)
-                            tx4 = np.array(tx4)
+#                        if y0 <= yloc and yloc <= y1:
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            tx1 = []
+#                            tx2 = []
+#                            tx3 = []
+#                            tx4 = []
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords1):
+#                                    tx1.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords2):
+#                                    tx2.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords3):
+#                                    tx3.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, tri_coords4):
+#                                    tx4.append(tx[idx])
+#        
+#                            tx1 = np.array(tx1)
+#                            tx2 = np.array(tx2)
+#                            tx3 = np.array(tx3)
+#                            tx4 = np.array(tx4)
     #                         pylab.plot( tx1, uh_elem_1(tx1, yloc))
     #                         pylab.plot( tx2, uh_elem_2(tx2, yloc))
     #                         pylab.plot( tx3, uh_elem_3(tx3, yloc))
@@ -3809,10 +4083,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
         
                         top_coords = p[top_nodes,:]
                         bottom_coords = p[bottom_nodes,:]
-    
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[top_nodes[0],top_nodes[1],top_nodes[2],top_nodes[3]]]
-                            polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],bottom_nodes[2],bottom_nodes[3]]]
     
                         # build the shape functions at the enrichment nodes
                         Pe_enr_top = np.zeros((4,4))
@@ -3843,12 +4113,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
         
                         [x_fct_T, y_fct_T] = xy_fct( top_coords[:,0], top_coords[:,1] )
                         [x_fct_B, y_fct_B] = xy_fct( bottom_coords[:,0], bottom_coords[:,1] )
-        
-                        # computing the Jacobian and the determinant of the left and right children of the parent element
-                        J_top = jacobian_mat( top_coords[:,0], top_coords[:,1] )
-                        J_bottom = jacobian_mat( bottom_coords[:,0], bottom_coords[:,1] )
-                        detJ_top = lambda e,n: determinant(J_top)(e,n)
-                        detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)
         
                         node_enr_4 = [nodes[4]]
                         node_enr_5 = [nodes[5]]
@@ -3903,17 +4167,79 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         
 # canceling the norm computation            
                         if NORM_COMP == 1:
-                            # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-                            # for transformation from the parametric element to phisycal element
-                            # of the Gauss nodes ui
-                            [x_transform_fct_T,y_transform_fct_T] = xy_fct(x_coords_T,y_coords_T)            
-                            [x_transform_fct_B,y_transform_fct_B] = xy_fct(x_coords_B,y_coords_B)            
 
+                            if len(root.enrichNodes) < 3:
+                                # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                                # for transformation from the parametric element to phisycal element
+                                # of the Gauss nodes ui
+                                [x_transform_fct_T,y_transform_fct_T] = xy_fct(x_coords_T,y_coords_T)            
+                                [x_transform_fct_B,y_transform_fct_B] = xy_fct(x_coords_B,y_coords_B)            
+                                # computing the Jacobian and the determinant of the left and right children of the parent element
+                                J_top = jacobian_mat( top_coords[:,0], top_coords[:,1] )
+                                J_bottom = jacobian_mat( bottom_coords[:,0], bottom_coords[:,1] )
+                              
+                            if len(root.enrichNodes) == 3:
+#                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                
+                                lOrd = [0,1,2,3] # local order    
+                                vecB_x = [ bottom_coords[ lOrd[0],0], 
+                                          (bottom_coords[ lOrd[0],0] + bottom_coords[lOrd[1],0])/2.0,
+                                          bottom_coords[lOrd[1],0],
+                                          (bottom_coords[lOrd[1],0] + bottom_coords[lOrd[2],0])/2.0,
+                                          bottom_coords[lOrd[2],0], 
+                                          coord_enrich.x, 
+                                          bottom_coords[lOrd[3],0],
+                                          (bottom_coords[lOrd[3],0] + bottom_coords[lOrd[0],0])/2.0
+                                         ]
+                                vecB_y = [ bottom_coords[ lOrd[0],1], 
+                                          (bottom_coords[ lOrd[0],1] + bottom_coords[lOrd[1],1])/2.0,
+                                          bottom_coords[lOrd[1],1],
+                                          (bottom_coords[lOrd[1],1] + bottom_coords[lOrd[2],1])/2.0,
+                                          bottom_coords[lOrd[2],1], 
+                                          coord_enrich.y, 
+                                          bottom_coords[lOrd[3],1],
+                                          (bottom_coords[lOrd[3],1] + bottom_coords[lOrd[0],1])/2.0
+                                         ]
+                        
+                                [x_transform_fct_B, y_transform_fct_B] = quad_xy_fct_bi_quadratic( vecB_x, vecB_y )
+                                J_bottom = quad_jacobian_mat_bi_quadratic( vecB_x, vecB_y )
+                                
+                                lOrd = [2,3,0,1]
+                                vecT_x = [ top_coords[ lOrd[0],0], 
+                                          (top_coords[ lOrd[0],0] + top_coords[lOrd[1],0])/2.0,
+                                          top_coords[lOrd[1],0],
+                                          (top_coords[lOrd[1],0] + top_coords[lOrd[2],0])/2.0,
+                                          top_coords[lOrd[2],0], 
+                                          coord_enrich.x, 
+                                          top_coords[lOrd[3],0],
+                                          (top_coords[lOrd[3],0] + top_coords[lOrd[0],0])/2.0
+                                         ]
+                                vecT_y = [ top_coords[ lOrd[0],1], 
+                                          (top_coords[ lOrd[0],1] + top_coords[lOrd[1],1])/2.0,
+                                          top_coords[lOrd[1],1],
+                                          (top_coords[lOrd[1],1] + top_coords[lOrd[2],1])/2.0,
+                                          top_coords[lOrd[2],1], 
+                                          coord_enrich.y, 
+                                          top_coords[lOrd[3],1],
+                                          (top_coords[lOrd[3],1] + top_coords[lOrd[0],1])/2.0
+                                         ]
+                        
+                                [x_transform_fct_T, y_transform_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
+                                J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )
+                            
+                            detJ_top = lambda e,n: determinant(J_top)(e,n)
+                            detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)   
+                            
                             el_sum_T =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
                             el_sum_B =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
              
+                            print 'Horizontal element', e,' and vals:', el_sum_T, el_sum_B
+                            print 'Element sum:', el_sum_T + el_sum_B
+                            
                             all_elems_sum = all_elems_sum + el_sum_T + el_sum_B
-                    
+                            print 'all_elems_sum = ', all_elems_sum
+                            
                         Usolution[nodes[0],0] = uh_elem_B( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_B( p[nodes[1],0], p[nodes[1],1]  )
                         Usolution[nodes[2],0] = uh_elem_T( p[nodes[2],0], p[nodes[2],1]  )
@@ -3921,8 +4247,14 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[4],0] = uh_elem_B( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_B( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[top_nodes[0],top_nodes[1],top_nodes[2],top_nodes[3]]]
+                            polygonList = polygonList + [[bottom_nodes[0],bottom_nodes[1],bottom_nodes[2],bottom_nodes[3]]]
+    
+    
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+#                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_B( nodes6.x, nodes6.y )
                             
@@ -3936,11 +4268,11 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
     
     
                         if len(root.enrichNodes) == 4:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_B( nodes6.x, nodes6.y )
                             
-                            index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
                             pt7 = index7[0][0] + len(p)
                             Usolution[pt7] = uh_elem_B( nodes7.x, nodes7.y )
     
@@ -3952,24 +4284,24 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[bottom_nodes[0], bottom_nodes[1], pt7, pt6]]
                             polygonList = polygonList + [[pt7,bottom_nodes[1],bottom_nodes[2]]]
                             
-                        if y0 <= yloc and yloc <= y1:
-        
-                            tx = np.arange(coords[0,0],coords[1,0]+0.01,0.001)
-                            txT = []
-                            txB = []
-        
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, top_coords):
-                                    txT.append(tx[idx])
-                                if point_in_on_poly( tx[idx]-0.1, yloc, top_coords):
-                                    txT.append(tx[idx]-0.1)
-                                
-                                if point_in_on_poly( tx[idx], yloc, bottom_coords):
-                                    txB.append(tx[idx])
-                                
-                            txT = np.array(txT)
-                            txB = np.array(txB)
+#                        if y0 <= yloc and yloc <= y1:
+#        
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.01,0.001)
+#                            txT = []
+#                            txB = []
+#        
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, top_coords):
+#                                    txT.append(tx[idx])
+#                                if point_in_on_poly( tx[idx]-0.1, yloc, top_coords):
+#                                    txT.append(tx[idx]-0.1)
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, bottom_coords):
+#                                    txB.append(tx[idx])
+#                                
+#                            txT = np.array(txT)
+#                            txB = np.array(txB)
     #                         pylab.plot( txT, uh_elem_T(txT, yloc))
     #                         pylab.plot( txB, uh_elem_B(txB, yloc))
         
@@ -3997,10 +4329,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         # coordinates of the right sub-element or the sub-element number 2
                         right_coords = p[right_nodes,:]
         
-                        if len(root.enrichNodes) < 3:
-                            polygonList = polygonList + [[left_nodes[0],left_nodes[1],left_nodes[2],left_nodes[3]]]
-                            polygonList = polygonList + [[right_nodes[0],right_nodes[1],right_nodes[2],right_nodes[3]]]
-    
                         # build the shape functions at the enrichment nodes
                         Pe_enr_left = np.zeros((4,4))
                         Pe_enr_left[:,0] = np.ones((4,1)).transpose()
@@ -4032,16 +4360,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         psi_btm_R = lambda x,y: Nbasis_enr_right[0](x,y)
                         psi_upr_R = lambda x,y: Nbasis_enr_right[3](x,y)
          
-         
-                        # getting x and y coordinates transformed into the [-1,1] and [-1,1] intervals
-                        [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
-                        [x_fct_R, y_fct_R] = xy_fct( right_coords[:,0], right_coords[:,1] )
-         
-                        # computing the Jacobian and the determinant of the left and right children of the parent element
-                        J_left = jacobian_mat( left_coords[:,0], left_coords[:,1] )
-                        J_right = jacobian_mat( right_coords[:,0], right_coords[:,1] )
-                        detJ_left = lambda eps,niu: determinant(J_left)(eps,niu)
-                        detJ_right = lambda eps,niu: determinant(J_right)(eps,niu)
              
                         # scaling factor
                         ##x1 = abs(loc - coords[0,0])
@@ -4110,17 +4428,80 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 
 # canceling the norm computation            
                         if NORM_COMP == 1:
-                            # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
-                            # for transformation from the parametric element to phisycal element
-                            # of the Gauss nodes ui
-                            [x_transform_fct_L,y_transform_fct_L] = xy_fct(x_coords_L,y_coords_L)            
-                            [x_transform_fct_R,y_transform_fct_R] = xy_fct(x_coords_R,y_coords_R)            
-                            
+                            if len(root.enrichNodes) < 3:
+                                # create the x = f(epsilon,niu) and y = g(epsilon,niu) functions
+                                # for transformation from the parametric element to phisycal element
+                                # of the Gauss nodes ui
+                                [x_transform_fct_L,y_transform_fct_L] = xy_fct(left_coords[:,0], left_coords[:,1])            
+                                [x_transform_fct_R,y_transform_fct_R] = xy_fct(right_coords[:,0], right_coords[:,1])            
+         
+                                # computing the Jacobian and the determinant of the left and right children of the parent element
+                                J_left = jacobian_mat( left_coords[:,0], left_coords[:,1] )
+                                J_right = jacobian_mat( right_coords[:,0], right_coords[:,1] )
+                                                    
+                            if len(root.enrichNodes) == 3:
+                                
+#                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                
+                                lOrd = [3,0,1,2] # local order    
+                                vecL_x = [ left_coords[ lOrd[0],0], 
+                                          (left_coords[ lOrd[0],0] + left_coords[lOrd[1],0])/2.0,
+                                          left_coords[lOrd[1],0],
+                                          (left_coords[lOrd[1],0] + left_coords[lOrd[2],0])/2.0,
+                                          left_coords[lOrd[2],0], 
+                                          coord_enrich.x, 
+                                          left_coords[lOrd[3],0],
+                                          (left_coords[lOrd[3],0] + left_coords[lOrd[0],0])/2.0
+                                         ]
+                                vecL_y = [ left_coords[ lOrd[0],1], 
+                                          (left_coords[ lOrd[0],1] + left_coords[lOrd[1],1])/2.0,
+                                          left_coords[lOrd[1],1],
+                                          (left_coords[lOrd[1],1] + left_coords[lOrd[2],1])/2.0,
+                                          left_coords[lOrd[2],1], 
+                                          coord_enrich.y, 
+                                          left_coords[lOrd[3],1],
+                                          (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/2.0
+                                         ]
+                        
+                                
+                                [x_transform_fct_L, y_transform_fct_L] = quad_xy_fct_bi_quadratic( vecL_x, vecL_y )
+                                J_left = quad_jacobian_mat_bi_quadratic( vecL_x, vecL_y )
+                                
+                                lOrd = [1,2,3,0]
+                                vecR_x = [ right_coords[ lOrd[0],0], 
+                                          (right_coords[ lOrd[0],0] + right_coords[lOrd[1],0])/2.0,
+                                          right_coords[lOrd[1],0],
+                                          (right_coords[lOrd[1],0] + right_coords[lOrd[2],0])/2.0,
+                                          right_coords[lOrd[2],0], 
+                                          coord_enrich.x, 
+                                          right_coords[lOrd[3],0],
+                                          (right_coords[lOrd[3],0] + right_coords[lOrd[0],0])/2.0
+                                         ]
+                                vecR_y = [ right_coords[ lOrd[0],1], 
+                                          (right_coords[ lOrd[0],1] + right_coords[lOrd[1],1])/2.0,
+                                          right_coords[lOrd[1],1],
+                                          (right_coords[lOrd[1],1] + right_coords[lOrd[2],1])/2.0,
+                                          right_coords[lOrd[2],1], 
+                                          coord_enrich.y, 
+                                          right_coords[lOrd[3],1],
+                                          (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/2.0
+                                         ]
+                                
+                                [x_transform_fct_R, y_transform_fct_R] = quad_xy_fct_bi_quadratic( vecR_x, vecR_y )
+                                J_right = quad_jacobian_mat_bi_quadratic( vecR_x, vecR_y )
+
+
+                            detJ_left = lambda eps,niu: determinant(J_left)(eps,niu)
+                            detJ_right = lambda eps,niu: determinant(J_right)(eps,niu)
+                        
                             el_sum_L =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
                             el_sum_R =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
     
+                            print 'vertical element', e,' and vals', el_sum_R, el_sum_L
                             all_elems_sum = all_elems_sum + el_sum_R + el_sum_L;
-        
+                            print 'all_elems_sum = ', all_elems_sum
+                            
                         Usolution[nodes[0],0] = uh_elem_L( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_R( p[nodes[1],0], p[nodes[1],1]  )
                         Usolution[nodes[2],0] = uh_elem_R( p[nodes[2],0], p[nodes[2],1]  )
@@ -4128,8 +4509,14 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Usolution[nodes[4],0] = uh_elem_L( p[nodes[4],0], p[nodes[4],1]  )
                         Usolution[nodes[5],0] = uh_elem_L( p[nodes[5],0], p[nodes[5],1]  )
     
+                        if len(root.enrichNodes) < 3:
+                            polygonList = polygonList + [[left_nodes[0],left_nodes[1],left_nodes[2],left_nodes[3]]]
+                            polygonList = polygonList + [[right_nodes[0],right_nodes[1],right_nodes[2],right_nodes[3]]]
+    
+    
                         if len(root.enrichNodes) == 3:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
+#                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
                             Usolution[pt6] = uh_elem_L( nodes6.x, nodes6.y )
                             
@@ -4142,13 +4529,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt6,right_nodes[2],right_nodes[3]]]
     
                         if len(root.enrichNodes) == 4:
-                            index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
+                            index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
                             pt6 = index6[0][0] + len(p)
-                            Usolution[pt6] = uh_elem_B( nodes6.x, nodes6.y )
+                            Usolution[pt6] = uh_elem_L( nodes6.x, nodes6.y )
                             
-                            index7 = numpy.where(numpy.all(p_extra==[nodes7.x, nodes7.y],axis=1))
+                            index7 = numpy.where(numpy.all(p_extra==[old_node7.x, old_node7.y],axis=1))
                             pt7 = index7[0][0] + len(p)
-                            Usolution[pt7] = uh_elem_B( nodes7.x, nodes7.y )
+                            Usolution[pt7] = uh_elem_L( nodes7.x, nodes7.y )
                             
                             polygonList = polygonList + [[left_nodes[0],left_nodes[1],pt6]]
                             polygonList = polygonList + [[left_nodes[0],pt6,pt7,left_nodes[3]]]
@@ -4159,25 +4546,29 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             polygonList = polygonList + [[pt6,right_nodes[1],right_nodes[2],pt7]]
     
     
-                        if y0 <= yloc and yloc <= y1:
-        
-                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
-                            txL = []
-                            txR = []
-        
-                            for idx in range(0,len(tx)):
-        
-                                if point_in_on_poly( tx[idx], yloc, left_coords):
-                                    txL.append(tx[idx])
-                                
-                                if point_in_on_poly( tx[idx], yloc, right_coords):
-                                    txR.append(tx[idx])
-                                
-                            txL = np.array(txL)
-                            txR = np.array(txR)
+#                        if y0 <= yloc and yloc <= y1:
+#        
+#                            tx = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
+#                            txL = []
+#                            txR = []
+#        
+#                            for idx in range(0,len(tx)):
+#        
+#                                if point_in_on_poly( tx[idx], yloc, left_coords):
+#                                    txL.append(tx[idx])
+#                                
+#                                if point_in_on_poly( tx[idx], yloc, right_coords):
+#                                    txR.append(tx[idx])
+#                                
+#                            txL = np.array(txL)
+#                            txR = np.array(txR)
     #                         pylab.plot( txL, uh_elem_L(txL, yloc))
     #                         pylab.plot( txR, uh_elem_R(txR, yloc))
         
+
+#    numpy.save('points6.npy', p_points6)
+    print all_elems_sum
+    print 'norm is: ', math.sqrt(all_elems_sum)
 
 #    print Usolution
     print 'Writing VTK file...' 
@@ -4245,6 +4636,63 @@ def print_vtk_file(p,Usolution,plist,p_extra):
 
     target.close()
 
+def coord_enrich_comp_quad_circle(p,nodes6):
+    
+    node4 = Coordinate(p[4,0], p[4,1])
+    node5 = Coordinate(p[5,0], p[5,1])
+    midPoint = Coordinate((node4.x + node5.x)/2.0, (node4.y + node5.y)/2.0)
+    
+    if node4.x != node5.x:
+         xx = [node4.x, node5.x, nodes6.x]
+         x_n = [node4.x, node5.x, nodes6.x]
+         yy = [0,0,0]
+         y_n = [node4.y, node5.y, nodes6.y]
+         xx.sort()
+         for i in range(0,3):
+             indx = x_n.index(xx[i])
+             yy[i] = y_n[indx]  
+         
+         # quadratic interpolation
+         f = interpolate.interp1d(np.array(xx), np.array(yy))
+         coord_enrich = Coordinate(0,0)
+         coord_enrich.x = midPoint.x
+         coord_enrich.y = f(midPoint.x)
+ 
+    else:
+         xx = [0,0,0]
+         x_n = [node4.x, node5.x, nodes6.x]
+         yy = [node4.y, node5.y, nodes6.y]
+         y_n = [node4.y, node5.y, nodes6.y]
+         yy.sort()
+         for i in range(0,3):
+             indx = y_n.index(yy[i])
+             xx[i] = x_n[indx]  
+             
+         
+         f = interpolate.interp1d(np.array(yy), np.array(xx))
+         coord_enrich = Coordinate(0,0)
+         coord_enrich.x = f(midPoint.y)
+         coord_enrich.y = midPoint.y
+
+##    coord_enrich = Coordinate(root.enrichNodes[2].x, root.enrichNodes[2].y)
+#    coord_enrich.x =  coord_enrich.x / 1000.0
+#    if coord_enrich.x != 0.0:
+#        coord_enrich.x += 0.001
+#    coord_enrich.y =  coord_enrich.y / 1000.0
+#    if coord_enrich.y != 0.0:
+#        coord_enrich.y += 0.001
+#    coord_enrich.y = 1 - coord_enrich.y
+        
+
+    new_coord_enrich1 = Coordinate(0, 0)
+    [c_center, c_rad] = which_circle(coord_enrich)
+    new_coord_enrich1.x = c_center.x + c_rad * ( coord_enrich.x - c_center.x) / math.sqrt( math.pow(coord_enrich.x - c_center.x, 2) + math.pow(coord_enrich.y - c_center.y,2) )
+    new_coord_enrich1.y = c_center.y + c_rad * ( coord_enrich.y - c_center.y) / math.sqrt( math.pow(coord_enrich.x - c_center.x, 2) + math.pow( coord_enrich.y - c_center.y,2) )
+           
+    return new_coord_enrich1
+
+    return coord_enrich
+
 def coord_enrich_comp_quad(root):
     
     midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
@@ -4283,13 +4731,20 @@ def coord_enrich_comp_quad(root):
 
 #    coord_enrich = Coordinate(root.enrichNodes[2].x, root.enrichNodes[2].y)
     coord_enrich.x =  coord_enrich.x / 1000.0
-#    if coord_enrich.x != 0.0:
-#        coord_enrich.x += 0.001
+    if coord_enrich.x != 0.0:
+        coord_enrich.x += 0.001
     coord_enrich.y =  coord_enrich.y / 1000.0
-#    if coord_enrich.y != 0.0:
-#        coord_enrich.y += 0.001
+    if coord_enrich.y != 0.0:
+        coord_enrich.y += 0.001
     coord_enrich.y = 1 - coord_enrich.y
         
+
+    new_coord_enrich1 = Coordinate(0, 0)
+    [c_center, c_rad] = which_circle(coord_enrich)
+    new_coord_enrich1.x = c_center.x + c_rad * ( coord_enrich.x - c_center.x) / math.sqrt( math.pow(coord_enrich.x - c_center.x, 2) + math.pow(coord_enrich.y - c_center.y,2) )
+    new_coord_enrich1.y = c_center.y + c_rad * ( coord_enrich.y - c_center.y) / math.sqrt( math.pow(coord_enrich.x - c_center.x, 2) + math.pow( coord_enrich.y - c_center.y,2) )
+           
+    return new_coord_enrich1
 
     return coord_enrich
 
@@ -4297,23 +4752,24 @@ def coord_enrich_computation(E):
         
     coord_enrich1 = Coordinate(E.x, E.y)
     coord_enrich1.x =  coord_enrich1.x / 1000.0
-#    if coord_enrich1.x != 0.0:
-#        coord_enrich1.x += 0.001
+    if coord_enrich1.x != 0.0:
+        coord_enrich1.x += 0.001
     coord_enrich1.y =  coord_enrich1.y / 1000.0
-#    if coord_enrich1.y != 0.0:
-#        coord_enrich1.y += 0.001
+    if coord_enrich1.y != 0.0:
+        coord_enrich1.y += 0.001
     coord_enrich1.y = 1 - coord_enrich1.y
     
-#     coord_enrich2 = Coordinate(F.x, F.y)
-#     coord_enrich2.x =  coord_enrich2.x / 1000.0
-#     if coord_enrich2.x != 0.0:
-#         coord_enrich2.x += 0.001
-#     coord_enrich2.y =  coord_enrich2.y / 1000.0
-#     if coord_enrich2.y != 0.0:
-#         coord_enrich2.y += 0.001
-#     coord_enrich2.y = 1 - coord_enrich2.y
-    
-    return coord_enrich1
+#    print '-------- inside coord enrich computation -------'
+#    print coord_enrich1.x, coord_enrich1.y
+    new_coord_enrich1 = Coordinate(0, 0)
+    [c_center, c_rad] = which_circle(coord_enrich1)
+#    print math.sqrt( math.pow(coord_enrich1.x - c_center.x, 2) + math.pow(coord_enrich1.y - c_center.y,2) )
+#    print [c_center.x, c_center.y], c_rad
+    new_coord_enrich1.x = c_center.x + c_rad * ( coord_enrich1.x - c_center.x) / math.sqrt( math.pow(coord_enrich1.x - c_center.x, 2) + math.pow(coord_enrich1.y - c_center.y,2) )
+    new_coord_enrich1.y = c_center.y + c_rad * ( coord_enrich1.y - c_center.y) / math.sqrt( math.pow(coord_enrich1.x - c_center.x, 2) + math.pow( coord_enrich1.y - c_center.y,2) )
+           
+#    print new_coord_enrich1.x, new_coord_enrich1.y     
+    return new_coord_enrich1
 
 def circumcenter_tri(coords):
 # computing the circumcenter of the triangle defined by coordinates a, b, and c
@@ -4345,7 +4801,7 @@ def circumcenter_tri(coords):
 #     U.y = (a.y + b.y + c.y) / 3.0
     return U
     
-def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
+def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -4418,7 +4874,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) >= 2:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -4426,11 +4882,12 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
         [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
         J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
            
-    if len(root.enrichNodes) == 33:
+    if len(root.enrichNodes) == 3:
 
 #         midPoint = Coordinate((root.enrichNodes[0].x +root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
         
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess],nodes6)
         
         lOrd = [1,2,0] # local order 
         
@@ -4737,10 +5194,10 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_4[j]( x_fct_4(e,n), y_fct_4(e,n)) ) * det_J4(e,n)
             
 
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-            integral4 = simpson_rule(Kefunc4)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
+            integral4 = my_gauss_rule(Kefunc4,ui,wi)
 
             K[i,j] = integral1 + integral2 + integral3 + integral4
 
@@ -4752,14 +5209,14 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image):
             fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
             fv4 = lambda e,n: rhs(e,n) * Nbasis_4[i](x_fct_4(e,n),y_fct_4(e,n)) * det_J4(e,n)
 
-            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) + simpson_rule(fv4)
+            Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) + my_gauss_rule(fv4,ui,wi)
 
             #NEUMANN BCS are zero - code not inserted here
 
     return [K,Fe]
 
 
-def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
+def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -4836,7 +5293,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
     [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
     J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
             
-    if len(root.enrichNodes) >= 2:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
         J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
@@ -4844,12 +5301,13 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
         J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
            
-    if len(root.enrichNodes) == 33:
+    if len(root.enrichNodes) == 3:
         
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-                
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+              
         lOrd = [0,1,2] # local order 
           
         vec1_x = [ coords1[ lOrd[0],0], coords1[lOrd[1],0], coords1[lOrd[2],0], (coords1[ lOrd[0],0] + coords1[lOrd[1],0])/2.0, coord_enrich.x, (coords1[lOrd[0],0] + coords1[lOrd[2],0])/2.0  ]
@@ -5131,10 +5589,11 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
                                 Ny_4[i]( x_fct_4(e,n), y_fct_4(e,n)) *
                                 Ny_4[j]( x_fct_4(e,n), y_fct_4(e,n)) ) * det_J4(e,n)
             
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-            integral4 = simpson_rule(Kefunc4)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
+            integral4 = my_gauss_rule(Kefunc4,ui,wi)
+            print [i,j], integral1, integral2, integral3, integral4
             K[i,j] = integral1 + integral2 + integral3 + integral4
 
         # construct the local matrix and local components of the load vector
@@ -5145,12 +5604,12 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image):
         fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
         fv4 = lambda e,n: rhs(e,n) * Nbasis_4[i](x_fct_4(e,n),y_fct_4(e,n)) * det_J4(e,n)
 
-        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) + simpson_rule(fv4)
+        Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) + my_gauss_rule(fv4,ui,wi)
 
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
+def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -5237,12 +5696,9 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
         
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
     
-#        root.printRect()
-#        print coords4
-        coord_enrich = coord_enrich_comp_quad(root)
-#        print '$$$$$$$$$$',coord_enrich.x, coord_enrich.y
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-#        print coord_enrich.x, coord_enrich.y           
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        
         lOrd = [0,1,2] # local order 
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
         vec2_y = [ coords2[ lOrd[0],1], coords2[lOrd[1],1], coords2[lOrd[2],1], (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/2.0, coord_enrich.y, (coords2[lOrd[0],1] + coords2[lOrd[2],1])/2.0  ]
@@ -5503,12 +5959,12 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_4[i]( x_fct_4(e,n), y_fct_4(e,n)) *
                                 Ny_4[j]( x_fct_4(e,n), y_fct_4(e,n)) ) * det_J4(e,n)
             
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-            integral4 = simpson_rule(Kefunc4)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
+            integral4 = my_gauss_rule(Kefunc4,ui,wi)
 
-#            print [i,j], integral2, simpson_rule4(Kefunc2), abs(integral2 - simpson_rule4(Kefunc2))
+#            print [i,j], integral2, my_gauss_rule4(Kefunc2), abs(integral2 - my_gauss_rule4(Kefunc2))
 #            print quad2d(Kefunc2,x0,x1,y0,y1,ui,wi)
 
             K[i,j] = integral1 + integral2 + integral3 + integral4
@@ -5521,14 +5977,14 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image):
             fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
             fv4 = lambda e,n: rhs(e,n) * Nbasis_4[i](x_fct_4(e,n),y_fct_4(e,n)) * det_J4(e,n)
 
-            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) + simpson_rule(fv4)
+            Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) + my_gauss_rule(fv4,ui,wi)
 
 #    print K
 #    print Fe
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
+def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
 #def SE_corner(p,ui,wi,k1,k2,nodess,UConf,pConf,tConf):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
@@ -5614,7 +6070,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
     [x_fct_3, y_fct_3] = tri_xy_fct( coords3[:,0], coords3[:,1] )
     J3 = tri_jacobian_mat( coords3[:,0], coords3[:,1] )
             
-    if len(root.enrichNodes) >= 2:
+    if len(root.enrichNodes) == 2:
         
         [x_fct_2, y_fct_2] = tri_xy_fct( coords2[:,0], coords2[:,1] )
         J2 = tri_jacobian_mat( coords2[:,0], coords2[:,1] )
@@ -5622,11 +6078,12 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         [x_fct_4, y_fct_4] = tri_xy_fct( coords4[:,0], coords4[:,1] )
         J4 = tri_jacobian_mat( coords4[:,0], coords4[:,1] )
         
-    if len(root.enrichNodes) == 33:
+    if len(root.enrichNodes) == 3:
        
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
         
         lOrd = [2,0,1] # local order    
         vec2_x = [ coords2[ lOrd[0],0], coords2[lOrd[1],0], coords2[lOrd[2],0], (coords2[ lOrd[0],0] + coords2[lOrd[1],0])/2.0, coord_enrich.x, (coords2[lOrd[0],0] + coords2[lOrd[2],0])/2.0  ]
@@ -5705,14 +6162,6 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
                   circumcenter_pt2.y 
                   ]
 
-#         print vec2_x
-#         print vec2_y
-#         print coords2
-#         print circumcenter_pt2.x, circumcenter_pt2.y
-#         print min(coords2[ lOrd[0],1], coords2[lOrd[1],1]), coords2[ lOrd[0],1], coords2[lOrd[1],1] 
-#         print (coords2[ lOrd[0],1] + coords2[lOrd[1],1]) / 3.0
-#         print min(coords2[ lOrd[0],1], coords2[lOrd[1],1]) + (coords2[ lOrd[0],1] + coords2[lOrd[1],1])/3.0
-# 
 #         vec2_x = [ coords2[ lOrd[0],0], 
 #                   coords2[lOrd[1],0],
 #                   coords2[lOrd[2],0],
@@ -5946,10 +6395,10 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_4[i]( x_fct_4(e,n), y_fct_4(e,n)) *
                                 Ny_4[j]( x_fct_4(e,n), y_fct_4(e,n)) ) * det_J4(e,n)
             
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
-            integral4 = simpson_rule(Kefunc4)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
+            integral4 = my_gauss_rule(Kefunc4,ui,wi)
 
             K[i,j] = integral1 + integral2 + integral3 + integral4
 
@@ -5961,7 +6410,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image):
         fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
         fv4 = lambda e,n:  rhs(e,n) * Nbasis_4[i](x_fct_4(e,n),y_fct_4(e,n)) * det_J4(e,n)
 
-        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) + simpson_rule(fv4)
+        Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) + my_gauss_rule(fv4,ui,wi)
 
             #NEUMANN BCS are zero - code not inserted here
 
@@ -6045,7 +6494,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
         is_in_same_bin(pxVal14,pxVal34) == True ):
              K_cst = [k2,k2,k1]
 
-    print 'East edge: K = ', K_cst, len(root.enrichNodes)
+#    print 'East edge: K = ', K_cst, len(root.enrichNodes)
 
     if len(root.enrichNodes) == 2:
         [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
@@ -6059,7 +6508,8 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
     if len(root.enrichNodes) == 3:
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -6430,9 +6880,9 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
                                 Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
 
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
 
             K[i,j] = integral1 + integral2 + integral3 
 
@@ -6443,7 +6893,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
         fv2 = lambda e,n:  rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
         fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
 
-        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+        Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) 
 
         #NEUMANN BCS are zero - code not inserted here
 
@@ -6551,7 +7001,8 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     if len(root.enrichNodes) == 3:
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -6921,8 +7372,8 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 #     kefunct2 = lambda e,n: fff(x_fct_2(e,n), y_fct_2(e,n)) *  det_J2(e,n)
 #     kefunct3 = lambda e,n: fff(x_fct_3(e,n), y_fct_3(e,n)) *  det_J3(e,n) * 10
 
-#     print 'Kefunct: simpson ',simpson_rule(kefunct1) , simpson_rule(kefunct2) , simpson_rule(kefunct3)
-#     print 'simspon(ggg)',simpson_rule(ggg)
+#     print 'Kefunct: simpson ',my_gauss_rule(kefunct1) , my_gauss_rule(kefunct2) , my_gauss_rule(kefunct3)
+#     print 'simspon(ggg)',my_gauss_rule(ggg)
     
     
     for i in range(0,5):
@@ -6945,12 +7396,10 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
                                 Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
 
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
 
-#             if i == 4 and j == 1:
-#                 print'=============>>>>>>', integral1 , integral2 , integral3
             Ke[i,j] = integral1 + integral2 + integral3 
 
     # construct the local matrix and local components of the load vector
@@ -6960,7 +7409,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
         fv2 = lambda e,n:  rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
         fv3 = lambda e,n:  rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
 
-        Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+        Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) 
 
         #NEUMANN BCS are zero - code not inserted here
 
@@ -7077,7 +7526,8 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
     if len(root.enrichNodes) == 3:
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -7443,9 +7893,9 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
                                 Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
 
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
 
             K[i,j] = integral1 + integral2 + integral3 
 
@@ -7456,7 +7906,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
             fv2 = lambda e,n: rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
             fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
 
-            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+            Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) 
 
             #NEUMANN BCS are zero - code not inserted here
 
@@ -7577,7 +8027,9 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
     if len(root.enrichNodes) == 3:
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_comp_quad(root)
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -7943,9 +8395,9 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
                                 Ny_3[i]( x_fct_3(e,n), y_fct_3(e,n)) *
                                 Ny_3[j]( x_fct_3(e,n), y_fct_3(e,n)) ) * det_J3(e,n)
 
-            integral1 = simpson_rule(Kefunc1)
-            integral2 = simpson_rule(Kefunc2)
-            integral3 = simpson_rule(Kefunc3)
+            integral1 = my_gauss_rule(Kefunc1,ui,wi)
+            integral2 = my_gauss_rule(Kefunc2,ui,wi)
+            integral3 = my_gauss_rule(Kefunc3,ui,wi)
 
             K[i,j] = integral1 + integral2 + integral3 
 
@@ -7956,7 +8408,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
             fv2 = lambda e,n: rhs(e,n) * Nbasis_2[i](x_fct_2(e,n),y_fct_2(e,n)) * det_J2(e,n)
             fv3 = lambda e,n: rhs(e,n) * Nbasis_3[i](x_fct_3(e,n),y_fct_3(e,n)) * det_J3(e,n)
 
-            Fe[i] = simpson_rule(fv1) + simpson_rule(fv2) + simpson_rule(fv3) 
+            Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) 
 
             #NEUMANN BCS are zero - code not inserted here
 
@@ -7983,11 +8435,6 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
     bottom_coords = p[bottom_nodes,:]
     top_coords = p[top_nodes,:]
-
-
-#    if x0 == 0.28125 and y1 == 0.25:
-#        print 'bottom ', bottom_nodes, bottom_coords
-#        print 'top', top_nodes,top_coords
 
 
     Pe = np.zeros((4,4))
@@ -8048,8 +8495,7 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-    #if SE-South
-    if ( is_in_same_bin(pxVal1,pxVal2) == True and pxVal1 > binBnd[1] and
+    if ( is_in_same_bin(pxVal1,pxVal2) == True and pxVal1 < binBnd[1] and
          is_in_same_bin(pxVal3,pxVal4) == True and
         (is_in_same_bin(pxVal1,pxVal4) == False and is_in_same_bin(pxVal2,pxVal3) == False) ):
         K_cst = [k2,k1]
@@ -8175,7 +8621,9 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
        
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_comp_quad(root)
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
         
         lOrd = [0,1,2,3] # local order    
         vecB_x = [ bottom_coords[ lOrd[0],0], 
@@ -8308,26 +8756,26 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
     # construct the local matrix and local components of the load vector
     for i in range(0,6):
         for j in range(0,6):
-            if nodes[i] >= nodes[j]:
+#            if nodes[i] >= nodes[j]:
 
-                Kefunc1 = lambda e,n: K_cst[0] * ( Nx_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
-                                                                                                        Nx_top[j](x_fct_T(e,n),y_fct_T(e,n)) + 
-                                                                                                        Ny_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
-                                                                                                        Ny_top[j](x_fct_T(e,n),y_fct_T(e,n)) ) * detJ_top(e,n) 
-                Kefunc2 = lambda e,n: K_cst[1] * ( Nx_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
-                                                                                                        Nx_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) + 
-                                                                                                        Ny_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
-                                                                                                        Ny_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) ) * detJ_bottom(e,n)
-                top_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
-                bottom_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
+            Kefunc1 = lambda e,n: K_cst[0] * ( Nx_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
+                                                Nx_top[j](x_fct_T(e,n),y_fct_T(e,n)) + 
+                                                Ny_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
+                                                Ny_top[j](x_fct_T(e,n),y_fct_T(e,n)) ) * detJ_top(e,n) 
+            Kefunc2 = lambda e,n: K_cst[1] * ( Nx_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
+                                                Nx_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) + 
+                                                Ny_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
+                                                Ny_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) ) * detJ_bottom(e,n)
+            top_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
+            bottom_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
 
-                Ke_Horiz[i,j] = top_integral + bottom_integral
-    
-                # construct the local load vector
-            fv1 = lambda e,n: rhs(e,n) * Nbasis_top[i](x_fct_T(e,n),y_fct_T(e,n)) * detJ_top(e,n)
-            fv2 = lambda e,n: rhs(e,n) * Nbasis_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * detJ_bottom(e,n)
-    
-            Fe_Horiz[i] = quad2d(fv1,-1,1,-1,1,ui,wi) + quad2d(fv2,-1,1,-1,1,ui,wi)
+            Ke_Horiz[i,j] = top_integral + bottom_integral
+
+        # construct the local load vector
+        fv1 = lambda e,n: rhs(e,n) * Nbasis_top[i](x_fct_T(e,n),y_fct_T(e,n)) * detJ_top(e,n)
+        fv2 = lambda e,n: rhs(e,n) * Nbasis_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * detJ_bottom(e,n)
+
+        Fe_Horiz[i] = quad2d(fv1,-1,1,-1,1,ui,wi) + quad2d(fv2,-1,1,-1,1,ui,wi)
 
 
     return [Ke_Horiz,Fe_Horiz]
@@ -8415,7 +8863,6 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
     pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
-    #if SE-South
     if ( is_in_same_bin(pxVal1,pxVal4) == True and is_in_same_bin(pxVal2,pxVal3) == True and pxVal4 > binBnd[1] and
         ( is_in_same_bin(pxVal1,pxVal2)== False and is_in_same_bin(pxVal4,pxVal3) == False) ):
         K_cst = [k2,k1]
@@ -8527,6 +8974,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
     
+    root.printRect()
     if len(root.enrichNodes) == 2:
         
         [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
@@ -8540,7 +8988,9 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
        
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 
-        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
+#        coord_enrich = coord_enrich_comp_quad(root)
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
         
         lOrd = [3,0,1,2] # local order    
         vecL_x = [ left_coords[ lOrd[0],0], 
@@ -8562,6 +9012,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
                   (left_coords[lOrd[3],1] + left_coords[lOrd[0],1])/2.0
                  ]
 
+        
         [x_fct_L, y_fct_L] = quad_xy_fct_bi_quadratic( vecL_x, vecL_y )
         J_left = quad_jacobian_mat_bi_quadratic( vecL_x, vecL_y )
         
@@ -8584,7 +9035,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
                   right_coords[lOrd[3],1],
                   (right_coords[lOrd[3],1] + right_coords[lOrd[0],1])/2.0
                  ]
-
+        
         [x_fct_R, y_fct_R] = quad_xy_fct_bi_quadratic( vecR_x, vecR_y )
         J_right = quad_jacobian_mat_bi_quadratic( vecR_x, vecR_y )
 
@@ -8673,22 +9124,22 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     # construct the local matrix and local components of the load vector
     for i in range(0,6):
         for j in range(0,6):
-            if nodes[i] >= nodes[j]:
+#            if nodes[i] >= nodes[j]:
 
-                Kefunc1 = lambda e,n: K_cst[0] * ( Nx_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
-                                                Nx_left[j](x_fct_L(e,n),y_fct_L(e,n)) + 
-                                                Ny_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
-                                                Ny_left[j](x_fct_L(e,n),y_fct_L(e,n)) ) * detJ_left(e,n) 
-                Kefunc2 = lambda e,n: K_cst[1] * ( Nx_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
-                                                Nx_right[j](x_fct_R(e,n),y_fct_R(e,n)) + 
-                                                Ny_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
-                                                Ny_right[j](x_fct_R(e,n),y_fct_R(e,n)) ) * detJ_right(e,n)
-                left_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
-                right_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
+            Kefunc1 = lambda e,n: K_cst[0] * ( Nx_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
+                                            Nx_left[j](x_fct_L(e,n),y_fct_L(e,n)) + 
+                                            Ny_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
+                                            Ny_left[j](x_fct_L(e,n),y_fct_L(e,n)) ) * detJ_left(e,n) 
+            Kefunc2 = lambda e,n: K_cst[1] * ( Nx_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
+                                            Nx_right[j](x_fct_R(e,n),y_fct_R(e,n)) + 
+                                            Ny_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
+                                            Ny_right[j](x_fct_R(e,n),y_fct_R(e,n)) ) * detJ_right(e,n)
+            left_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
+            right_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
 
-                Ke_Vertical[i,j] = left_integral + right_integral
-                #print i,j,left_integral, right_integral
-    
+            Ke_Vertical[i,j] = left_integral + right_integral
+            #print i,j,left_integral, right_integral
+
         # construct the local load vector
         fv1 = lambda e,n: rhs(e,n) * Nbasis_left[i](x_fct_L(e,n),y_fct_L(e,n)) * detJ_left(e,n)
         fv2 = lambda e,n: rhs(e,n) * Nbasis_right[i](x_fct_R(e,n),y_fct_R(e,n)) * detJ_right(e,n)
@@ -8717,8 +9168,6 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     #        Fe_Vertical[i] = Fe_Vertical[i] + quad2d(int_neumn_bottom,-1,1,-1,1,ui,wi)
                         
     
-
-
     return [Ke_Vertical,Fe_Vertical]
 
 
@@ -8801,10 +9250,7 @@ def on_corners1(enrich,x0,y0,x1,y1):
 
     return False
 
-def simpson_rule(f):
 
-    I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
-    return I
 
 def local_quad(ui,wi,f):
 # http://www.ece.ualberta.ca/~knight/ece632/fea/triangles/num_ex.html

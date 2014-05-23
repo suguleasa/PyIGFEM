@@ -90,7 +90,7 @@ def draw_line_normals(image,pinit,pend):
                 
 ## This function draws a line between two points in space: pinit and pend
 def draw_line(image,pinit,pend):
-    pix_col = 1
+    pix_col = 255
     if (pinit.x == pend.x):
 		# print "vertical line"
 		if (pinit.y <= pend.y):
@@ -1762,7 +1762,8 @@ def Nurbs_horizontal_case(image,p1,p2,p3,p4,L2,L4):
 
                 
 def draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4):
-     
+    px_col = 255
+    
     imageSize = image.GetSize()
     
     Px = P[:,0]
@@ -1781,6 +1782,6 @@ def draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4):
         
         if ( (p1.x <= xloc and xloc <= p2.x and p1.y <= yloc and yloc <= p4.y) or 
          (p1.x <= yloc and yloc <= p2.x and p1.y <= xloc and xloc <= p4.y) ):
-                image.SetPixel(xloc,yloc,0,1)
+                image.SetPixel(xloc,yloc,0,px_col)
         
     

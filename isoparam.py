@@ -478,7 +478,6 @@ def mytriderivX(C):
 	N1x = lambda x,y: C[1,0] 
 	N2x = lambda x,y: C[1,1]
 	N3x = lambda x,y: C[1,2]
-	print N1x(0,324)
 	return [N1x, N2x, N3x]
 
 def mytriderivY(C):
@@ -486,7 +485,6 @@ def mytriderivY(C):
 	N1y = lambda x,y:  C[2,0]
 	N2y = lambda x,y:  C[2,1]
 	N3y = lambda x,y:  C[2,2]
-	print N1y(0,324)
 	return [N1y, N2y, N3y]
 
 

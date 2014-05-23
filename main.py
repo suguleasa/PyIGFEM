@@ -1687,6 +1687,7 @@ def remove_duplicates(seq):
 
 def process_list_of_elements(llist,root):
     n = len(llist)
+    print n
     pvec = numpy.zeros((0,2))
     
     coordsList1 = []
@@ -1702,16 +1703,16 @@ def process_list_of_elements(llist,root):
     cList1 = deepcopy(coordsList1)
     
     for i in range(0, len(coordsList1)):
-        coordsList1[i][0] = coordsList1[i][0] / 1000.0
-        coordsList1[i][1] = coordsList1[i][1] / 1000.0
-#        if coordsList1[i][0] != 0.0:
-#            coordsList1[i][0] += 0.001
-#        if coordsList1[i][1] != 0.0:
-#            coordsList1[i][1] += 0.001
+        coordsList1[i][0] = coordsList1[i][0] / DIV_F 
+        coordsList1[i][1] = coordsList1[i][1] / DIV_F
+        if coordsList1[i][0] != 0.0:
+            coordsList1[i][0] += 0.001
+        if coordsList1[i][1] != 0.0:
+            coordsList1[i][1] += 0.001
              
         coordsList1[i][1] = 1 - coordsList1[i][1] 
         
-        
+    
     # sort by y, and then by x
     coordsList1 = sorted(coordsList1,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list:
@@ -1726,22 +1727,53 @@ def process_list_of_elements(llist,root):
         root_i = get_node_by_id(masterNode,llist[i])
         l = len(root_i.enrichNodes)
         
+        p1,p2,p3,p4 = root_i.rect
+        
+#        if p1.x == 159 and p2.x == 167 and p1.y == 15 and p4.y == 23:
+#            print 'length = ', l
+#            print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
+#            print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
+#            print root_i.enrichNodes[2].x, root_i.enrichNodes[2].y
+        
         if l > 0:
+            
+#            enrN = root_i.enrichNodes[0]
+#            coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
+#    
+#            enrN = root_i.enrichNodes[1]
+#            coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
+
+#            for j in range(0,l):
+#                enrN = root_i.enrichNodes[j]
+#                coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
+
+#            if l >= 2:
+#                NR_ENRICH_NODES = 2
+#                for j in range(0,NR_ENRICH_NODES):
+#                    enrN = root_i.enrichNodes[j]
+#                    coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
+
+#            if l == 1:
+#                print '-----' 
+#                root_i.printRect()
+#                
             NR_ENRICH_NODES = 2
             for j in range(0,NR_ENRICH_NODES):
                 enrN = root_i.enrichNodes[j]
+#                print enrN.x, enrN.y
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
+
 
     cList2 = deepcopy(coordsList2)
     
     
     for i in range(0, len(coordsList2)):
-        coordsList2[i][0] = coordsList2[i][0] / 1000.0
-        coordsList2[i][1] = coordsList2[i][1] / 1000.0
-#        if coordsList2[i][0] != 0.0:
-#            coordsList2[i][0] += 0.001
-#        if coordsList2[i][1] != 0.0:
-#            coordsList2[i][1] += 0.001
+        coordsList2[i][0] = coordsList2[i][0] / DIV_F
+        coordsList2[i][1] = coordsList2[i][1] / DIV_F
+        if coordsList2[i][0] != 0.0:
+            coordsList2[i][0] += 0.001
+        if coordsList2[i][1] != 0.0:
+            coordsList2[i][1] += 0.001
              
         coordsList2[i][1] = 1 - coordsList2[i][1] 
 
@@ -1767,7 +1799,7 @@ def process_list_of_elements(llist,root):
     pvecCList = numpy.zeros((0,2))
     pvecCList = numpy.vstack([pvecCList,cList])
 
-#     pvec = pvec / 1000.0
+#     pvec = pvec / DIV_F
 #     for i in range(0,len(pvec)):
 #         if pvec[i,0] != 0.0:
 #             pvec[i,0] += 0.001
@@ -1785,16 +1817,16 @@ def process_list_of_elements(llist,root):
 # #         root_i = get_node_by_id(masterNode,llist[i])
 # #         p1,p2,p3,p4 = root_i.rect
 # #         
-# # #         p1.x = p1.x/1000.0
-# # #         p1.y = p1.y/1000.0
+# # #         p1.x = p1.x/DIV_F
+# # #         p1.y = p1.y/DIV_F
 # # #         if p1.x != 0.0:
 # # #             p1.x += 0.001
 # # #         if p1.y != 0.0:
 # # #             p1.y += 0.001
 # # #         p1.y = 1 - p1.y
 # #         
-# # #         p2.x = p2.x/1000.0
-# # #         p2.y = p2.y/1000.0
+# # #         p2.x = p2.x/DIV_F
+# # #         p2.y = p2.y/DIV_F
 # # #         if p2.x != 0.0:
 # # #             p2.x += 0.001
 # # #         if p2.y != 0.0:
@@ -1802,8 +1834,8 @@ def process_list_of_elements(llist,root):
 # # #         p2.y = 1 - p2.y
 # #         
 # #         
-# # #         p3.x = p3.x/1000.0
-# # #         p3.y = p3.y/1000.0
+# # #         p3.x = p3.x/DIV_F
+# # #         p3.y = p3.y/DIV_F
 # # #         if p3.x != 0.0:
 # # #             p3.x += 0.001
 # # #         if p3.y != 0.0:
@@ -1812,8 +1844,8 @@ def process_list_of_elements(llist,root):
 # #         
 # #         
 # #         
-# # #         p4.x = p4.x/1000.0
-# # #         p4.y = p4.y/1000.0
+# # #         p4.x = p4.x/DIV_F
+# # #         p4.y = p4.y/DIV_F
 # # #         if p4.x != 0.0:
 # # #             p4.x += 0.001
 # # #         if p4.y != 0.0:
@@ -1842,8 +1874,8 @@ def process_list_of_elements(llist,root):
 # #             if l == 1:
 # #                 enrN1 = root_i.enrichNodes[0]
 # #                 
-# # #                 enrN1.x = enrN1.x/1000.0
-# # #                 enrN1.y = enrN1.y/1000.0
+# # #                 enrN1.x = enrN1.x/DIV_F
+# # #                 enrN1.y = enrN1.y/DIV_F
 # # #                 if enrN1.x != 0.0:
 # # #                     enrN1.x += 0.001
 # # #                 if enrN1.y != 0.0:
@@ -1859,8 +1891,8 @@ def process_list_of_elements(llist,root):
 # #             if l == 2:
 # #                 enrN1 = root_i.enrichNodes[0]
 # #                 
-# # #                 enrN1.x = enrN1.x/1000.0
-# # #                 enrN1.y = enrN1.y/1000.0
+# # #                 enrN1.x = enrN1.x/DIV_F
+# # #                 enrN1.y = enrN1.y/DIV_F
 # # #                 if enrN1.x != 0.0:
 # # #                     enrN1.x += 0.001
 # # #                 if enrN1.y != 0.0:
@@ -1873,8 +1905,8 @@ def process_list_of_elements(llist,root):
 # #                 
 # #                 enrN2 = root_i.enrichNodes[1]
 # #                 
-# # #                 enrN2.x = enrN2.x/1000.0
-# # #                 enrN2.y = enrN2.y/1000.0
+# # #                 enrN2.x = enrN2.x/DIV_F
+# # #                 enrN2.y = enrN2.y/DIV_F
 # # #                 if enrN2.x != 0.0:
 # # #                     enrN2.x += 0.001
 # # #                 if enrN2.y != 0.0:
@@ -1907,7 +1939,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
 #             pvec[i,0] -= 0.001
 #         if pvec[i,1] != 0.0:
 #             pvec[i,1] -= 0.001
-#     pvec = pvec * 1000.0
+#     pvec = pvec * DIV_F
        
     t = []
     for i in range(0,n):
@@ -1959,7 +1991,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 b6 = [enrN2.x, enrN2.y]
                 ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
                 c6 = ind6[0][0]   
-                  
+                
                 if abs(enrN1.x - enrN2.x)<=TOL_error and abs(enrN1.y - enrN2.y)<=TOL_error:
                     t = t + [[c1,c2,c3,c4]]
                 else:
@@ -2004,11 +2036,11 @@ def numbering(pvec,pvecCList, llist, masterNode):
             tind = el[k]
             old_coords = pvecCList[tind]
             
-            new_coords = old_coords/1000.0
-#            if new_coords[1] != 0.0:
-#                new_coords[1] += 0.001
-#            if new_coords[0] != 0.0:
-#                new_coords[0] += 0.001
+            new_coords = old_coords / DIV_F
+            if new_coords[1] != 0.0:
+                new_coords[1] += 0.001
+            if new_coords[0] != 0.0:
+                new_coords[0] += 0.001
             new_coords[1] = 1 - new_coords[1]
             
     
@@ -2071,12 +2103,12 @@ def set_nsew(llist, masterNode, full_vec):
             if west_neighbor.has_children == True and p1w.x < p1.x:
                 root.nsew[3] = 1
                 p1wchild1,p2wchild1,p3wchild1,p4wchild1 = west_neighbor.children[1].rect
-                x1 = p3wchild1.x / 1000.0
-                y1 = p3wchild1.y / 1000.0
-#                if x1 != 0.0:
-#                    x1 += 0.001
-#                if y1 != 0.0:
-#                    y1 += 0.001            
+                x1 = p3wchild1.x / DIV_F
+                y1 = p3wchild1.y / DIV_F
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
                 y1 = 1 -  y1    
                 x1 = find_nearest(full_vec,x1)
                 y1 = find_nearest(full_vec,y1)  
@@ -2091,12 +2123,12 @@ def set_nsew(llist, masterNode, full_vec):
             if east_neighbor.has_children == True and p2.x < p2e.x:
                 root.nsew[2] = 1
                 p1echild0, p2echild0, p3echild0, p4echild0 = east_neighbor.children[0].rect
-                x4 = p4echild0.x / 1000.0
-                y4 = p4echild0.y / 1000.0
-#                if x4 != 0.0:
-#                    x4 += 0.001
-#                if y4 != 0.0:
-#                    y4 += 0.001            
+                x4 = p4echild0.x / DIV_F
+                y4 = p4echild0.y / DIV_F
+                if x4 != 0.0:
+                    x4 += 0.001
+                if y4 != 0.0:
+                    y4 += 0.001            
                 y4 = 1 - y4     
                 x4 = find_nearest(full_vec,x4)
                 y4 = find_nearest(full_vec,y4)
@@ -2111,12 +2143,12 @@ def set_nsew(llist, masterNode, full_vec):
             if south_neighbor.has_children == True and p4.y < p4s.y:
                 root.nsew[1] = 1
                 p1schild0, p2schild0, p3schild0, p4schild0 = south_neighbor.children[0].rect
-                x2 = p2schild0.x / 1000.0
-                y2 = p2schild0.y / 1000.0
-#                if x2 != 0.0:
-#                    x2 += 0.001
-#                if y2 != 0.0:
-#                    y2 += 0.001            
+                x2 = p2schild0.x / DIV_F
+                y2 = p2schild0.y / DIV_F
+                if x2 != 0.0:
+                    x2 += 0.001
+                if y2 != 0.0:
+                    y2 += 0.001            
                 y2 = 1 - y2
                 x2 = find_nearest(full_vec,x2)
                 y2 = find_nearest(full_vec,y2)
@@ -2130,12 +2162,12 @@ def set_nsew(llist, masterNode, full_vec):
             if north_neighbor.has_children == True and p1n.y < p1.y:
                 root.nsew[0] = 1
                 p1nchild2, p2nchild2, p3nchild2, p4nchild2 = north_neighbor.children[2].rect
-                x3 = p3nchild2.x / 1000.0
-                y3 = p3nchild2.y / 1000.0
-#                if x3 != 0.0:
-#                    x3 += 0.001
-#                if y3 != 0.0:
-#                    y3 += 0.001            
+                x3 = p3nchild2.x / DIV_F
+                y3 = p3nchild2.y / DIV_F
+                if x3 != 0.0:
+                    x3 += 0.001
+                if y3 != 0.0:
+                    y3 += 0.001            
                 y3 = 1 - y3
                 x3 = find_nearest(full_vec,x3)
                 y3 = find_nearest(full_vec,y3)
@@ -2224,8 +2256,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 
 #             # enrichment node 1 is one of the corners of the element
 #             if on_corners(enrich1,p1.x,p1.y,p3.x,p3.y):
-#                 x1 = enrich1[0] / 1000.0
-#                 y1 = enrich1[1] / 1000.0
+#                 x1 = enrich1[0] / DIV_F
+#                 y1 = enrich1[1] / DIV_F
 #                 if x1 != 0.0:
 #                     x1 += 0.001
 #                 if y1 != 0.0:
@@ -2241,8 +2273,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                
 #             # enrichment node 2 is one of the corners of the element   
 #             if on_corners(enrich2,p1.x,p1.y,p3.x,p3.y):
-#                 x2 = enrich2[0] / 1000.0
-#                 y2 = enrich2[1] / 1000.0
+#                 x2 = enrich2[0] / DIV_F
+#                 y2 = enrich2[1] / DIV_F
 #                 if x2 != 0.0:
 #                     x2 += 0.001
 #                 if y2 != 0.0:
@@ -2259,12 +2291,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
 
             if ( not(on_corners(enrich1,coords)) and (on_corners(enrich2,coords)) ):
-                x1 = enrich1[0] / 1000.0
-                y1 = enrich1[1] / 1000.0
-#                if x1 != 0.0:
-#                    x1 += 0.001
-#                if y1 != 0.0:
-#                    y1 += 0.001            
+                x1 = enrich1[0] / DIV_F
+                y1 = enrich1[1] / DIV_F
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
                 y1 = 1 - y1
                 
                         
@@ -2301,12 +2333,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     
 
             if ( on_corners(enrich1,coords) and not(on_corners(enrich2,coords)) ):
-                x1 = enrich2[0] / 1000.0
-                y1 = enrich2[1] / 1000.0
-#                if x1 != 0.0:
-#                    x1 += 0.001
-#                if y1 != 0.0:
-#                    y1 += 0.001            
+                x1 = enrich2[0] / DIV_F
+                y1 = enrich2[1] / DIV_F
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
                 y1 = 1 - y1
                 
                 if  ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
@@ -2339,12 +2371,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                # and not(ind1 in vec_indices) #and not(ind2 in vec_indices)
                 ):
 
-                x1 = enrich1[0] / 1000.0
-                y1 = enrich1[1] / 1000.0
-#                if x1 != 0.0:
-#                    x1 += 0.001
-#                if y1 != 0.0:
-#                    y1 += 0.001            
+                x1 = enrich1[0] / DIV_F
+                y1 = enrich1[1] / DIV_F
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
                 y1 = 1 - y1
                 
                         
@@ -2392,12 +2424,12 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                         print ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
 #                  (enrich2[1] == p1.y or enrich2[1] == p3.y))
                         
-                x1 = enrich2[0] / 1000.0
-                y1 = enrich2[1] / 1000.0
-#                if x1 != 0.0:
-#                    x1 += 0.001
-#                if y1 != 0.0:
-#                    y1 += 0.001            
+                x1 = enrich2[0] / DIV_F
+                y1 = enrich2[1] / DIV_F
+                if x1 != 0.0:
+                    x1 += 0.001
+                if y1 != 0.0:
+                    y1 += 0.001            
                 y1 = 1 - y1
                 
                 if ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
@@ -3266,12 +3298,12 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                     P_quad += 1 
                     
                     nodes6 = Coordinate(0,0)
-                    nodes6.x =  root_i.enrichNodes[2].x / 1000.0
-#                    if nodes6.x != 0.0:
-#                        nodes6.x += 0.001
-                    nodes6.y =  root_i.enrichNodes[2].y / 1000.0
-#                    if nodes6.y != 0.0:
-#                        nodes6.y += 0.001
+                    nodes6.x =  root_i.enrichNodes[2].x / DIV_F
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  root_i.enrichNodes[2].y / DIV_F
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
     
                     p_extra = p_extra + [[nodes6.x, nodes6.y]]
@@ -3291,21 +3323,21 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                     nodes6 = Coordinate(0,0)
                     nodes7 = Coordinate(0,0)
                     
-                    nodes6.x =  E.x / 1000.0
-#                    if nodes6.x != 0.0:
-#                        nodes6.x += 0.001
+                    nodes6.x =  E.x / DIV_F
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
                         
-                    nodes6.y =  E.y / 1000.0
-#                    if nodes6.y != 0.0:
-#                        nodes6.y += 0.001
+                    nodes6.y =  E.y / DIV_F
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
                     nodes6.y = 1 - nodes6.y
                     
-                    nodes7.x =  F.x / 1000.0
-#                    if nodes7.x != 0.0:
-#                        nodes7.x += 0.001
-                    nodes7.y =  F.y / 1000.0
-#                    if nodes7.y != 0.0:
-#                        nodes7.y += 0.001
+                    nodes7.x =  F.x / DIV_F
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
+                    nodes7.y =  F.y / DIV_F
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
                     nodes7.y = 1 - nodes7.y
                
                     p_extra = p_extra + [[nodes6.x, nodes6.y]]
@@ -3354,10 +3386,13 @@ if __name__ == "__main__":
     print "Reading image in..."
 #     inputImage = sitk.ReadImage("images/channelsCircles.png");
 #     outputImage = sitk.ReadImage("images/channelsCircles.png");
-#    inputImage = sitk.ReadImage("images/circles.png");
-#    outputImage = sitk.ReadImage("images/circles.png");
-    inputImage = sitk.ReadImage("images/horseshoe.png");
-    outputImage = sitk.ReadImage("images/horseshoe.png");
+#    inputImage = sitk.ReadImage("images/green1.png");
+#    outputImage = sitk.ReadImage("images/green1.png");
+    inputImage = sitk.ReadImage("images/circles.png");
+    outputImage = sitk.ReadImage("images/circles.png");
+        
+#    inputImage = sitk.ReadImage("images/horseshoe.png");
+#    outputImage = sitk.ReadImage("images/horseshoe.png");
 #   
 #    inputImage = sitk.ReadImage("images/channelsSharp.png");
 #    outputImage = sitk.ReadImage("images/channelsSharp.png");
@@ -3431,9 +3466,9 @@ if __name__ == "__main__":
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
 #    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
-    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-    divide_high_stress_elements(full_list,rootNode, outputImage)
-#     
+#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
+#    divide_high_stress_elements(full_list,rootNode, outputImage)
+##     
 #    masterNode = rootNode
 #        
 #    
@@ -3507,45 +3542,56 @@ if __name__ == "__main__":
             
             
 # Commenting out the solver 
-    if POL_APPROX != 3 and NORM_COMP != 0:
+    if POL_APPROX != 3 :#and NORM_COMP != 0:
         [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
-           
+        
+        numpy.set_printoptions(threshold=numpy.nan)
+
+
         [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
            
                
-        full_vec = numpy.linspace(0,0.999, pow(2,masterNode.MAX_DEPTH)+1)
+        full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
            
         set_nsew(llist,masterNode,full_vec)
            
-        print p_reg
+#        print p_reg
         p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
         
-        for i in range(0,len(p_reg)):
-            p_reg[i,0] = int(p_reg[i,0] * 1000) / 1000.0
-            p_reg[i,1] = int(p_reg[i,1] * 1000) / 1000.0
-            
-        print p_reg
+#        for i in range(0,len(p_reg)):
+#            p_reg[i,0] = int(p_reg[i,0] * 1000) / DIV_F
+#            p_reg[i,1] = int(p_reg[i,1] * 1000) / DIV_F
+#            
+#        print p_reg
         # material conductivities
-        k1 = 10
-        k2 = 1
+        k1 = 1
+        k2 = 10
 #        print 'HOMOGENEOUS'
         # generate Legendre-Gauss nodes and weights:
-        ruleOrder = 4
+        ruleOrder = 9
         [ui,wi] = lgwt(ruleOrder,-1,1)
                
         # get triangular mesh data
-        f = open("multipleinclusionShifted.res", "r")
-        f2 = open("multipleinclusionShifted.1.ele", "r")
+        f = open("multipleinclusions.res", "r")
+        f2 = open("multipleinclusions.ele", "r")
         [pTri,UTri] = read_p_U(f)
         tTri = read_corners(f2)
         f.close()
         f2.close()
                
-        UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage)
+#        p_reg = numpy.load('p_reg_127x127.npy')
+        p_reg = numpy.load('p_reg_256x256.npy')
+        
+        print p_reg, len(p_reg)
+        
+        UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)
         aa1 = numpy.array([UU])
         ww1 = numpy.array(aa1[()])
         UU = ww1[0].item()[:,:]
            
+        print UU
+#        print p_reg
+        
         print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist, p_extra, P_quad, P_cub)
 
         print MAX_SIZE_X, MIN_SIZE

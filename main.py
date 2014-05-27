@@ -1679,7 +1679,6 @@ def get_node_by_id(node,id):
         return p  
 def remove_duplicates(seq): 
    # order preserving
-
    noDupes = []
    [noDupes.append(i) for i in seq if not noDupes.count(i)]
    return noDupes
@@ -1687,7 +1686,6 @@ def remove_duplicates(seq):
 
 def process_list_of_elements(llist,root):
     n = len(llist)
-    print n
     pvec = numpy.zeros((0,2))
     
     coordsList1 = []
@@ -1729,12 +1727,6 @@ def process_list_of_elements(llist,root):
         
         p1,p2,p3,p4 = root_i.rect
         
-#        if p1.x == 159 and p2.x == 167 and p1.y == 15 and p4.y == 23:
-#            print 'length = ', l
-#            print root_i.enrichNodes[0].x, root_i.enrichNodes[0].y
-#            print root_i.enrichNodes[1].x, root_i.enrichNodes[1].y
-#            print root_i.enrichNodes[2].x, root_i.enrichNodes[2].y
-        
         if l > 0:
             
 #            enrN = root_i.enrichNodes[0]
@@ -1763,7 +1755,6 @@ def process_list_of_elements(llist,root):
 #                print enrN.x, enrN.y
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
-
     cList2 = deepcopy(coordsList2)
     
     
@@ -1782,6 +1773,7 @@ def process_list_of_elements(llist,root):
     # remove duplicates from the list:
     coordsList2 = [ key for key,_ in groupby(coordsList2)]
     
+    
     coordsList = coordsList1 + coordsList2
     coordsList = remove_duplicates(coordsList)
     pvec = numpy.vstack([pvec,coordsList])
@@ -1792,7 +1784,6 @@ def process_list_of_elements(llist,root):
     cList2 = sorted(cList2,key=lambda x: (x[1],x[0]))
     # remove duplicates from the list
     cList2 = [ key for key,_ in groupby(cList2)]
-#     cList2 = [[999, 499], [916, 624], [874, 687], [833, 749], [749, 874], [749, 876], [666, 999]]
      
     cList = cList1 + cList2
     cList = remove_duplicates(cList)
@@ -2194,9 +2185,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 #                     p[k,1] = val
             p[i,j] = val
 
-
-
-#     print 'mid p-945', p[945]
     # go over the coordinates of the intersection nodes
     # and update them accordingly
 
@@ -2467,14 +2455,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             else:
                 root.ishomog = 0
                 
-#             if root.index == '323210':
-#                 print '--------323210----------------'
-#                 print [p1.x,p3.x], [p1.y,p3.y]
-#                 print 'tl', tl
-#                 print 'tp', tp
-#                 print enrich1, p[ind1]
-#                 print enrich2, p[ind2]
-#                 print root.index, root.ishomog
             
             vec_indices = vec_indices + [ind1, ind2]
 
@@ -3382,6 +3362,48 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
     return P_quad, P_cub, p_extra
 
              
+def fake_reg_grid(m,n):
+  p = numpy.zeros(((n+1)*(m+1),2))
+  tmp = 0
+  for i in range(0,n+1):
+    y = i * 1.0/n
+    for j in range(0,m+1):
+      x = j * 1.0/m
+      p[tmp,:] = [x,y]
+      tmp = tmp + 1
+  return p
+
+# create a list with all the corners of an element per row
+def create_corners_list(m,n,p,loc_x_fcn):
+
+  enr_node_iter = 0;
+  t = []
+  for j in range(1,n):
+    for i in range(1,m):
+      c1 = i + (j-1) * m
+      c2 = c1 + 1
+      c3 = i + j * m
+      c4 = c3 + 1
+
+      # Start with indexing at 0
+      c1 -= 1
+      c2 -= 1
+      c3 -= 1
+      c4 -= 1
+
+      # on the elements with enrichment nodes en1, en2, add the nodes to the element's corners list: [c1, c2, c4,    c3, en1, en2] 
+      if ( (p[c1,0] < loc_x_fcn(0.0) and loc_x_fcn(1.0) < p[c2,0]) or (p[c3,0] < loc_x_fcn(0.0) and loc_x_fcn(1.0) < p[c4,0]) ) and k1!=k2:
+        en1 = m*n + enr_node_iter
+        en2 = en1 + 1
+        t = t + [[c1,c2,c4,c3, en1,en2]]
+        enr_node_iter += 1
+      else:
+        t = t + [[c1,c2,c4,c3]]
+
+  return t
+
+                                                                                                                     
+             
 if __name__ == "__main__":
     print "Reading image in..."
 #     inputImage = sitk.ReadImage("images/channelsCircles.png");
@@ -3530,6 +3552,11 @@ if __name__ == "__main__":
 
     print 'values', P_quad, P_cub 
     
+#    root = get_node_by_id(masterNode,['23203'])
+#    root.printRect()
+#    print len(root.enrichNodes)
+#    print root.enrichNodes[0].x, root.enrichNodes[0].y
+#    print root.enrichNodes[1].x, root.enrichNodes[1].y
     
 #    n = len(tree_list)
 #
@@ -3546,45 +3573,62 @@ if __name__ == "__main__":
         [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
         
         numpy.set_printoptions(threshold=numpy.nan)
-
-
+        
         [t_reg,t_px] = numbering(p_reg,p_regCList,llist, masterNode)
-           
-               
+         
         full_vec = numpy.linspace(0,1.0, pow(2,masterNode.MAX_DEPTH)+1)
            
         set_nsew(llist,masterNode,full_vec)
            
-#        print p_reg
         p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
-        
-#        for i in range(0,len(p_reg)):
-#            p_reg[i,0] = int(p_reg[i,0] * 1000) / DIV_F
-#            p_reg[i,1] = int(p_reg[i,1] * 1000) / DIV_F
+
+        ###
+#        m = 33
+#        p_reg_IDEAL = numpy.load('p_reg_32x32.npy')
+#        p_reg_extra = numpy.array(p_reg[m*m:])
+#        p_ideal_extra = numpy.array(p_reg_IDEAL[m*m:])
+#        
+#        for j in range(0, len(p_reg_extra)):
+#            val = Coordinate(p_reg_extra[j,0], p_reg_extra[j,1])
+#            dmin = 10000.0
+#            for i in range(0,len(p_ideal_extra)):
+#                kl = Coordinate(p_ideal_extra[i,0],p_ideal_extra[i,1])
+#                ddd = find_distance(kl,val)
+#                if ddd < dmin:
+#                    dmin = ddd
+#                    new_indx = numpy.where(numpy.all(p_ideal_extra==[kl.x,kl.y], axis=1))
 #            
-#        print p_reg
+#            p_reg_extra[j] = [p_ideal_extra[new_indx,0][0,0],p_ideal_extra[new_indx,1][0,0]] 
+#            
+#            
+#        p_reg = numpy.vstack([numpy.array(p_reg[0:m*m]), numpy.array(p_reg_extra)])
+        ##
+        print 'length of p vector: ______', len(p_reg)
         # material conductivities
-        k1 = 1
-        k2 = 10
-#        print 'HOMOGENEOUS'
+        k1 = 10
+        k2 = 1
         # generate Legendre-Gauss nodes and weights:
-        ruleOrder = 9
+        if POL_APPROX == 0:
+            ruleOrder = 4
+        else:
+            ruleOrder = 5
         [ui,wi] = lgwt(ruleOrder,-1,1)
                
         # get triangular mesh data
-        f = open("multipleinclusions.res", "r")
-        f2 = open("multipleinclusions.ele", "r")
+        f = open("multipleinclusions0.0005.res", "r")
+        f2 = open("multipleinclusions0.0005.ele", "r")
         [pTri,UTri] = read_p_U(f)
         tTri = read_corners(f2)
         f.close()
         f2.close()
-               
+           
+        
+#        p_n = numpy.save('before_p_reg.npy', p_reg)
 #        p_reg = numpy.load('p_reg_127x127.npy')
-        p_reg = numpy.load('p_reg_256x256.npy')
+#        p_reg = numpy.load('p_reg_256x256.npy')
+        p_reg = numpy.load('p_reg_64x64.npy') 
         
-        print p_reg, len(p_reg)
-        
-        UU = myquad(ndim,ndim,k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)
+        UU = myquad(k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)
         aa1 = numpy.array([UU])
         ww1 = numpy.array(aa1[()])
         UU = ww1[0].item()[:,:]

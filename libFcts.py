@@ -90,7 +90,7 @@ def draw_line_normals(image,pinit,pend):
                 
 ## This function draws a line between two points in space: pinit and pend
 def draw_line(image,pinit,pend):
-    pix_col = 255
+    pix_col = 1
     if (pinit.x == pend.x):
 		# print "vertical line"
 		if (pinit.y <= pend.y):

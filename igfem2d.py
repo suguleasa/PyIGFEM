@@ -63,38 +63,6 @@ sum = __builtin__.sum
 #        self.x = x
 #        self.y = y
 
-# Use Simpson Rule for integration over isoparametric elements
-def simpson_rule(f):
-
-    I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
-    return I
-def gauss_quadrat(f,ui,wi):
-    J = 0
-    L = ui.size
-    for i in range(0,L):
-        for j in range(0,L):
-            J = J + wi[i] * wi[j] * f(ui[i],ui[j])
-
-    return J
-
-def my_gauss_rule(f,ui,wi):
-# Gauss Rule with 3 points: exact for polynomial of degree 2
-#    J = 0
-#    L = ui.size
-#    for i in range(0,L):
-#        for j in range(0,L):
-#            J = J + wi[i] * wi[j] * f(ui[i],ui[j])
-#                                              
-##  I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
-##  return I
-#    return J
-    return simpson_rule4(f)
-
-
-def simpson_rule4(f):
-# Gauss Rule with 4 points: exact for polynomial of degree 3
-    I = -27.0/96.0 * f(1.0/3.0,1.0/3.0) + 25.0/96.0 * f(0.2,0.6) + 25.0/96.0 * f(0.2, 0.2) + 25.0/96.0 * f(0.6, 0.2)
-    return I
 
 # Determine if a point is inside a given polygon or not
 # Polygon is a list of (x,y) pairs. This fuction
@@ -132,6 +100,34 @@ def point_in_on_poly(x,y,poly):
                 return True
     return inside
 
+def number_nodes(m,pp,tt):
+  nr_of_nodes = (m+1)**2 - 1
+  T = m*m
+
+  for e in range(0,T):
+    nodes = tt[e]
+    coords = pp[nodes,:]
+
+    x0 = coords[0,0]
+    x1 = coords[1,0]
+    y0 = coords[0,1]
+    y1 = coords[2,1]
+
+    for k in range(nr_of_nodes+1,len(pp)):
+      in_poly = point_in_square(pp[k][0],pp[k][1],x0,y0,x1,y1)
+      if in_poly == True:
+        tt[e] =  tt[e] + [k]#numpy.hstack((tt[e],k))
+
+  return tt
+
+def point_in_square(x,y,x0,y0,x1,y1):
+
+  if (x0 <= x and x <= x1) and (y0<=y and y <= y1):# and 
+    # (x != x0 and y != y0) and :
+    return True
+  else:
+    return False
+
 def is_on(a, b, c):
     "Return true iff point c intersects the line segment from a to b."
     # (or the degenerate case that all 3 points are coincident)
@@ -147,7 +143,106 @@ def within(p, q, r):
     "Return true iff q is between p and r (inclusive)."
     return p <= q <= r or r <= q <= p
 
+# Use Simpson Rule for integration over isoparametric elements
+def simpson_rule(f):
 
+    I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
+    return I
+
+def gauss_quadrat(f,ui,wi):
+    J = 0
+    L = ui.size
+    for i in range(0,L):
+        for j in range(0,L):
+            J = J + wi[i] * wi[j] * f(ui[i],ui[j])
+
+    return J
+
+def my_gauss_rule(f,ui,wi):
+# Gauss Rule with 3 points: exact for polynomial of degree 2
+#    J = 0
+#    L = ui.size
+#    for i in range(0,L):
+#        for j in range(0,L):
+#            J = J + wi[i] * wi[j] * f(ui[i],ui[j])
+#                                              
+##  I = 1.0/6.0 * f(1.0/2.0,1.0/2.0) + 1.0/6.0 * f(1.0/2.0,0.0) + 1.0/6.0 * f(0.0,1.0/2.0)
+##  return I
+#    return J
+    if POL_APPROX == 0:
+        return 1.0/2.0 * f(1.0/3.0, 1.0/3.0)
+    
+    if POL_APPROX == 1:
+        return simpson_rule3(f)
+
+    if POL_APPROX == 2:
+        return simpson_rule3(f)
+
+def simpson_rule3(f):
+# Gauss Rule with 4 points: exact for polynomial of degree 3
+    I = -27.0/96.0 * f(1.0/3.0,1.0/3.0) + 25.0/96.0 * f(0.2,0.6) + 25.0/96.0 * f(0.2, 0.2) + 25.0/96.0 * f(0.6, 0.2)
+    return I
+
+def simpson_rule4(f):
+    
+    I = 0
+    I = I + f(0.44594849091597, 0.44594849091597) * 0.22338158967801 * 1.0/2.0
+    I = I + f(0.44594849091597, 0.10810301816807) * 0.22338158967801 * 1.0/2.0
+    I = I + f(0.10810301816807, 0.44594849091597) * 0.22338158967801 * 1.0/2.0
+    I = I + f(0.09157621350977, 0.09157621350977) * 0.10995174365532 * 1.0/2.0
+    I = I + f(0.09157621350977, 0.81684757298046) * 0.10995174365532 * 1.0/2.0
+    I = I + f(0.81684757298046, 0.09157621350977) * 0.10995174365532 * 1.0/2.0
+
+    return I
+
+def simpson_rule5(f):
+    I = 0
+    I = I + f(0.33333333333333, 0.33333333333333) * 0.22500000000000 * 1.0/2.0
+    I = I + f(0.47014206410511, 0.47014206410511) * 0.13239415278851 * 1.0/2.0
+    I = I + f(0.47014206410511, 0.05971587178977) * 0.13239415278851 * 1.0/2.0
+    I = I + f(0.05971587178977, 0.47014206410511) * 0.13239415278851 * 1.0/2.0
+    I = I + f(0.10128650732346, 0.10128650732346) * 0.12593918054483 * 1.0/2.0
+    I = I + f(0.10128650732346, 0.79742698535309) * 0.12593918054483 * 1.0/2.0
+    I = I + f(0.79742698535309, 0.10128650732346) * 0.12593918054483 * 1.0/2.0
+
+    return I
+
+def simpson_rule6(f):
+    
+    I = 0
+    
+    I = I + f(0.24928674517091, 0.24928674517091) * 0.11678627572638 * 1.0/2.0
+    I = I + f(0.24928674517091, 0.50142650965818) * 0.11678627572638 * 1.0/2.0
+    I = I + f(0.50142650965818, 0.24928674517091) * 0.11678627572638 * 1.0/2.0
+    I = I + f(0.06308901449150, 0.06308901449150) * 0.05084490637021 * 1.0/2.0
+    I = I + f(0.06308901449150, 0.87382197101700) * 0.05084490637021 * 1.0/2.0
+    I = I + f(0.87382197101700, 0.06308901449150) * 0.05084490637021 * 1.0/2.0
+    I = I + f(0.31035245103378, 0.63650249912140) * 0.08285107561837 * 1.0/2.0
+    I = I + f(0.63650249912140, 0.05314504984482) * 0.08285107561837 * 1.0/2.0
+    I = I + f(0.05314504984482, 0.31035245103378) * 0.08285107561837 * 1.0/2.0
+    I = I + f(0.63650249912140, 0.31035245103378) * 0.08285107561837 * 1.0/2.0
+    I = I + f(0.31035245103378, 0.05314504984482) * 0.08285107561837 * 1.0/2.0
+    I = I + f(0.05314504984482, 0.63650249912140) * 0.08285107561837 * 1.0/2.0
+    return I
+
+def simpson_rule7(f):
+    I = 0
+
+    I = I + f(0.33333333333333,0.33333333333333) * -0.14957004446768 * 1.0/2.0
+    I = I + f(0.26034596607904,0.26034596607904) * 0.17561525743321 * 1.0/2.0
+    I = I + f(0.26034596607904,0.47930806784192) * 0.17561525743321 * 1.0/2.0
+    I = I + f(0.47930806784192,0.26034596607904) * 0.17561525743321 * 1.0/2.0
+    I = I + f(0.06513010290222,0.06513010290222) * 0.05334723560884 * 1.0/2.0
+    I = I + f(0.06513010290222,0.86973979419557) * 0.05334723560884 * 1.0/2.0
+    I = I + f(0.86973979419557,0.06513010290222) * 0.05334723560884 * 1.0/2.0
+    I = I + f(0.31286549600487,0.63844418856981) * 0.07711376089026 * 1.0/2.0
+    I = I + f(0.63844418856981,0.04869031542532) * 0.07711376089026 * 1.0/2.0
+    I = I + f(0.04869031542532,0.31286549600487) * 0.07711376089026 * 1.0/2.0
+    I = I + f(0.63844418856981,0.31286549600487) * 0.07711376089026 * 1.0/2.0
+    I = I + f(0.31286549600487,0.04869031542532) * 0.07711376089026 * 1.0/2.0
+    I = I + f(0.04869031542532,0.63844418856981) * 0.07711376089026 * 1.0/2.0
+    
+    return I
 def gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem_HN,detJ_HN):
     J = 0
     L = ui.size
@@ -156,13 +251,37 @@ def gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem
             J = J + wi[i] * wi[j] * diff_fct_triangles_HN(ui[i],ui[j],x_trans_fct,y_trans_fct,pConf,tConf,UConf,uh_elem_HN,detJ_HN)
     return J
 
-def gauss_integration(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem,detJ):
+def gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem,detJ):
     J = 0
     L = ui.size
     for i in range(0,L):
         for j in range(0,L):
             J = J + wi[i] * wi[j] * ufunction(ui[i],ui[j],x_trans_fct,y_trans_fct,pConf,tConf,UConf,uh_elem,detJ)
     return J
+
+
+def gauss_integration(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem,detJ):
+#    J = 0
+#    L = ui.size
+#    for i in range(0,L):
+#        for j in range(0,L):
+#            J = J + wi[i] * wi[j] * ufunction(ui[i],ui[j],x_trans_fct,y_trans_fct,pConf,tConf,UConf,uh_elem,detJ)
+#    return J
+
+    fct = lambda e,n: ufunction(e,n,x_trans_fct,y_trans_fct,pConf,tConf,UConf,uh_elem,detJ)
+    
+    if POL_APPROX == 0:
+        return 1.0/2.0 * fct(1.0/3.0, 1.0/3.0)
+    if POL_APPROX == 1:
+        return simpson_rule3(fct)
+
+    if POL_APPROX == 2:
+        return simpson_rule3(fct)
+    
+
+#    return simpson_rule4(fct)
+#    return 1.0/2.0 * fct(1.0/3.0, 1.0/3.0)
+
 
 def found_in_FEM(point_x,point_y,pConf,tConf,UConf):
     u_conf = 0
@@ -403,7 +522,7 @@ def Nbases(Nbasis,x0,x1,y0,y1,p,nodes,N,S,E,W):
     
     return [N1,N2,N3,N4]
 
-def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
+def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #def myquad(m,n,k1,k2,loc,ui,wi,p,t,UConf,pConf,tConf):
     
     #definition of rhombus corners
@@ -426,7 +545,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
     #filename = 'vertical2by2.txt'
     #lines = [line.strip() for line in open(filename)]
 
-    # numbering boundary nodes
+#    # numbering boundary nodes
 #    lbcs = [0] + range(m,m*n,m)
 #    rbcs = [m-1] + range(2*m-1,m*n,m)
 #    tbcs = range(1,m-1)
@@ -502,6 +621,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
     K = sparse.lil_matrix((N,N))
     F = sparse.lil_matrix((N,1))
 
+    print T ,' LENGTH OF t vector'
     list_hanging_nodes = []
     for e in range(0,T): #800, 833
 #     for e in range(820, T):
@@ -512,10 +632,16 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         
         root = get_node_by_id(masterNode,llist[e])
-        
+
+#        if e == 94:
+#            root.printRect()
+#            print 'tvec = ',t[e]
+#            print root.ishomog
+                     
         p1,p2,p3,p4 = root.rect
         
         nodes6 = Coordinate(0,0)
+        nodes7 = Coordinate(0,0)
         
         if len(root.enrichNodes) == 3:
             
@@ -534,7 +660,99 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
             new_nodes6.y = c_center.y + c_rad * ( nodes6.y - c_center.y) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
             nodes6 = Coordinate(new_nodes6.x, new_nodes6.y)
             
+        if len(root.enrichNodes) == 4:
             
+            if root.enrichNodes[2].y == root.enrichNodes[3].y:
+                if root.enrichNodes[2].x <= root.enrichNodes[3].x: 
+                    nodes6 = Coordinate(0,0)
+                    nodes6.x =  root.enrichNodes[2].x / 1000.0
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  root.enrichNodes[2].y / 1000.0
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
+                    nodes6.y = 1 - nodes6.y
+                    
+                    nodes7 = Coordinate(0,0)
+                    nodes7.x =  root.enrichNodes[3].x / 1000.0
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
+                    nodes7.y =  root.enrichNodes[3].y / 1000.0
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
+                    nodes7.y = 1 - nodes7.y
+                    
+                else:
+                    nodes6 = Coordinate(0,0)
+                    nodes6.x =  root.enrichNodes[3].x / 1000.0
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  root.enrichNodes[3].y / 1000.0
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
+                    nodes6.y = 1 - nodes6.y
+                    
+                    nodes7 = Coordinate(0,0)
+                    nodes7.x =  root.enrichNodes[2].x / 1000.0
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
+                    nodes7.y =  root.enrichNodes[2].y / 1000.0
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
+                    nodes7.y = 1 - nodes7.y
+            else:
+                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+                    nodes6 = Coordinate(0,0)
+                    nodes6.x =  root.enrichNodes[2].x / 1000.0
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  root.enrichNodes[2].y / 1000.0
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
+                    nodes6.y = 1 - nodes6.y
+                    
+                    nodes7 = Coordinate(0,0)
+                    nodes7.x =  root.enrichNodes[3].x / 1000.0
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
+                    nodes7.y =  root.enrichNodes[3].y / 1000.0
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
+                    nodes7.y = 1 - nodes7.y
+                else:
+                    nodes6 = Coordinate(0,0)
+                    nodes6.x =  root.enrichNodes[3].x / 1000.0
+                    if nodes6.x != 0.0:
+                        nodes6.x += 0.001
+                    nodes6.y =  root.enrichNodes[3].y / 1000.0
+                    if nodes6.y != 0.0:
+                        nodes6.y += 0.001
+                    nodes6.y = 1 - nodes6.y
+                    
+                    nodes7 = Coordinate(0,0)
+                    nodes7.x =  root.enrichNodes[2].x / 1000.0
+                    if nodes7.x != 0.0:
+                        nodes7.x += 0.001
+                    nodes7.y =  root.enrichNodes[2].y / 1000.0
+                    if nodes7.y != 0.0:
+                        nodes7.y += 0.001
+                    nodes7.y = 1 - nodes7.y
+                    
+            old_node6 = Coordinate(nodes6.x, nodes6.y)
+            [c_center, c_rad] = which_circle(nodes6)
+            new_nodes6 = Coordinate(0.0,0.0)
+            new_nodes6.x = c_center.x + c_rad * ( nodes6.x - c_center.x) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            new_nodes6.y = c_center.y + c_rad * ( nodes6.y - c_center.y) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
+            nodes6 = Coordinate(new_nodes6.x, new_nodes6.y)
+            
+            old_node7 = Coordinate(nodes7.x, nodes7.y)
+            [c_center, c_rad] = which_circle(nodes7)
+            new_nodes7 = Coordinate(0.0,0.0)
+            new_nodes7.x = c_center.x + c_rad * ( nodes7.x - c_center.x) / math.sqrt( math.pow(nodes7.x - c_center.x, 2) + math.pow( nodes7.y - c_center.y,2) )
+            new_nodes7.y = c_center.y + c_rad * ( nodes7.y - c_center.y) / math.sqrt( math.pow(nodes7.x - c_center.x, 2) + math.pow( nodes7.y - c_center.y,2) )
+            nodes7 = Coordinate(new_nodes7.x, new_nodes7.y)
+            
+                        
         pxVal1 = image.GetPixel(int(p1.x), int(p1.y))
         pxVal2 = image.GetPixel(int(p2.x), int(p2.y))
         pxVal3 = image.GetPixel(int(p3.x), int(p3.y))
@@ -858,7 +1076,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
            
         else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
             enrich1 = np.array(p[nodes[4]])
-            
+
             if len(nodes) == 5:
                 
                 corner0 = ( min(abs(enrich1[0] - [x0]))<=1e-12) and (min(abs(enrich1[1] - [y0])) <= 1e-12 )
@@ -948,6 +1166,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                 corner2 = ( min(abs(enrich2[0] - [x1]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
                 corner3 = ( min(abs(enrich2[0] - [x0]))<=1e-12) and (min(abs(enrich2[1] - [y1])) <= 1e-12 )
 
+#                print corner0, corner1, corner2, corner3
+#                print p[nodes]
+                
                 # testing if interface is along a diagonal
                 if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
                     print 'Diagonal, element ', e
@@ -1006,7 +1227,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                     Nx_trid2 = triderivX(C_trid2)
                     Ny_trid2 = triderivY(C_trid2)
 
-                    if len(root.enrichNodes) != 3:
+                    if len(root.enrichNodes) < 3:
                     
                         [x_fct_1, y_fct_1] = tri_xy_fct( coords_trid1[:,0], coords_trid1[:,1] )
                         [x_fct_2, y_fct_2] = tri_xy_fct( coords_trid2[:,0], coords_trid2[:,1] )
@@ -1049,20 +1270,21 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 
                     if len(root.enrichNodes) == 4:
                 
-                        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-                            E = root.enrichNodes[2]
-                            F = root.enrichNodes[3]
-                        else:
-                            E = root.enrichNodes[3]
-                            F = root.enrichNodes[2]
-                            
-                        coord_enrich1 = coord_enrich_computation(E)
-                        coord_enrich2 = coord_enrich_computation(F)
+#                        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                            E = root.enrichNodes[2]
+#                            F = root.enrichNodes[3]
+#                        else:
+#                            E = root.enrichNodes[3]
+#                            F = root.enrichNodes[2]
+#                            
+#                        coord_enrich1 = coord_enrich_computation(E)
+#                        coord_enrich2 = coord_enrich_computation(F)
                 
+                        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+                        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodess], nodes7)
                         
-                        circumcenter_pt1 = circumcenter_tri(coords1)
-                        circumcenter_pt2 = circumcenter_tri(coords2)
-                        circumcenter_pt3 = circumcenter_tri(coords3)
+                        circumcenter_pt1 = circumcenter_tri(coords_trid1)
+                        circumcenter_pt2 = circumcenter_tri(coords_trid2)
 
                         if(corner0 == True and corner2 == True): 
                         # even diagonal: SW - NE
@@ -1081,22 +1303,22 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         pt8 = Coordinate(0,0)
                         pt9 = Coordinate(0,0)
                          
-                        pt4.x = 2.0/3.0 * coords1[lOrd[0],0] + 1.0/3.0 * coords1[lOrd[1],0]
-                        pt4.y = 2.0/3.0 * coords1[lOrd[0],1] + 1.0/3.0 * coords1[lOrd[1],1]
+                        pt4.x = 2.0/3.0 * coords_trid1[lOrd[0],0] + 1.0/3.0 * coords_trid1[lOrd[1],0]
+                        pt4.y = 2.0/3.0 * coords_trid1[lOrd[0],1] + 1.0/3.0 * coords_trid1[lOrd[1],1]
                          
-                        pt5.x = 1.0/3.0 * coords1[lOrd[0],0] + 2.0/3.0 * coords1[lOrd[1],0]
-                        pt5.y = 1.0/3.0 * coords1[lOrd[0],1] + 2.0/3.0 * coords1[lOrd[1],1]
+                        pt5.x = 1.0/3.0 * coords_trid1[lOrd[0],0] + 2.0/3.0 * coords_trid1[lOrd[1],0]
+                        pt5.y = 1.0/3.0 * coords_trid1[lOrd[0],1] + 2.0/3.0 * coords_trid1[lOrd[1],1]
                          
-                        pt8.x = 2.0/3.0 * coords1[lOrd[2],0] + 1.0/3.0 * coords1[lOrd[0],0]
-                        pt8.y = 2.0/3.0 * coords1[lOrd[2],1] + 1.0/3.0 * coords1[lOrd[0],1]
+                        pt8.x = 2.0/3.0 * coords_trid1[lOrd[2],0] + 1.0/3.0 * coords_trid1[lOrd[0],0]
+                        pt8.y = 2.0/3.0 * coords_trid1[lOrd[2],1] + 1.0/3.0 * coords_trid1[lOrd[0],1]
                          
-                        pt9.x = 1.0/3.0 * coords1[lOrd[2],0] + 2.0/3.0 * coords1[lOrd[0],0]
-                        pt9.y = 1.0/3.0 * coords1[lOrd[2],1] + 2.0/3.0 * coords1[lOrd[0],1]
+                        pt9.x = 1.0/3.0 * coords_trid1[lOrd[2],0] + 2.0/3.0 * coords_trid1[lOrd[0],0]
+                        pt9.y = 1.0/3.0 * coords_trid1[lOrd[2],1] + 2.0/3.0 * coords_trid1[lOrd[0],1]
                  
                          
-                        vec1_x = [coords1[lOrd[0],0], 
-                                  coords1[lOrd[1],0], 
-                                  coords1[lOrd[2],0], 
+                        vec1_x = [coords_trid1[lOrd[0],0], 
+                                  coords_trid1[lOrd[1],0], 
+                                  coords_trid1[lOrd[2],0], 
                                   pt4.x, 
                                   pt5.x,
                                   pt6.x,
@@ -1105,9 +1327,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                                   pt9.x,
                                   circumcenter_pt1.x  
                                   ]
-                        vec1_y = [coords1[lOrd[0],1], 
-                                  coords1[lOrd[1],1], 
-                                  coords1[lOrd[2],1], 
+                        vec1_y = [coords_trid1[lOrd[0],1], 
+                                  coords_trid1[lOrd[1],1], 
+                                  coords_trid1[lOrd[2],1], 
                                   pt4.y, 
                                   pt5.y,
                                   pt6.y,
@@ -1137,21 +1359,21 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         pt8 = Coordinate(0,0)
                         pt9 = Coordinate(0,0)
                     
-                        pt4.x = 2.0/3.0 * coords2[lOrd[0],0] + 1.0/3.0 * coords2[lOrd[1],0]
-                        pt4.y = 2.0/3.0 * coords2[lOrd[0],1] + 1.0/3.0 * coords2[lOrd[1],1]
+                        pt4.x = 2.0/3.0 * coords_trid2[lOrd[0],0] + 1.0/3.0 * coords_trid2[lOrd[1],0]
+                        pt4.y = 2.0/3.0 * coords_trid2[lOrd[0],1] + 1.0/3.0 * coords_trid2[lOrd[1],1]
                         
-                        pt5.x = 1.0/3.0 * coords2[lOrd[0],0] + 2.0/3.0 * coords2[lOrd[1],0]
-                        pt5.y = 1.0/3.0 * coords2[lOrd[0],1] + 2.0/3.0 * coords2[lOrd[1],1]
+                        pt5.x = 1.0/3.0 * coords_trid2[lOrd[0],0] + 2.0/3.0 * coords_trid2[lOrd[1],0]
+                        pt5.y = 1.0/3.0 * coords_trid2[lOrd[0],1] + 2.0/3.0 * coords_trid2[lOrd[1],1]
                         
-                        pt8.x = 2.0/3.0 * coords2[lOrd[2],0] + 1.0/3.0 * coords2[lOrd[0],0]
-                        pt8.y = 2.0/3.0 * coords2[lOrd[2],1] + 1.0/3.0 * coords2[lOrd[0],1]
+                        pt8.x = 2.0/3.0 * coords_trid2[lOrd[2],0] + 1.0/3.0 * coords_trid2[lOrd[0],0]
+                        pt8.y = 2.0/3.0 * coords_trid2[lOrd[2],1] + 1.0/3.0 * coords_trid2[lOrd[0],1]
                         
-                        pt9.x = 1.0/3.0 * coords2[lOrd[2],0] + 2.0/3.0 * coords2[lOrd[0],0]
-                        pt9.y = 1.0/3.0 * coords2[lOrd[2],1] + 2.0/3.0 * coords2[lOrd[0],1]
+                        pt9.x = 1.0/3.0 * coords_trid2[lOrd[2],0] + 2.0/3.0 * coords_trid2[lOrd[0],0]
+                        pt9.y = 1.0/3.0 * coords_trid2[lOrd[2],1] + 2.0/3.0 * coords_trid2[lOrd[0],1]
                     
-                        vec2_x = [coords2[lOrd[0],0], 
-                                  coords2[lOrd[1],0],
-                                  coords2[lOrd[2],0],
+                        vec2_x = [coords_trid2[lOrd[0],0], 
+                                  coords_trid2[lOrd[1],0],
+                                  coords_trid2[lOrd[2],0],
                                   pt4.x, 
                                   pt5.x,
                                   pt6.x,
@@ -1160,9 +1382,9 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                                   pt9.x,
                                   circumcenter_pt2.x  
                                   ]
-                        vec2_y = [coords2[lOrd[0],1], 
-                                  coords2[lOrd[1],1], 
-                                  coords2[lOrd[2],1], 
+                        vec2_y = [coords_trid2[lOrd[0],1], 
+                                  coords_trid2[lOrd[1],1], 
+                                  coords_trid2[lOrd[2],1], 
                                   pt4.y, 
                                   pt5.y,
                                   pt6.y, 
@@ -1185,11 +1407,13 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         for j in range(0,3):
 #                             if nodes_trid1[i] >=  nodes_trid1[j]:
                                 Kefunc_trid1 = lambda e,n: K_cst_trid1 * ( Nx_trid1[i](x_fct_1(e,n), y_fct_1(e,n)) * Nx_trid1[j](x_fct_1(e,n), y_fct_1(e,n)) + Ny_trid1[i](x_fct_1(e,n), y_fct_1(e,n)) * Ny_trid1[j](x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
-                                Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
+#                                Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
+                                Ke_trid1[i,j] = my_gauss_rule(Kefunc_trid1,ui,wi)
 
                         # construct the local load vector
                         fv_trid1 = lambda x,y: rhs(x,y) * Nbasis_trid1[i](x,y)
-                        Fe_trid1[i] = 1.0/2.0 * quad2d(fv_trid1,x0,x1,y0,y1,ui,wi)
+#                        Fe_trid1[i] = 1.0/2.0 * quad2d(fv_trid1,x0,x1,y0,y1,ui,wi)
+                        Fe_trid1[i] = my_gauss_rule(fv_trid1,ui,wi)
 
             
                     # add the local stiffness matrix and local load vector to the global K and F
@@ -1206,11 +1430,14 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         for j in range(0,3):
 #                             if nodes_trid2[i] >=  nodes_trid2[j]:
                                 Kefunc_trid2 = lambda e,n: K_cst_trid2 * ( Nx_trid2[i](x_fct_2(e,n), y_fct_2(e,n)) * Nx_trid2[j](x_fct_2(e,n), y_fct_2(e,n)) + Ny_trid2[i](x_fct_2(e,n), y_fct_2(e,n)) * Ny_trid2[j](x_fct_2(e,n), y_fct_2(e,n)) )* det_J2(e,n)
-                                Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
+#                                Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
+                                Ke_trid2[i,j] = my_gauss_rule(Kefunc_trid2,ui,wi)
 
                         # construct the local load vector
                         fv_trid2 = lambda x,y: rhs(x,y) * Nbasis_trid2[i](x,y)
-                        Fe_trid2[i] = 1.0/2.0 * quad2d(fv_trid2,x0,x1,y0,y1,ui,wi)
+#                        Fe_trid2[i] = 1.0/2.0 * quad2d(fv_trid2,x0,x1,y0,y1,ui,wi)
+                        Fe_trid2[i] = my_gauss_rule(fv_trid2,ui,wi)
+
 
             
                     # add the local stiffness matrix and local load vector to the global K and F
@@ -1235,7 +1462,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NW corner"
-                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
+                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
 
                         
                         # add the local stiffness matrix and local load vector to the global K and F
@@ -1258,7 +1485,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         ):
                         print 'SE corner'
                         
-                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
+                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -1278,7 +1505,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "NE corner"
-                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
+                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -1298,7 +1525,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
                         print "SW corner"
-                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6)
+                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
         
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
@@ -1319,7 +1546,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         else:
                             south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image)
+                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image,nodes6,nodes7,nodes)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -1339,7 +1566,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
                         else:
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
-                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image)
+                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image,nodes6,nodes7,nodes)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -1364,7 +1591,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         else:
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image)
+                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image,nodes6,nodes7,nodes)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -1388,7 +1615,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         else:
                             east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image)
+                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image,nodes6,nodes7,nodes)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
@@ -1429,9 +1656,8 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 
 
                         print "horizontal slide: quad-quad"
-                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image)
+                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
                     
-                        print Ke_Horiz, Fe_Horiz
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
@@ -1448,7 +1674,7 @@ def myquad(m,n,k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         not(on_corners(enrich1,coords)) and 
                         not(on_corners(enrich2,coords)) ):
                         print "vertical slide: quad-quad"
-                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image)
+                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
@@ -1601,13 +1827,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 
     Usolution = np.zeros((len(p) + len(p_extra),1))
     polygonList = []
-    
+#    U[31,0] = 0.0
 #    p_points6 = []
 
     # COMPUTING THE L-2 NORM
     for e in range(0,T):
 #    for e in [1,4,3,6,8,9,10,11,14,15,13]:
-#    for e in [4]:
+#    for e in [13]:
         
         nodes = t[e] # row of t =  node numbers of the 4 corners of element e
         nodes = np.array(nodes)
@@ -1630,8 +1856,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
             new_nodes6.x = c_center.x + c_rad * ( nodes6.x - c_center.x) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
             new_nodes6.y = c_center.y + c_rad * ( nodes6.y - c_center.y) / math.sqrt( math.pow(nodes6.x - c_center.x, 2) + math.pow( nodes6.y - c_center.y,2) )
             nodes6 = Coordinate(new_nodes6.x, new_nodes6.y)
-            
-#            p_points6 = p_points6 + [[nodes6.x, nodes6.y]]
             
             
         if len(root.enrichNodes) == 4:
@@ -2139,9 +2363,16 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                     Usolution[nodes_trid1[1],0] = uh_elem_trid1(p[nodes_trid1[1],0],p[nodes_trid1[1],1])
                     Usolution[nodes_trid1[2],0] = uh_elem_trid1(p[nodes_trid1[2],0],p[nodes_trid1[2],1])
                     
+    
+                    Usolution[nodes_trid2[0],0] = uh_elem_trid2(p[nodes_trid2[0],0],p[nodes_trid2[0],1])
+                    Usolution[nodes_trid2[1],0] = uh_elem_trid2(p[nodes_trid2[1],0],p[nodes_trid2[1],1])
+                    Usolution[nodes_trid2[2],0] = uh_elem_trid2(p[nodes_trid2[2],0],p[nodes_trid2[2],1])
+    
+                                                
                     if len(root.enrichNodes) < 3:
                         polygonList = polygonList + [[nodes_trid1[0], nodes_trid1[1], nodes_trid1[2] ]]
-  
+                        polygonList = polygonList + [[nodes_trid2[0], nodes_trid2[1], nodes_trid2[2] ]]
+                        
                     if len(root.enrichNodes) == 3:
                         index6 = numpy.where(numpy.all(p_extra==[old_node6.x, old_node6.y],axis=1))
 #                        index6 = numpy.where(numpy.all(p_extra==[nodes6.x, nodes6.y],axis=1))
@@ -2194,36 +2425,184 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                  
 # canceling the norm computation
                     if NORM_COMP == 1:   
-                        [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
-                        Jac_trid1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
+                        if len(root.enrichNodes) < 3:
+                            [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct(x_coords_trid1,y_coords_trid1)            
+                            Jac_trid1 = tri_jacobian_mat( coords_trid1[:,0], coords_trid1[:,1] )
+                            [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct(x_coords_trid2,y_coords_trid2)            
+                            Jac_trid2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
+                        
+                        if len(root.enrichNodes) == 3:
+                            coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+                              
+                            if(corner0 == True and corner2 == True): 
+                            # even diagonal: SW - NE
+                                lOrd = [1,2,0] 
+                            else:
+                                lOrd = [0,1,2] 
+                              
+                            vec1_x = [ coords_trid1[ lOrd[0],0], coords_trid1[lOrd[1],0], coords_trid1[lOrd[2],0], (coords_trid1[ lOrd[0],0] + coords_trid1[lOrd[1],0])/2.0, coord_enrich.x, (coords_trid1[lOrd[0],0] + coords_trid1[lOrd[2],0])/2.0  ]
+                            vec1_y = [ coords_trid1[ lOrd[0],1], coords_trid1[lOrd[1],1], coords_trid1[lOrd[2],1], (coords_trid1[ lOrd[0],1] + coords_trid1[lOrd[1],1])/2.0, coord_enrich.y, (coords_trid1[lOrd[0],1] + coords_trid1[lOrd[2],1])/2.0  ]
+                    
+                            [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+                            Jac_trid1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                            
+                            
+                            if(corner0 == True and corner2 == True): 
+                            # even diagonal: SW - NE
+                                lOrd = [2,0,1] 
+                            else:
+                                lOrd = [1,2,0] 
+                                
+                            vec2_x = [ coords_trid2[ lOrd[0],0], coords_trid2[lOrd[1],0], coords_trid2[lOrd[2],0], (coords_trid2[ lOrd[0],0] + coords_trid2[lOrd[1],0])/2.0, coord_enrich.x, (coords_trid2[lOrd[0],0] + coords_trid2[lOrd[2],0])/2.0  ]
+                            vec2_y = [ coords_trid2[ lOrd[0],1], coords_trid2[lOrd[1],1], coords_trid2[lOrd[2],1], (coords_trid2[ lOrd[0],1] + coords_trid2[lOrd[1],1])/2.0, coord_enrich.y, (coords_trid2[lOrd[0],1] + coords_trid2[lOrd[2],1])/2.0  ]
+                    
+                            [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                            Jac_trid2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                            
+                        if len(root.enrichNodes) == 4:
+#                            if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                E = root.enrichNodes[2]
+#                                F = root.enrichNodes[3]
+#                            else:
+#                                E = root.enrichNodes[3]
+#                                F = root.enrichNodes[2]
+#                                
+#                            coord_enrich1 = coord_enrich_computation(E)
+#                            coord_enrich2 = coord_enrich_computation(F)
+                    
+                            
+                            coord_enrich1 = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+                            coord_enrich2 = coord_enrich_comp_quad_circle(p[nodess], nodes7)
+                            
+                            circumcenter_pt1 = circumcenter_tri(coords_trid1)
+                            circumcenter_pt2 = circumcenter_tri(coords_trid2)
+    
+                            pt4 = Coordinate(0,0)
+                            pt5 = Coordinate(0,0)
+                            pt6 = Coordinate(0,0)
+                            pt7 = Coordinate(0,0)
+                            pt8 = Coordinate(0,0)
+                            pt9 = Coordinate(0,0)
+                            
+                            if(corner0 == True and corner2 == True): 
+                            # even diagonal: SW - NE
+                                lOrd = [1,2,0] 
+                                pt6.x = coord_enrich2.x
+                                pt6.y = coord_enrich2.y 
+                            else:
+                                lOrd = [0,1,2]   
+                                pt7.x = coord_enrich1.x
+                                pt7.y = coord_enrich1.y                      
+                            
+                            
+                             
+                            pt4.x = 2.0/3.0 * coords_trid1[lOrd[0],0] + 1.0/3.0 * coords_trid1[lOrd[1],0]
+                            pt4.y = 2.0/3.0 * coords_trid1[lOrd[0],1] + 1.0/3.0 * coords_trid1[lOrd[1],1]
+                             
+                            pt5.x = 1.0/3.0 * coords_trid1[lOrd[0],0] + 2.0/3.0 * coords_trid1[lOrd[1],0]
+                            pt5.y = 1.0/3.0 * coords_trid1[lOrd[0],1] + 2.0/3.0 * coords_trid1[lOrd[1],1]
+                             
+                            pt8.x = 2.0/3.0 * coords_trid1[lOrd[2],0] + 1.0/3.0 * coords_trid1[lOrd[0],0]
+                            pt8.y = 2.0/3.0 * coords_trid1[lOrd[2],1] + 1.0/3.0 * coords_trid1[lOrd[0],1]
+                             
+                            pt9.x = 1.0/3.0 * coords_trid1[lOrd[2],0] + 2.0/3.0 * coords_trid1[lOrd[0],0]
+                            pt9.y = 1.0/3.0 * coords_trid1[lOrd[2],1] + 2.0/3.0 * coords_trid1[lOrd[0],1]
+                     
+                             
+                            vec1_x = [coords_trid1[lOrd[0],0], 
+                                      coords_trid1[lOrd[1],0], 
+                                      coords_trid1[lOrd[2],0], 
+                                      pt4.x, 
+                                      pt5.x,
+                                      pt6.x,
+                                      pt7.x,
+                                      pt8.x,
+                                      pt9.x,
+                                      circumcenter_pt1.x  
+                                      ]
+                            vec1_y = [coords_trid1[lOrd[0],1], 
+                                      coords_trid1[lOrd[1],1], 
+                                      coords_trid1[lOrd[2],1], 
+                                      pt4.y, 
+                                      pt5.y,
+                                      pt6.y,
+                                      pt7.y,
+                                      pt8.y,
+                                      pt9.y,
+                                      circumcenter_pt1.y  
+                                      ]
+                            [x_transform_fct_trid1,y_transform_fct_trid1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                            Jac_trid2 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                            
+    
+                            pt4 = Coordinate(0,0)
+                            pt5 = Coordinate(0,0)
+                            pt6 = Coordinate(0,0)
+                            pt7 = Coordinate(0,0)
+                            pt8 = Coordinate(0,0)
+                            pt9 = Coordinate(0,0)
+                            
+                            if(corner0 == True and corner2 == True): 
+                            # even diagonal: SW - NE
+                                lOrd = [2,0,1] 
+                                pt6.x = coord_enrich1.x
+                                pt6.y = coord_enrich1.y  
+                            else:
+                                lOrd = [1,2,0] 
+                                pt7.x = coord_enrich2.x
+                                pt7.y = coord_enrich2.y
+                                
+                            pt4.x = 2.0/3.0 * coords_trid2[lOrd[0],0] + 1.0/3.0 * coords_trid2[lOrd[1],0]
+                            pt4.y = 2.0/3.0 * coords_trid2[lOrd[0],1] + 1.0/3.0 * coords_trid2[lOrd[1],1]
+                            
+                            pt5.x = 1.0/3.0 * coords_trid2[lOrd[0],0] + 2.0/3.0 * coords_trid2[lOrd[1],0]
+                            pt5.y = 1.0/3.0 * coords_trid2[lOrd[0],1] + 2.0/3.0 * coords_trid2[lOrd[1],1]
+                            
+                            pt8.x = 2.0/3.0 * coords_trid2[lOrd[2],0] + 1.0/3.0 * coords_trid2[lOrd[0],0]
+                            pt8.y = 2.0/3.0 * coords_trid2[lOrd[2],1] + 1.0/3.0 * coords_trid2[lOrd[0],1]
+                            
+                            pt9.x = 1.0/3.0 * coords_trid2[lOrd[2],0] + 2.0/3.0 * coords_trid2[lOrd[0],0]
+                            pt9.y = 1.0/3.0 * coords_trid2[lOrd[2],1] + 2.0/3.0 * coords_trid2[lOrd[0],1]
+                        
+                            vec2_x = [coords_trid2[lOrd[0],0], 
+                                      coords_trid2[lOrd[1],0],
+                                      coords_trid2[lOrd[2],0],
+                                      pt4.x, 
+                                      pt5.x,
+                                      pt6.x,
+                                      pt7.x,
+                                      pt8.x,
+                                      pt9.x,
+                                      circumcenter_pt2.x  
+                                      ]
+                            vec2_y = [coords_trid2[lOrd[0],1], 
+                                      coords_trid2[lOrd[1],1], 
+                                      coords_trid2[lOrd[2],1], 
+                                      pt4.y, 
+                                      pt5.y,
+                                      pt6.y, 
+                                      pt7.y,
+                                      pt8.y,
+                                      pt9.y,
+                                      circumcenter_pt2.y 
+                                      ]
+                            
+                            [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                            Jac_trid2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                              
                         detJ_trid1 = lambda eps,niu: determinant(Jac_trid1)(eps,niu)
-                 
                         el_sum_trid1 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid1,y_transform_fct_trid1,uh_elem_trid1,detJ_trid1)
                         all_elems_sum = all_elems_sum + el_sum_trid1;
+    
+                        detJ_trid2 = lambda eps,niu: determinant(Jac_trid2)(eps,niu)
+                        el_sum_trid2 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid2,y_transform_fct_trid2,uh_elem_trid2,detJ_trid2)
+                        all_elems_sum = all_elems_sum + el_sum_trid2
     
     #                     if y0 <= yloc and yloc <= y1:
     #                         tx_trid1 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
     #                         sfct_trid1 = uh_elem_trid1(tx_trid1,yloc)
     #                         pylab.plot(tx_trid1,sfct_trid1)
-    
-                    Usolution[nodes_trid2[0],0] = uh_elem_trid2(p[nodes_trid2[0],0],p[nodes_trid2[0],1])
-                    Usolution[nodes_trid2[1],0] = uh_elem_trid2(p[nodes_trid2[1],0],p[nodes_trid2[1],1])
-                    Usolution[nodes_trid2[2],0] = uh_elem_trid2(p[nodes_trid2[2],0],p[nodes_trid2[2],1])
-                    
-                    if len(root.enrichNodes) < 3:
-                        polygonList = polygonList + [[nodes_trid2[0], nodes_trid2[1], nodes_trid2[2] ]]
-    
-                            
-                            
-# canceling the norm computation  
-                    if NORM_COMP == 1:  
-                        [x_transform_fct_trid2,y_transform_fct_trid2] = tri_xy_fct(x_coords_trid2,y_coords_trid2)            
-                        Jac_trid2 = tri_jacobian_mat( coords_trid2[:,0], coords_trid2[:,1] )
-                        detJ_trid2 = lambda eps,niu: determinant(Jac_trid2)(eps,niu)
-             
-                        el_sum_trid2 =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_trid2,y_transform_fct_trid2,uh_elem_trid2,detJ_trid2)
-                        all_elems_sum = all_elems_sum + el_sum_trid2
-    
+
     #                     if y0 <= yloc and yloc <= y1:
     #                         tx_trid2 = np.arange(coords[0,0],coords[1,0]+0.00001,0.001)
     #                         sfct_trid2 = uh_elem_trid2(tx_trid2,yloc)
@@ -2282,18 +2661,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_coords2 = p[tri_nodes2]
                         tri_coords3 = p[tri_nodes3]
         
-                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-        
-                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-        
-                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
-                        detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
     
                         node_enr_4 = [north_nodes[4]]
                         coords_enr_4 = p[node_enr_4]
@@ -2329,6 +2696,300 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes3[2],0] * Nbasis_tri3[2](x,y) * factor_N)
 # canceling the norm computation  
                         if NORM_COMP == 1:
+                            
+                            if len(root.enrichNodes) == 2:
+                                [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                                [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                
+                                J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                                J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+        
+                            if len(root.enrichNodes) == 3:
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [0,1,2] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                                    
+                                    lOrd = [1,2,0]
+                                    vec3_x = [ tri_coords3[ lOrd[0],0], tri_coords3[lOrd[1],0], tri_coords3[lOrd[2],0], (tri_coords3[ lOrd[0],0] + tri_coords3[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords3[lOrd[0],0] + tri_coords3[lOrd[2],0])/2.0  ]
+                                    vec3_y = [ tri_coords3[ lOrd[0],1], tri_coords3[lOrd[1],1], tri_coords3[lOrd[2],1], (tri_coords3[ lOrd[0],1] + tri_coords3[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords3[lOrd[0],1] + tri_coords3[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is curved
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    lOrd = [2,0,1]
+                                    vec1_x = [ tri_coords1[ lOrd[0],0], tri_coords1[lOrd[1],0], tri_coords1[lOrd[2],0], (tri_coords1[ lOrd[0],0] + tri_coords1[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords1[lOrd[0],0] + tri_coords1[lOrd[2],0])/2.0  ]
+                                    vec1_y = [ tri_coords1[ lOrd[0],1], tri_coords1[lOrd[1],1], tri_coords1[lOrd[2],1], (tri_coords1[ lOrd[0],1] + tri_coords1[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords1[lOrd[0],1] + tri_coords1[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                                                
+                                    lOrd = [1,2,0] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )                                
+                                
+                            if len(root.enrichNodes) == 4:
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes], nodes7)
+                                
+                                circumcenter_pt1 = circumcenter_tri(tri_coords1)
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                circumcenter_pt3 = circumcenter_tri(tri_coords3)
+                        
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [0,1,2] # local order    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                    
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                            
+                                    lOrd = [1,2,0]
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords3[lOrd[0],0] + 1.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords3[lOrd[0],1] + 1.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords3[lOrd[0],0] + 2.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords3[lOrd[0],1] + 2.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords3[lOrd[2],0] + 1.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords3[lOrd[2],1] + 1.0/3.0 * tri_coords3[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords3[lOrd[2],0] + 2.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords3[lOrd[2],1] + 2.0/3.0 * tri_coords3[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                     
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                    
+                                    vec3_x = [tri_coords3[ lOrd[0],0], 
+                                              tri_coords3[lOrd[1],0],
+                                              tri_coords3[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt3.x  
+                                              ]
+                                    vec3_y = [tri_coords3[ lOrd[0],1], 
+                                              tri_coords3[lOrd[1],1], 
+                                              tri_coords3[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt3.y  
+                                              ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    lOrd = [2,0,1]
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords1[lOrd[0],0] + 1.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords1[lOrd[0],1] + 1.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords1[lOrd[0],0] + 2.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords1[lOrd[0],1] + 2.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords1[lOrd[2],0] + 1.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords1[lOrd[2],1] + 1.0/3.0 * tri_coords1[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords1[lOrd[2],0] + 2.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords1[lOrd[2],1] + 2.0/3.0 * tri_coords1[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                     
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                     
+                                    vec1_x = [tri_coords1[lOrd[0],0], 
+                                              tri_coords1[lOrd[1],0], 
+                                              tri_coords1[lOrd[2],0], 
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt1.x  
+                                              ]
+                                    vec1_y = [tri_coords1[lOrd[0],1], 
+                                              tri_coords1[lOrd[1],1], 
+                                              tri_coords1[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt1.y  
+                                              ]
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                                    
+                                                
+                                    lOrd = [1,2,0] # local order    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                    
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )  
+                                                                   
+                            detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                            detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                            detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                            detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
+                        
                             el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)      
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
@@ -2481,17 +3142,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_coords2 = p[tri_nodes2]
                         tri_coords3 = p[tri_nodes3]
         
-                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-        
-        
-                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
         
                         node_enr_4 = [south_nodes[4]]
                         coords_enr_4 = p[node_enr_4]
@@ -2529,6 +3179,306 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_S )
 # canceling the norm computation   
                         if NORM_COMP == 1: 
+                            if len(root.enrichNodes) < 3:
+                                [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                                [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                
+                
+                                J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                                J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                
+                            if len(root.enrichNodes) == 3:
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+        
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [2,0,1] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                                    
+                                    lOrd = [1,2,0]
+                                    vec3_x = [ tri_coords3[ lOrd[0],0], tri_coords3[lOrd[1],0], tri_coords3[lOrd[2],0], (tri_coords3[ lOrd[0],0] + tri_coords3[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords3[lOrd[0],0] + tri_coords3[lOrd[2],0])/2.0  ]
+                                    vec3_y = [ tri_coords3[ lOrd[0],1], tri_coords3[lOrd[1],1], tri_coords3[lOrd[2],1], (tri_coords3[ lOrd[0],1] + tri_coords3[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords3[lOrd[0],1] + tri_coords3[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    lOrd = [0,1,2]
+                                    vec1_x = [ tri_coords1[ lOrd[0],0], tri_coords1[lOrd[1],0], tri_coords1[lOrd[2],0], (tri_coords1[ lOrd[0],0] + tri_coords1[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords1[lOrd[0],0] + tri_coords1[lOrd[2],0])/2.0  ]
+                                    vec1_y = [ tri_coords1[ lOrd[0],1], tri_coords1[lOrd[1],1], tri_coords1[lOrd[2],1], (tri_coords1[ lOrd[0],1] + tri_coords1[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords1[lOrd[0],1] + tri_coords1[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                                                
+                                    lOrd = [1,2,0] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                        
+                            if len(root.enrichNodes) == 4:
+                        
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes], nodes7)
+                                
+                                circumcenter_pt1 = circumcenter_tri(tri_coords1)
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                circumcenter_pt3 = circumcenter_tri(tri_coords3)
+                                
+                                            
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [2,0,1] # local order    
+                                    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                    
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                    
+                                            
+                                    lOrd = [1,2,0]
+                                    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords3[lOrd[0],0] + 1.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords3[lOrd[0],1] + 1.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords3[lOrd[0],0] + 2.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords3[lOrd[0],1] + 2.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords3[lOrd[2],0] + 1.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords3[lOrd[2],1] + 1.0/3.0 * tri_coords3[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords3[lOrd[2],0] + 2.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords3[lOrd[2],1] + 2.0/3.0 * tri_coords3[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                     
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                    
+                                    vec3_x = [tri_coords3[ lOrd[0],0], 
+                                              tri_coords3[lOrd[1],0],
+                                              tri_coords3[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt3.x  
+                                              ]
+                                    vec3_y = [tri_coords3[ lOrd[0],1], 
+                                              tri_coords3[lOrd[1],1], 
+                                              tri_coords3[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt3.y  
+                                              ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    lOrd = [0,1,2]
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords1[lOrd[0],0] + 1.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords1[lOrd[0],1] + 1.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords1[lOrd[0],0] + 2.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords1[lOrd[0],1] + 2.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords1[lOrd[2],0] + 1.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords1[lOrd[2],1] + 1.0/3.0 * tri_coords1[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords1[lOrd[2],0] + 2.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords1[lOrd[2],1] + 2.0/3.0 * tri_coords1[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                     
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                     
+                                    vec1_x = [tri_coords1[lOrd[0],0], 
+                                              tri_coords1[lOrd[1],0], 
+                                              tri_coords1[lOrd[2],0], 
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt1.x  
+                                              ]
+                                    vec1_y = [tri_coords1[lOrd[0],1], 
+                                              tri_coords1[lOrd[1],1], 
+                                              tri_coords1[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt1.y  
+                                              ]
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                                    
+                                    
+                                                
+                                    lOrd = [1,2,0] # local order    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                    
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )                                
+                                
+                                   
+                            detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                            detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                            detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        
                             el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
@@ -2687,17 +3637,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_coords2 = p[tri_nodes2]
                         tri_coords3 = p[tri_nodes3]
         
-                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-        
-                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-        
-                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
     
                         # scaling factor
                         node_enr_4 = [west_nodes[4]]
@@ -2734,6 +3673,301 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_W)
 # canceling the norm computation 
                         if NORM_COMP == 1:
+                            if len(root.enrichNodes) < 3:
+                                
+                                [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                                [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                
+                                J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                                J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                
+                            if len(root.enrichNodes) == 3:
+                                
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [0,1,2] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                                    
+                                    lOrd = [2,0,1]
+                                    vec3_x = [ tri_coords3[ lOrd[0],0], tri_coords3[lOrd[1],0], tri_coords3[lOrd[2],0], (tri_coords3[ lOrd[0],0] + tri_coords3[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords3[lOrd[0],0] + tri_coords3[lOrd[2],0])/2.0  ]
+                                    vec3_y = [ tri_coords3[ lOrd[0],1], tri_coords3[lOrd[1],1], tri_coords3[lOrd[2],1], (tri_coords3[ lOrd[0],1] + tri_coords3[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords3[lOrd[0],1] + tri_coords3[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    lOrd = [0,1,2]
+                                    vec1_x = [ tri_coords1[ lOrd[0],0], tri_coords1[lOrd[1],0], tri_coords1[lOrd[2],0], (tri_coords1[ lOrd[0],0] + tri_coords1[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords1[lOrd[0],0] + tri_coords1[lOrd[2],0])/2.0  ]
+                                    vec1_y = [ tri_coords1[ lOrd[0],1], tri_coords1[lOrd[1],1], tri_coords1[lOrd[2],1], (tri_coords1[ lOrd[0],1] + tri_coords1[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords1[lOrd[0],1] + tri_coords1[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                                                
+                                    lOrd = [1,2,0] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                           
+                            if len(root.enrichNodes) == 4:
+                        
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes], nodes7)
+                                
+                                circumcenter_pt1 = circumcenter_tri(tri_coords1)
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                circumcenter_pt3 = circumcenter_tri(tri_coords3)
+                                
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [0,1,2] # local order    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                    
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                            
+                                    lOrd = [2,0,1]
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords3[lOrd[0],0] + 1.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords3[lOrd[0],1] + 1.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords3[lOrd[0],0] + 2.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords3[lOrd[0],1] + 2.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords3[lOrd[2],0] + 1.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords3[lOrd[2],1] + 1.0/3.0 * tri_coords3[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords3[lOrd[2],0] + 2.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords3[lOrd[2],1] + 2.0/3.0 * tri_coords3[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                     
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                    
+                                    vec3_x = [tri_coords3[ lOrd[0],0], 
+                                              tri_coords3[lOrd[1],0],
+                                              tri_coords3[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt3.x  
+                                              ]
+                                    vec3_y = [tri_coords3[ lOrd[0],1], 
+                                              tri_coords3[lOrd[1],1], 
+                                              tri_coords3[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt3.y  
+                                              ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    lOrd = [0,1,2]
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords1[lOrd[0],0] + 1.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords1[lOrd[0],1] + 1.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords1[lOrd[0],0] + 2.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords1[lOrd[0],1] + 2.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords1[lOrd[2],0] + 1.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords1[lOrd[2],1] + 1.0/3.0 * tri_coords1[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords1[lOrd[2],0] + 2.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords1[lOrd[2],1] + 2.0/3.0 * tri_coords1[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                     
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                     
+                                    vec1_x = [tri_coords1[lOrd[0],0], 
+                                              tri_coords1[lOrd[1],0], 
+                                              tri_coords1[lOrd[2],0], 
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt1.x  
+                                              ]
+                                    vec1_y = [tri_coords1[lOrd[0],1], 
+                                              tri_coords1[lOrd[1],1], 
+                                              tri_coords1[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt1.y  
+                                              ]
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                                                
+                                    lOrd = [1,2,0] # local order    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                    
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )                                   
+                                
+                                
+                            detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                            detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                            detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                        
                             el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)       
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
@@ -2887,16 +4121,6 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         tri_coords2 = p[tri_nodes2]
                         tri_coords3 = p[tri_nodes3]
         
-                        [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
-                        [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
-                        [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
-        
-                        J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
-                        J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
-                        J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
-                        detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
-                        detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
-                        detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
         
                         node_enr_4 = [east_nodes[4]]
                         coords_enr_4 = p[node_enr_4]
@@ -2932,6 +4156,306 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                                 U[tri_nodes3[0],0] * Nbasis_tri3[0](x,y) * factor_E )
 # canceling the norm computation  
                         if NORM_COMP == 1:  
+                            if len(root.enrichNodes) < 3:
+                                [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                [x_fct_2, y_fct_2] = tri_xy_fct( tri_coords2[:,0], tri_coords2[:,1] )
+                                [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                
+                                J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                J_tri2 = tri_jacobian_mat( tri_coords2[:,0], tri_coords2[:,1] )
+                                J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                            
+                            if len(root.enrichNodes) == 3:
+                                coord_enrich = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [0,1,2] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                                    
+                                    lOrd = [1,2,0]
+                                    vec3_x = [ tri_coords3[ lOrd[0],0], tri_coords3[lOrd[1],0], tri_coords3[lOrd[2],0], (tri_coords3[ lOrd[0],0] + tri_coords3[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords3[lOrd[0],0] + tri_coords3[lOrd[2],0])/2.0  ]
+                                    vec3_y = [ tri_coords3[ lOrd[0],1], tri_coords3[lOrd[1],1], tri_coords3[lOrd[2],1], (tri_coords3[ lOrd[0],1] + tri_coords3[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords3[lOrd[0],1] + tri_coords3[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    
+                                    lOrd = [1,2,0]
+                                    vec1_x = [ tri_coords1[ lOrd[0],0], tri_coords1[lOrd[1],0], tri_coords1[lOrd[2],0], (tri_coords1[ lOrd[0],0] + tri_coords1[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords1[lOrd[0],0] + tri_coords1[lOrd[2],0])/2.0  ]
+                                    vec1_y = [ tri_coords1[ lOrd[0],1], tri_coords1[lOrd[1],1], tri_coords1[lOrd[2],1], (tri_coords1[ lOrd[0],1] + tri_coords1[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords1[lOrd[0],1] + tri_coords1[lOrd[2],1])/2.0  ]
+                        
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_quadratic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_quadratic( vec1_x, vec1_y )
+                                                
+                                    lOrd = [2,0,1] # local order    
+                                    vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
+                                    vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
+                        
+                                
+                            if len(root.enrichNodes) == 4:
+                        
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes], nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes], nodes7)
+                                
+                                circumcenter_pt1 = circumcenter_tri(tri_coords1)
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                circumcenter_pt3 = circumcenter_tri(tri_coords3)
+                                
+                                if triangle_1 == False:
+                                    # triangle 3 is the one with curved edge
+                                    [x_fct_1, y_fct_1] = tri_xy_fct( tri_coords1[:,0], tri_coords1[:,1] )
+                                    J_tri1 = tri_jacobian_mat( tri_coords1[:,0], tri_coords1[:,1] )
+                                    
+                                    lOrd = [0,1,2]
+                                
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                    
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                            
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                
+                                    lOrd = [1,2,0]
+                                    
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords3[lOrd[0],0] + 1.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords3[lOrd[0],1] + 1.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords3[lOrd[0],0] + 2.0/3.0 * tri_coords3[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords3[lOrd[0],1] + 2.0/3.0 * tri_coords3[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords3[lOrd[2],0] + 1.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords3[lOrd[2],1] + 1.0/3.0 * tri_coords3[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords3[lOrd[2],0] + 2.0/3.0 * tri_coords3[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords3[lOrd[2],1] + 2.0/3.0 * tri_coords3[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                     
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                    
+                                    vec3_x = [tri_coords3[ lOrd[0],0], 
+                                              tri_coords3[lOrd[1],0],
+                                              tri_coords3[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt3.x  
+                                              ]
+                                    vec3_y = [tri_coords3[ lOrd[0],1], 
+                                              tri_coords3[lOrd[1],1], 
+                                              tri_coords3[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt3.y  
+                                              ]
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+                                    J_tri3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+                                    
+                                if triangle_1 == True:
+                                    # triangle 1 is the one with curved edge
+                        
+                                    [x_fct_3, y_fct_3] = tri_xy_fct( tri_coords3[:,0], tri_coords3[:,1] )
+                                    J_tri3 = tri_jacobian_mat( tri_coords3[:,0], tri_coords3[:,1] )
+                                    
+                                    
+                                    lOrd = [1,2,0]
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                     
+                                    pt4.x = 2.0/3.0 * tri_coords1[lOrd[0],0] + 1.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords1[lOrd[0],1] + 1.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt5.x = 1.0/3.0 * tri_coords1[lOrd[0],0] + 2.0/3.0 * tri_coords1[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords1[lOrd[0],1] + 2.0/3.0 * tri_coords1[lOrd[1],1]
+                                     
+                                    pt8.x = 2.0/3.0 * tri_coords1[lOrd[2],0] + 1.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords1[lOrd[2],1] + 1.0/3.0 * tri_coords1[lOrd[0],1]
+                                     
+                                    pt9.x = 1.0/3.0 * tri_coords1[lOrd[2],0] + 2.0/3.0 * tri_coords1[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords1[lOrd[2],1] + 2.0/3.0 * tri_coords1[lOrd[0],1]
+                             
+                                    pt6.x = coord_enrich2.x
+                                    pt6.y = coord_enrich2.y     
+                                     
+                                    pt7.x = coord_enrich1.x
+                                    pt7.y = coord_enrich1.y
+                                     
+                                    vec1_x = [tri_coords1[lOrd[0],0], 
+                                              tri_coords1[lOrd[1],0], 
+                                              tri_coords1[lOrd[2],0], 
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt1.x  
+                                              ]
+                                    vec1_y = [tri_coords1[lOrd[0],1], 
+                                              tri_coords1[lOrd[1],1], 
+                                              tri_coords1[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y,
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt1.y  
+                                              ]
+                                    [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                                    J_tri1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                                                
+                                    lOrd = [2,0,1] 
+                                      
+                                    pt4 = Coordinate(0,0)
+                                    pt5 = Coordinate(0,0)
+                                    pt6 = Coordinate(0,0)
+                                    pt7 = Coordinate(0,0)
+                                    pt8 = Coordinate(0,0)
+                                    pt9 = Coordinate(0,0)
+                                
+                                    pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                    pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                    
+                                    pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                    
+                                    pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                    pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                            
+                                    pt6.x = coord_enrich1.x
+                                    pt6.y = coord_enrich1.y     
+                                    
+                                    pt7.x = coord_enrich2.x
+                                    pt7.y = coord_enrich2.y
+                                
+                                    vec2_x = [tri_coords2[lOrd[0],0], 
+                                              tri_coords2[lOrd[1],0],
+                                              tri_coords2[lOrd[2],0],
+                                              pt4.x, 
+                                              pt5.x,
+                                              pt6.x,
+                                              pt7.x,
+                                              pt8.x,
+                                              pt9.x,
+                                              circumcenter_pt2.x  
+                                              ]
+                                    vec2_y = [tri_coords2[lOrd[0],1], 
+                                              tri_coords2[lOrd[1],1], 
+                                              tri_coords2[lOrd[2],1], 
+                                              pt4.y, 
+                                              pt5.y,
+                                              pt6.y, 
+                                              pt7.y,
+                                              pt8.y,
+                                              pt9.y,
+                                              circumcenter_pt2.y 
+                                              ]
+                                    
+                                    [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                    J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                                                    
+                                
+                                
+                            detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
+                            detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
+                            detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
+                                                    
                             el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
@@ -3195,6 +4719,130 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
                                 J_tri4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
+                            if len(root.enrichNodes) == 4:
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+                                
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                
+                                lOrd = [1,2,0]
+                                
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                
+                                pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                
+                                pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                
+                                pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                
+                                pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                        
+                                pt6.x = coord_enrich2.x
+                                pt6.y = coord_enrich2.y     
+                                
+                                pt7.x = coord_enrich1.x
+                                pt7.y = coord_enrich1.y
+                                
+                                vec2_x = [ tri_coords2[ lOrd[0],0], 
+                                          tri_coords2[lOrd[1],0],
+                                          tri_coords2[lOrd[2],0],
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt2.x  
+                                          ]
+                                vec2_y = [ tri_coords2[ lOrd[0],1], 
+                                          tri_coords2[lOrd[1],1], 
+                                          tri_coords2[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y, 
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt2.y 
+                                          ]
+                        
+                                [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                
+                                circumcenter_pt4 = circumcenter_tri(tri_coords4)
+                                lOrd = [2,0,1]
+                                
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                
+                                pt4.x = 2.0/3.0 * tri_coords4[lOrd[0],0] + 1.0/3.0 * tri_coords4[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords4[lOrd[0],1] + 1.0/3.0 * tri_coords4[lOrd[1],1]
+                                
+                                pt5.x = 1.0/3.0 * tri_coords4[lOrd[0],0] + 2.0/3.0 * tri_coords4[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords4[lOrd[0],1] + 2.0/3.0 * tri_coords4[lOrd[1],1]
+                                
+                                pt8.x = 2.0/3.0 * tri_coords4[lOrd[2],0] + 1.0/3.0 * tri_coords4[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords4[lOrd[2],1] + 1.0/3.0 * tri_coords4[lOrd[0],1]
+                                
+                                pt9.x = 1.0/3.0 * tri_coords4[lOrd[2],0] + 2.0/3.0 * tri_coords4[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords4[lOrd[2],1] + 2.0/3.0 * tri_coords4[lOrd[0],1]
+                        
+                                pt6.x = coord_enrich1.x
+                                pt6.y = coord_enrich1.y     
+                                
+                                pt7.x = coord_enrich2.x
+                                pt7.y = coord_enrich2.y
+                                
+                                vec4_x = [tri_coords4[lOrd[0],0], 
+                                          tri_coords4[lOrd[1],0],
+                                          tri_coords4[lOrd[2],0],
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt4.x  
+                                          ]
+                                vec4_y = [tri_coords4[lOrd[0],1], 
+                                          tri_coords4[lOrd[1],1],
+                                          tri_coords4[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y, 
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt4.y  
+                                          ]
+                        
+                                [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
+                                J_tri4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
+        
+                                        
                             detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
                             detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
                             detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
@@ -3205,12 +4853,9 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
                             
-                            print 'NW element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
                             print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            
-                            
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            print 'all_elems_sum = ', all_elems_sum
+#                            print 'all_elems_sum = ', all_elems_sum
                             
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_1( p[nodes[1],0], p[nodes[1],1]  )
@@ -3437,11 +5082,13 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 #                                coord_enrich = coord_enrich_computation(root.enrichNodes[2])
                                 coord_enrich = coord_enrich_comp_quad_circle(p[nodes],nodes6)
                                 
-                                
+#                                print coord_enrich.x, coord_enrich.y
                                 lOrd = [2,0,1] # local order    
                                 vec2_x = [ tri_coords2[ lOrd[0],0], tri_coords2[lOrd[1],0], tri_coords2[lOrd[2],0], (tri_coords2[ lOrd[0],0] + tri_coords2[lOrd[1],0])/2.0, coord_enrich.x, (tri_coords2[lOrd[0],0] + tri_coords2[lOrd[2],0])/2.0  ]
                                 vec2_y = [ tri_coords2[ lOrd[0],1], tri_coords2[lOrd[1],1], tri_coords2[lOrd[2],1], (tri_coords2[ lOrd[0],1] + tri_coords2[lOrd[1],1])/2.0, coord_enrich.y, (tri_coords2[lOrd[0],1] + tri_coords2[lOrd[2],1])/2.0  ]
                         
+#                                print vec2_x, vec2_y
+                                
                                 [x_fct_2, y_fct_2] = tri_xy_fct_quadratic( vec2_x, vec2_y )
                                 J_tri2 = tri_jacobian_mat_quadratic( vec2_x, vec2_y )
                                 
@@ -3452,22 +5099,145 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
                                 J_tri4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
                                 
-        
+                            if len(root.enrichNodes) == 4:
+                                
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+                                
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                lOrd = [2,0,1] 
+                                
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                
+                                pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                
+                                pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                
+                                pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                
+                                pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                        
+                                pt6.x = coord_enrich1.x
+                                pt6.y = coord_enrich1.y     
+                                
+                                pt7.x = coord_enrich2.x
+                                pt7.y = coord_enrich2.y
+                                
+                                vec2_x = [tri_coords2[lOrd[0],0], 
+                                          tri_coords2[lOrd[1],0],
+                                          tri_coords2[lOrd[2],0],
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt2.x  
+                                          ]
+                                vec2_y = [tri_coords2[lOrd[0],1], 
+                                          tri_coords2[lOrd[1],1], 
+                                          tri_coords2[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y, 
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt2.y 
+                                          ]
+                        
+                                [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+
+                                
+                                circumcenter_pt4 = circumcenter_tri(tri_coords4)
+                                
+                                lOrd = [1,2,0]
+                                        
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                
+                                pt4.x = 2.0/3.0 * tri_coords4[lOrd[0],0] + 1.0/3.0 * tri_coords4[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords4[lOrd[0],1] + 1.0/3.0 * tri_coords4[lOrd[1],1]
+                                
+                                pt5.x = 1.0/3.0 * tri_coords4[lOrd[0],0] + 2.0/3.0 * tri_coords4[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords4[lOrd[0],1] + 2.0/3.0 * tri_coords4[lOrd[1],1]
+                                
+                                pt8.x = 2.0/3.0 * tri_coords4[lOrd[2],0] + 1.0/3.0 * tri_coords4[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords4[lOrd[2],1] + 1.0/3.0 * tri_coords4[lOrd[0],1]
+                                
+                                pt9.x = 1.0/3.0 * tri_coords4[lOrd[2],0] + 2.0/3.0 * tri_coords4[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords4[lOrd[2],1] + 2.0/3.0 * tri_coords4[lOrd[0],1]
+                        
+                                pt6.x = coord_enrich2.x
+                                pt6.y = coord_enrich2.y     
+                                
+                                pt7.x = coord_enrich1.x
+                                pt7.y = coord_enrich1.y
+                                 
+                                vec4_x = [tri_coords4[lOrd[0],0], 
+                                          tri_coords4[lOrd[1],0],
+                                          tri_coords4[lOrd[2],0],
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt4.x  
+                                          ]
+                                vec4_y = [tri_coords4[lOrd[0],1], 
+                                          tri_coords4[lOrd[1],1],
+                                          tri_coords4[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y, 
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt4.y  
+                                          ]
+                                 
+                                [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
+                                J_tri4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
+                                                                
+                                
                             detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
                             detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
                             detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
                             detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-                        
-                            
+        
                             el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
              
-                            print 'SE element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
                             print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            print 'all_elems_sum = ', all_elems_sum
+#                            print 'all_elems_sum = ', all_elems_sum
         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
@@ -3707,24 +5477,145 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 [x_fct_4, y_fct_4] = tri_xy_fct_quadratic( vec4_x, vec4_y )
                                 J_tri4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
-        
+                            if len(root.enrichNodes) == 4:
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                                
+                                circumcenter_pt2 = circumcenter_tri(tri_coords2)
+                                
+                                lOrd = [0,1,2] 
+                        
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                
+                                pt4.x = 2.0/3.0 * tri_coords2[lOrd[0],0] + 1.0/3.0 * tri_coords2[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords2[lOrd[0],1] + 1.0/3.0 * tri_coords2[lOrd[1],1]
+                                
+                                pt5.x = 1.0/3.0 * tri_coords2[lOrd[0],0] + 2.0/3.0 * tri_coords2[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords2[lOrd[0],1] + 2.0/3.0 * tri_coords2[lOrd[1],1]
+                                
+                                pt8.x = 2.0/3.0 * tri_coords2[lOrd[2],0] + 1.0/3.0 * tri_coords2[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords2[lOrd[2],1] + 1.0/3.0 * tri_coords2[lOrd[0],1]
+                                
+                                pt9.x = 1.0/3.0 * tri_coords2[lOrd[2],0] + 2.0/3.0 * tri_coords2[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords2[lOrd[2],1] + 2.0/3.0 * tri_coords2[lOrd[0],1]
+                        
+                                pt6.x = coord_enrich1.x
+                                pt6.y = coord_enrich1.y     
+                                
+                                pt7.x = coord_enrich2.x
+                                pt7.y = coord_enrich2.y
+                                
+                                vec2_x = [tri_coords2[lOrd[0],0], 
+                                          tri_coords2[lOrd[1],0],
+                                          tri_coords2[lOrd[2],0],
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt2.x  
+                                          ]
+                                vec2_y = [tri_coords2[lOrd[0],1], 
+                                          tri_coords2[lOrd[1],1], 
+                                          tri_coords2[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y, 
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt2.y 
+                                          ]
+                                
+                                
+                                [x_fct_2, y_fct_2] = tri_xy_fct_cubic( vec2_x, vec2_y )
+                                J_tri2 = tri_jacobian_mat_cubic( vec2_x, vec2_y )
+                                
+                                circumcenter_pt4 = circumcenter_tri(tri_coords4)
+                                lOrd = [1,2,0]
+                                
+                                
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                
+                                pt4.x = 2.0/3.0 * tri_coords4[lOrd[0],0] + 1.0/3.0 * tri_coords4[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords4[lOrd[0],1] + 1.0/3.0 * tri_coords4[lOrd[1],1]
+                                
+                                pt5.x = 1.0/3.0 * tri_coords4[lOrd[0],0] + 2.0/3.0 * tri_coords4[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords4[lOrd[0],1] + 2.0/3.0 * tri_coords4[lOrd[1],1]
+                                
+                                pt8.x = 2.0/3.0 * tri_coords4[lOrd[2],0] + 1.0/3.0 * tri_coords4[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords4[lOrd[2],1] + 1.0/3.0 * tri_coords4[lOrd[0],1]
+                                
+                                pt9.x = 1.0/3.0 * tri_coords4[lOrd[2],0] + 2.0/3.0 * tri_coords4[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords4[lOrd[2],1] + 2.0/3.0 * tri_coords4[lOrd[0],1]
+                        
+                                pt6.x = coord_enrich2.x
+                                pt6.y = coord_enrich2.y     
+                                
+                                pt7.x = coord_enrich1.x
+                                pt7.y = coord_enrich1.y
+                                
+                                vec4_x = [tri_coords4[lOrd[0],0], 
+                                            tri_coords4[lOrd[1],0],
+                                            tri_coords4[lOrd[2],0],
+                                            pt4.x, 
+                                            pt5.x,
+                                            pt6.x,
+                                            pt7.x,
+                                            pt8.x,
+                                            pt9.x,
+                                            circumcenter_pt4.x  
+                                           ]
+                                vec4_y = [tri_coords4[lOrd[0],1], 
+                                           tri_coords4[lOrd[1],1],
+                                           tri_coords4[lOrd[2],1], 
+                                           pt4.y, 
+                                           pt5.y,
+                                           pt6.y, 
+                                           pt7.y,
+                                           pt8.y,
+                                           pt9.y,
+                                           circumcenter_pt4.y  
+                                           ]
+                                        
+                                [x_fct_4, y_fct_4] = tri_xy_fct_cubic( vec4_x, vec4_y )
+                                J_tri4 = tri_jacobian_mat_cubic( vec4_x, vec4_y )
+                                        
                             detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
                             detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
                             detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
                             detJ_tri4 = lambda e,n: determinant(J_tri4)(e,n)
-        
-        
         
                             el_sum_1 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_1, y_fct_1, uh_elem_1, detJ_tri1)
                             el_sum_2 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_2, y_fct_2, uh_elem_2, detJ_tri2)
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
              
-                            print 'NE corner: element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
+#                            print 'NE corner: element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
                             print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            print 'all_elems_sum = ', all_elems_sum
+#                            print 'all_elems_sum = ', all_elems_sum
                             
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_3( p[nodes[1],0], p[nodes[1],1]  )
@@ -3961,7 +5852,130 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 [x_fct_3, y_fct_3] = tri_xy_fct_quadratic( vec3_x, vec3_y )
                                 J_tri3 = tri_jacobian_mat_quadratic( vec3_x, vec3_y )
                             
-                            
+                            if len(root.enrichNodes) == 4:
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+                                
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                circumcenter_pt1 = circumcenter_tri(tri_coords1)
+                                lOrd = [0,1,2] # local order 
+                                
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                 
+                                pt4.x = 2.0/3.0 * tri_coords1[lOrd[0],0] + 1.0/3.0 * tri_coords1[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords1[lOrd[0],1] + 1.0/3.0 * tri_coords1[lOrd[1],1]
+                                 
+                                pt5.x = 1.0/3.0 * tri_coords1[lOrd[0],0] + 2.0/3.0 * tri_coords1[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords1[lOrd[0],1] + 2.0/3.0 * tri_coords1[lOrd[1],1]
+                                 
+                                pt8.x = 2.0/3.0 * tri_coords1[lOrd[2],0] + 1.0/3.0 * tri_coords1[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords1[lOrd[2],1] + 1.0/3.0 * tri_coords1[lOrd[0],1]
+                                 
+                                pt9.x = 1.0/3.0 * tri_coords1[lOrd[2],0] + 2.0/3.0 * tri_coords1[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords1[lOrd[2],1] + 2.0/3.0 * tri_coords1[lOrd[0],1]
+                         
+                                pt6.x = coord_enrich1.x
+                                pt6.y = coord_enrich1.y     
+                                 
+                                pt7.x = coord_enrich2.x
+                                pt7.y = coord_enrich2.y
+                                 
+                                vec1_x = [tri_coords1[lOrd[0],0], 
+                                          tri_coords1[lOrd[1],0], 
+                                          tri_coords1[lOrd[2],0], 
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt1.x  
+                                          ]
+                                vec1_y = [tri_coords1[lOrd[0],1], 
+                                          tri_coords1[lOrd[1],1], 
+                                          tri_coords1[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y,
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt1.y  
+                                          ]
+                        
+                        
+                                [x_fct_1, y_fct_1] = tri_xy_fct_cubic( vec1_x, vec1_y )
+                                J_tri1 = tri_jacobian_mat_cubic( vec1_x, vec1_y )
+                                
+                                circumcenter_pt3 = circumcenter_tri(tri_coords3)
+                                lOrd = [1,2,0]
+                        
+                                pt4 = Coordinate(0,0)
+                                pt5 = Coordinate(0,0)
+                                pt6 = Coordinate(0,0)
+                                pt7 = Coordinate(0,0)
+                                pt8 = Coordinate(0,0)
+                                pt9 = Coordinate(0,0)
+                                 
+                                pt4.x = 2.0/3.0 * tri_coords3[lOrd[0],0] + 1.0/3.0 * tri_coords3[lOrd[1],0]
+                                pt4.y = 2.0/3.0 * tri_coords3[lOrd[0],1] + 1.0/3.0 * tri_coords3[lOrd[1],1]
+                                 
+                                pt5.x = 1.0/3.0 * tri_coords3[lOrd[0],0] + 2.0/3.0 * tri_coords3[lOrd[1],0]
+                                pt5.y = 1.0/3.0 * tri_coords3[lOrd[0],1] + 2.0/3.0 * tri_coords3[lOrd[1],1]
+                                 
+                                pt8.x = 2.0/3.0 * tri_coords3[lOrd[2],0] + 1.0/3.0 * tri_coords3[lOrd[0],0]
+                                pt8.y = 2.0/3.0 * tri_coords3[lOrd[2],1] + 1.0/3.0 * tri_coords3[lOrd[0],1]
+                                 
+                                pt9.x = 1.0/3.0 * tri_coords3[lOrd[2],0] + 2.0/3.0 * tri_coords3[lOrd[0],0]
+                                pt9.y = 1.0/3.0 * tri_coords3[lOrd[2],1] + 2.0/3.0 * tri_coords3[lOrd[0],1]
+                         
+                                pt6.x = coord_enrich2.x
+                                pt6.y = coord_enrich2.y     
+                                 
+                                pt7.x = coord_enrich1.x
+                                pt7.y = coord_enrich1.y
+                                
+                                vec3_x = [tri_coords3[lOrd[0],0], 
+                                          tri_coords3[lOrd[1],0],
+                                          tri_coords3[lOrd[2],0],
+                                          pt4.x, 
+                                          pt5.x,
+                                          pt6.x,
+                                          pt7.x,
+                                          pt8.x,
+                                          pt9.x,
+                                          circumcenter_pt3.x  
+                                          ]
+                                vec3_y = [tri_coords3[lOrd[0],1], 
+                                          tri_coords3[lOrd[1],1], 
+                                          tri_coords3[lOrd[2],1], 
+                                          pt4.y, 
+                                          pt5.y,
+                                          pt6.y,
+                                          pt7.y,
+                                          pt8.y,
+                                          pt9.y,
+                                          circumcenter_pt3.y  
+                                          ]
+                                
+                                [x_fct_3, y_fct_3] = tri_xy_fct_cubic( vec3_x, vec3_y )
+                                J_tri3 = tri_jacobian_mat_cubic( vec3_x, vec3_y )
+                                
+                                
                             detJ_tri1 = lambda e,n: determinant(J_tri1)(e,n)
                             detJ_tri2 = lambda e,n: determinant(J_tri2)(e,n)
                             detJ_tri3 = lambda e,n: determinant(J_tri3)(e,n)
@@ -3973,11 +5987,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                             el_sum_3 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_3, y_fct_3, uh_elem_3, detJ_tri3)                            
                             el_sum_4 =  gauss_integration(ui,wi,UConf,pConf,tConf, x_fct_4, y_fct_4, uh_elem_4, detJ_tri4)
          
-                            print 'SW element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
+#                            print 'SW element', e, 'and vals', el_sum_1, el_sum_2, el_sum_3, el_sum_4
                             print 'Element sum:', el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            
                             all_elems_sum = all_elems_sum + el_sum_1 + el_sum_2 + el_sum_3 + el_sum_4
-                            print 'all_elems_sum = ', all_elems_sum
+#                            print 'all_elems_sum = ', all_elems_sum
                         
                         Usolution[nodes[0],0] = uh_elem_1( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_4( p[nodes[1],0], p[nodes[1],1]  )
@@ -4228,17 +6241,95 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 [x_transform_fct_T, y_transform_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
                                 J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )
                             
+                            if len(root.enrichNodes) == 4:
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+  
+#                                if root.enrichNodes[2].x <= root.enrichNodes[3].x:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                        
+                                lOrd = [0,1,2,3] # local order    
+                                
+                                vecB_x = [ bottom_coords[ lOrd[0],0], 
+                                          2.0/3.0 * bottom_coords[lOrd[0],0] + 1.0/3.0 * bottom_coords[lOrd[1],0],
+                                          1.0/3.0 * bottom_coords[lOrd[0],0] + 2.0/3.0 * bottom_coords[lOrd[1],0],
+                                          bottom_coords[lOrd[1],0],
+                                          2.0/3.0 * bottom_coords[lOrd[1],0] + 1.0/3.0 * bottom_coords[lOrd[2],0],
+                                          1.0/3.0 * bottom_coords[lOrd[1],0] + 2.0/3.0 * bottom_coords[lOrd[2],0],
+                                          bottom_coords[lOrd[2],0], 
+                                          coord_enrich2.x,
+                                          coord_enrich1.x,
+                                          bottom_coords[lOrd[3],0],
+                                          2.0/3.0 * bottom_coords[lOrd[3],0] + 1.0/3.0 * bottom_coords[lOrd[0],0],
+                                          1.0/3.0 * bottom_coords[lOrd[3],0] + 2.0/3.0 * bottom_coords[lOrd[0],0]
+                                         ]
+                                vecB_y = [ bottom_coords[ lOrd[0],1], 
+                                          2.0/3.0 * bottom_coords[lOrd[0],1] + 1.0/3.0 * bottom_coords[lOrd[1],1],
+                                          1.0/3.0 * bottom_coords[lOrd[0],1] + 2.0/3.0 * bottom_coords[lOrd[1],1],
+                                          bottom_coords[lOrd[1],1],
+                                          2.0/3.0 * bottom_coords[lOrd[1],1] + 1.0/3.0 * bottom_coords[lOrd[2],1],
+                                          1.0/3.0 * bottom_coords[lOrd[1],1] + 2.0/3.0 * bottom_coords[lOrd[2],1],
+                                          bottom_coords[lOrd[2],1], 
+                                          coord_enrich2.y,
+                                          coord_enrich1.y,
+                                          bottom_coords[lOrd[3],1],
+                                          2.0/3.0 * bottom_coords[lOrd[3],1] + 1.0/3.0 * bottom_coords[lOrd[0],1],
+                                          1.0/3.0 * bottom_coords[lOrd[3],1] + 2.0/3.0 * bottom_coords[lOrd[0],1]
+                                         ]
+                        
+                                [x_transform_fct_B, y_transform_fct_B] = quad_xy_fct_bi_cubic( vecB_x, vecB_y )
+                                J_bottom = quad_jacobian_mat_bi_cubic( vecB_x, vecB_y )
+                                
+                                lOrd = [2,3,0,1]
+                                vecT_x = [ top_coords[ lOrd[0],0], 
+                                          2.0/3.0 * top_coords[lOrd[0],0] + 1.0/3.0 * top_coords[lOrd[1],0],
+                                          1.0/3.0 * top_coords[lOrd[0],0] + 2.0/3.0 * top_coords[lOrd[1],0],
+                                          top_coords[lOrd[1],0],
+                                          2.0/3.0 * top_coords[lOrd[1],0] + 1.0/3.0 * top_coords[lOrd[2],0],
+                                          1.0/3.0 * top_coords[lOrd[1],0] + 2.0/3.0 * top_coords[lOrd[2],0],
+                                          top_coords[lOrd[2],0], 
+                                          coord_enrich1.x,
+                                          coord_enrich2.x,
+                                          top_coords[lOrd[3],0],
+                                          2.0/3.0 * top_coords[lOrd[3],0] + 1.0/3.0 * top_coords[lOrd[0],0],
+                                          1.0/3.0 * top_coords[lOrd[3],0] + 2.0/3.0 * top_coords[lOrd[0],0]
+                                         ]
+                                vecT_y = [ top_coords[ lOrd[0],1], 
+                                          2.0/3.0 * top_coords[lOrd[0],1] + 1.0/3.0 * top_coords[lOrd[1],1],
+                                          1.0/3.0 * top_coords[lOrd[0],1] + 2.0/3.0 * top_coords[lOrd[1],1],
+                                          top_coords[lOrd[1],1],
+                                          2.0/3.0 * top_coords[lOrd[1],1] + 1.0/3.0 * top_coords[lOrd[2],1],
+                                          1.0/3.0 * top_coords[lOrd[1],1] + 2.0/3.0 * top_coords[lOrd[2],1],
+                                          top_coords[lOrd[2],1], 
+                                          coord_enrich1.y,
+                                          coord_enrich2.y,
+                                          top_coords[lOrd[3],1],
+                                          2.0/3.0 * top_coords[lOrd[3],1] + 1.0/3.0 * top_coords[lOrd[0],1],
+                                          1.0/3.0 * top_coords[lOrd[3],1] + 2.0/3.0 * top_coords[lOrd[0],1]
+                                        ]
+                        
+                                [x_transform_fct_T, y_transform_fct_T] = quad_xy_fct_bi_quadratic( vecT_x, vecT_y )
+                                J_top = quad_jacobian_mat_bi_quadratic( vecT_x, vecT_y )        
+                                
+                                
+                            
                             detJ_top = lambda e,n: determinant(J_top)(e,n)
                             detJ_bottom = lambda e,n: determinant(J_bottom)(e,n)   
                             
-                            el_sum_T =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
-                            el_sum_B =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
+                            el_sum_T =  gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_transform_fct_T,y_transform_fct_T,uh_elem_T,detJ_top)
+                            el_sum_B =  gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_transform_fct_B,y_transform_fct_B,uh_elem_B,detJ_bottom)
              
-                            print 'Horizontal element', e,' and vals:', el_sum_T, el_sum_B
+#                            print 'Horizontal element', e,' and vals:', el_sum_T, el_sum_B
                             print 'Element sum:', el_sum_T + el_sum_B
-                            
                             all_elems_sum = all_elems_sum + el_sum_T + el_sum_B
-                            print 'all_elems_sum = ', all_elems_sum
+#                            print 'all_elems_sum = ', all_elems_sum
                             
                         Usolution[nodes[0],0] = uh_elem_B( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_B( p[nodes[1],0], p[nodes[1],1]  )
@@ -4491,16 +6582,97 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                                 [x_transform_fct_R, y_transform_fct_R] = quad_xy_fct_bi_quadratic( vecR_x, vecR_y )
                                 J_right = quad_jacobian_mat_bi_quadratic( vecR_x, vecR_y )
 
+                            if len(root.enrichNodes) == 4:
+                                
+                                coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+                                coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+                                
+  
+#                                if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#                                    E = root.enrichNodes[2]
+#                                    F = root.enrichNodes[3]
+#                                else:
+#                                    E = root.enrichNodes[3]
+#                                    F = root.enrichNodes[2]
+#                                    
+#                                coord_enrich1 = coord_enrich_computation(E)
+#                                coord_enrich2 = coord_enrich_computation(F)
+                                
+                                
+                                lOrd = [3,0,1,2] # local order    
+                                vecL_x = [ left_coords[lOrd[0],0], 
+                                          2.0/3.0 * left_coords[lOrd[0],0] + 1.0/3.0 * left_coords[lOrd[1],0],
+                                          1.0/3.0 * left_coords[lOrd[0],0] + 2.0/3.0 * left_coords[lOrd[1],0],
+                                          left_coords[lOrd[1],0],
+                                          2.0/3.0 * left_coords[lOrd[1],0] + 1.0/3.0 * left_coords[lOrd[2],0],
+                                          1.0/3.0 * left_coords[lOrd[1],0] + 2.0/3.0 * left_coords[lOrd[2],0],
+                                          left_coords[lOrd[2],0], 
+                                          coord_enrich1.x,
+                                          coord_enrich2.x,
+                                          left_coords[lOrd[3],0],
+                                          2.0/3.0 * left_coords[lOrd[3],0] + 1.0/3.0 * left_coords[lOrd[0],0],
+                                          1.0/3.0 * left_coords[lOrd[3],0] + 2.0/3.0 * left_coords[lOrd[0],0]
+                                         ]
+                                vecL_y = [ left_coords[lOrd[0],1], 
+                                          2.0/3.0 * left_coords[lOrd[0],1] + 1.0/3.0 * left_coords[lOrd[1],1],
+                                          1.0/3.0 * left_coords[lOrd[0],1] + 2.0/3.0 * left_coords[lOrd[1],1],
+                                          left_coords[lOrd[1],1],
+                                          2.0/3.0 * left_coords[lOrd[1],1] + 1.0/3.0 * left_coords[lOrd[2],1],
+                                          1.0/3.0 * left_coords[lOrd[1],1] + 2.0/3.0 * left_coords[lOrd[2],1],
+                                          left_coords[lOrd[2],1], 
+                                          coord_enrich1.y,
+                                          coord_enrich2.y,
+                                          left_coords[lOrd[3],1],
+                                          2.0/3.0 * left_coords[lOrd[3],1] + 1.0/3.0 * left_coords[lOrd[0],1],
+                                          1.0/3.0 * left_coords[lOrd[3],1] + 2.0/3.0 * left_coords[lOrd[0],1]
+                                        ]
+                        
+                                [x_transform_fct_L, y_transform_fct_L] = quad_xy_fct_bi_cubic( vecL_x, vecL_y )
+                                J_left = quad_jacobian_mat_bi_cubic( vecL_x, vecL_y )
+                                
+                                lOrd = [1,2,3,0]
+                        
+                                vecR_x = [ right_coords[ lOrd[0],0], 
+                                          2.0/3.0 * right_coords[lOrd[0],0] + 1.0/3.0 * right_coords[lOrd[1],0],
+                                          1.0/3.0 * right_coords[lOrd[0],0] + 2.0/3.0 * right_coords[lOrd[1],0],
+                                          right_coords[lOrd[1],0],
+                                          2.0/3.0 * right_coords[lOrd[1],0] + 1.0/3.0 * right_coords[lOrd[2],0],
+                                          1.0/3.0 * right_coords[lOrd[1],0] + 2.0/3.0 * right_coords[lOrd[2],0],
+                                          right_coords[lOrd[2],0], 
+                                          coord_enrich2.x,
+                                          coord_enrich1.x,
+                                          right_coords[lOrd[3],0],
+                                          2.0/3.0 * right_coords[lOrd[3],0] + 1.0/3.0 * right_coords[lOrd[0],0],
+                                          1.0/3.0 * right_coords[lOrd[3],0] + 2.0/3.0 * right_coords[lOrd[0],0]
+                                        ]
+                                vecR_y = [ right_coords[ lOrd[0],1], 
+                                          2.0/3.0 * right_coords[lOrd[0],1] + 1.0/3.0 * right_coords[lOrd[1],1],
+                                          1.0/3.0 * right_coords[lOrd[0],1] + 2.0/3.0 * right_coords[lOrd[1],1],
+                                          right_coords[lOrd[1],1],
+                                          2.0/3.0 * right_coords[lOrd[1],1] + 1.0/3.0 * right_coords[lOrd[2],1],
+                                          1.0/3.0 * right_coords[lOrd[1],1] + 2.0/3.0 * right_coords[lOrd[2],1],
+                                          right_coords[lOrd[2],1], 
+                                          coord_enrich2.y,
+                                          coord_enrich1.y,
+                                          right_coords[lOrd[3],1],
+                                          2.0/3.0 * right_coords[lOrd[3],1] + 1.0/3.0 * right_coords[lOrd[0],1],
+                                          1.0/3.0 * right_coords[lOrd[3],1] + 2.0/3.0 * right_coords[lOrd[0],1]
+                                          ]
+                                
+                                [x_transform_fct_R, y_transform_fct_R] = quad_xy_fct_bi_cubic( vecR_x, vecR_y )
+                                J_right = quad_jacobian_mat_bi_cubic( vecR_x, vecR_y )
 
+                                
+                                
                             detJ_left = lambda eps,niu: determinant(J_left)(eps,niu)
                             detJ_right = lambda eps,niu: determinant(J_right)(eps,niu)
                         
-                            el_sum_L =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
-                            el_sum_R =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
+                            el_sum_L =  gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_transform_fct_L,y_transform_fct_L,uh_elem_L,detJ_left)
+                            el_sum_R =  gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_transform_fct_R,y_transform_fct_R,uh_elem_R,detJ_right)
     
-                            print 'vertical element', e,' and vals', el_sum_R, el_sum_L
+                            print 'vertical element', e,' and vals', el_sum_R + el_sum_L
                             all_elems_sum = all_elems_sum + el_sum_R + el_sum_L;
-                            print 'all_elems_sum = ', all_elems_sum
+#                            print 'all_elems_sum = ', all_elems_sum
                             
                         Usolution[nodes[0],0] = uh_elem_L( p[nodes[0],0], p[nodes[0],1]  )
                         Usolution[nodes[1],0] = uh_elem_R( p[nodes[1],0], p[nodes[1],1]  )
@@ -4801,7 +6973,7 @@ def circumcenter_tri(coords):
 #     U.y = (a.y + b.y + c.y) / 3.0
     return U
     
-def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
+def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -4907,16 +7079,19 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
 
     if len(root.enrichNodes) == 4:
         
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
-
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
+    
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodess],nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodess],nodes7)
+        
         circumcenter_pt2 = circumcenter_tri(coords2)
         
         lOrd = [1,2,0]
@@ -5216,7 +7391,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
     return [K,Fe]
 
 
-def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6):
+def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6,nodes7):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -5326,16 +7501,19 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6):
         
     if len(root.enrichNodes) == 4:
         
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
-
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
+        
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodess],nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodess],nodes7)
+        
         circumcenter_pt1 = circumcenter_tri(coords1)
         lOrd = [0,1,2] # local order 
         
@@ -5593,7 +7771,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6):
             integral2 = my_gauss_rule(Kefunc2,ui,wi)
             integral3 = my_gauss_rule(Kefunc3,ui,wi)
             integral4 = my_gauss_rule(Kefunc4,ui,wi)
-            print [i,j], integral1, integral2, integral3, integral4
+
             K[i,j] = integral1 + integral2 + integral3 + integral4
 
         # construct the local matrix and local components of the load vector
@@ -5609,7 +7787,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6):
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
+def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -5716,15 +7894,18 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
         
     if len(root.enrichNodes) == 4:
         
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
+        
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodess],nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodess],nodes7)
         
         circumcenter_pt2 = circumcenter_tri(coords2)
         
@@ -5984,7 +8165,7 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
+def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
 #def SE_corner(p,ui,wi,k1,k2,nodess,UConf,pConf,tConf):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
@@ -6053,16 +8234,6 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
     #    K_cst = [k2,k2,k2,k1]
 
 
-#    if len(root.enrichNodes) >2:
-#        print len(root.enrichNodes)
-#        print 'in  SE SE SE SE SE SE-----------------------------------'
-#        root.printRect() 
-#        print coords
-#        print coords4
-#        print root.enrichNodes[0].x,root.enrichNodes[0].y
-#        print root.enrichNodes[1].x,root.enrichNodes[1].y 
-#        print root.enrichNodes[2].x,root.enrichNodes[2].y
-        
     #ISOPARAMETRIC linear, quadratic, cubic triangles    
     [x_fct_1, y_fct_1] = tri_xy_fct( coords1[:,0], coords1[:,1] )
     J1 = tri_jacobian_mat( coords1[:,0], coords1[:,1] )
@@ -6100,16 +8271,18 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
         J4 = tri_jacobian_mat_quadratic( vec4_x, vec4_y )
         
     if len(root.enrichNodes) == 4:
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
 
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodess],nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodess],nodes7)
         
         circumcenter_pt2 = circumcenter_tri(coords2)
         lOrd = [2,0,1] 
@@ -6418,7 +8591,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6):
     return [K,Fe]
 
 
-def East_edge(p,ui,wi,k1,k2,nodess,root,image):
+def East_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
     K = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
@@ -6509,7 +8682,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        coord_enrich = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -6554,17 +8727,19 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
         
     if len(root.enrichNodes) == 4:
 
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
 
-        
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[full_nodes], nodes7)
+                                
         circumcenter_pt1 = circumcenter_tri(coords1)
         circumcenter_pt2 = circumcenter_tri(coords2)
         circumcenter_pt3 = circumcenter_tri(coords3)
@@ -6900,7 +9075,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image):
     return [K,Fe]
     
 
-def South_edge(p,ui,wi,k1,k2,nodess,root,image):
+def South_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
     
     Ke = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
@@ -6911,24 +9086,10 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
     nodes3 = [nodess[4],nodess[1],nodess[2]]
 #     nodes3 = [nodess[1],nodess[4],nodess[2]]
 
-#     print nodes
-#     print nodes1
-#     print nodes2
-#     print nodes3
-
     coords = p[nodes]
     coords1 = p[nodes1]
     coords2 = p[nodes2]
     coords3 = p[nodes3]
-
-#     print nodes
-#     print nodes1
-#     print nodes2
-#     print nodes3
-#     print coords
-#     print coords1
-#     print coords2
-#     print coords3
 
     x0 = coords[0,0]
     x1 = coords[1,0]
@@ -7002,7 +9163,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        coord_enrich = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -7045,16 +9206,18 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     if len(root.enrichNodes) == 4:
 
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
 
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[full_nodes], nodes7)
         
         circumcenter_pt1 = circumcenter_tri(coords1)
         circumcenter_pt2 = circumcenter_tri(coords2)
@@ -7418,7 +9581,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image):
 #     print 'South EDGE:\n', Ke, Fe
     return [Ke,Fe]
 
-def North_edge(p,ui,wi,k1,k2,nodess,root,image):
+def North_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
     K = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
@@ -7527,7 +9690,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
 
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
-        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        coord_enrich = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -7570,16 +9733,18 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
             
     if len(root.enrichNodes) == 4:
 
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
 
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[full_nodes], nodes7)
         
         circumcenter_pt1 = circumcenter_tri(coords1)
         circumcenter_pt2 = circumcenter_tri(coords2)
@@ -7914,7 +10079,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image):
 
 
 
-def West_edge(p,ui,wi,k1,k2,nodess,root,image):
+def West_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
     K = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
@@ -8029,7 +10194,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 #         midPoint = Coordinate((root.enrichNodes[0].x + root.enrichNodes[1].x)/2.0, (root.enrichNodes[0].y + root.enrichNodes[1].y)/2.0)
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
 #        coord_enrich = coord_enrich_comp_quad(root)
-        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        coord_enrich = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
         
         if K_cst[0] == K_cst[1]:
             # triangle 3 is the one with curved edge
@@ -8072,16 +10237,18 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
    
     if len(root.enrichNodes) == 4:
 
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
 
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[full_nodes], nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[full_nodes], nodes7)
         
         circumcenter_pt1 = circumcenter_tri(coords1)
         circumcenter_pt2 = circumcenter_tri(coords2)
@@ -8414,7 +10581,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image):
 
     return [K,Fe]
 
-def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
+def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
 
     enrich1 = np.array(p[nodes[4]])
     enrich2 = np.array(p[nodes[5]])
@@ -8623,7 +10790,7 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
 
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
 #        coord_enrich = coord_enrich_comp_quad(root)
-        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodes], nodes6)
         
         lOrd = [0,1,2,3] # local order    
         vecB_x = [ bottom_coords[ lOrd[0],0], 
@@ -8673,17 +10840,19 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
         
     if len(root.enrichNodes) == 4:
         
-        if root.enrichNodes[2].x <= root.enrichNodes[3].x:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].x <= root.enrichNodes[3].x:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
 
-
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
+        
         lOrd = [0,1,2,3] # local order    
         
         vecB_x = [ bottom_coords[ lOrd[0],0], 
@@ -8781,7 +10950,7 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image):
     return [Ke_Horiz,Fe_Horiz]
 
 
-def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
+def vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
     enrich1 = np.array(p[nodes[4]])
     enrich2 = np.array(p[nodes[5]])
 
@@ -8974,7 +11143,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
     # x = [N1_e, N2_e, N3_e, N4_e ] * [x0, x1, x2, x3 ]'
     # y = [N1_e, N2_e, N3_e, N4_e ] * [y0, y1, y2, y3 ]'
     
-    root.printRect()
+
     if len(root.enrichNodes) == 2:
         
         [x_fct_L, y_fct_L] = xy_fct( left_coords[:,0], left_coords[:,1] )
@@ -8990,7 +11159,7 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
 
 #        coord_enrich = coord_enrich_computation(root.enrichNodes[2])
 #        coord_enrich = coord_enrich_comp_quad(root)
-        coord_enrich = coord_enrich_comp_quad_circle(p[nodess], nodes6)
+        coord_enrich = coord_enrich_comp_quad_circle(p[nodes], nodes6)
         
         lOrd = [3,0,1,2] # local order    
         vecL_x = [ left_coords[ lOrd[0],0], 
@@ -9041,16 +11210,18 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image):
 
     if len(root.enrichNodes) == 4:
         
-        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
-            E = root.enrichNodes[2]
-            F = root.enrichNodes[3]
-        else:
-            E = root.enrichNodes[3]
-            F = root.enrichNodes[2]
-            
-        coord_enrich1 = coord_enrich_computation(E)
-        coord_enrich2 = coord_enrich_computation(F)
+#        if root.enrichNodes[2].y >= root.enrichNodes[3].y:
+#            E = root.enrichNodes[2]
+#            F = root.enrichNodes[3]
+#        else:
+#            E = root.enrichNodes[3]
+#            F = root.enrichNodes[2]
+#            
+#        coord_enrich1 = coord_enrich_computation(E)
+#        coord_enrich2 = coord_enrich_computation(F)
         
+        coord_enrich1 = coord_enrich_comp_quad_circle(p[nodes],nodes6)
+        coord_enrich2 = coord_enrich_comp_quad_circle(p[nodes],nodes7)
         
         lOrd = [3,0,1,2] # local order    
         vecL_x = [ left_coords[lOrd[0],0], 

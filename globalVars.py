@@ -1,17 +1,22 @@
 #binBnd = [0,180,256] # for real slice
-#binBnd = [0,110,256] # for fake images
-binBnd = [0,130,256] # for doughnut image
-AREA_INCLUSION = 16.0 # or a 4x4 small inclusion of pixels
-PROB = 0.05
+binBnd = [0,110,256] # for fake images
+#binBnd = [0,50,256] # for doughnut image
+AREA_INCLUSION = 4.0 # or a 4x4 small inclusion of pixels
+PROB = 0.3
+
+DIV_F = 1000.0
 
 #real slice
 #MAX_SIZE = 85
 #MIN_SIZE = 20#6
 
 # fake data
-MAX_SIZE_X = 128
-MAX_SIZE_Y = 128 
-MIN_SIZE = 32
+#MAX_SIZE_X = 20
+#MAX_SIZE_Y = 20
+#MIN_SIZE = 20
+MAX_SIZE_X = 64
+MAX_SIZE_Y = 64
+MIN_SIZE = 64
 
 ALT_MIN_SIZE = 8
 TOL_LINEARS = 2.0
@@ -20,7 +25,7 @@ TOL_CUBICS = 2.0 # cancel the cubic approximation by making a negative number
 
 TOL_NURBS = 3.0
 
-STRESS_MIN = 8 # minimum number of elements between interfaces
+STRESS_MIN = 2 # minimum number of elements between interfaces
 TOL_error = 3.0 # tolerance error for pixel distances
 
 EPS_FACTOR = 1e-2
@@ -31,8 +36,13 @@ EPS_FACTOR = 1e-2
 # 0 for linears
 # 1 for quadratics
 # 2 for cubics
-# 3 for NURBS - not yet implemented
-POL_APPROX = 0
+# 3 for NURBS 
+POL_APPROX = 1
 
 # activate norm computation: 1, else 0
-NORM_COMP = 0
+NORM_COMP = 1
+
+# fake circles radii
+Rs = 1.0/3.0
+R1 = 1.0/6.0
+R2 = 1.0/6.0

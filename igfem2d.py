@@ -21,6 +21,7 @@ from libFcts import *
 
 from main import *
 from scipy import interpolate
+import time
 
 import __builtin__
 sum = __builtin__.sum
@@ -171,7 +172,7 @@ def my_gauss_rule(f,ui,wi):
 #    return J
     if POL_APPROX == 0:
         return 1.0/2.0 * f(1.0/3.0, 1.0/3.0)
-    
+#        return simpson_rule(f)
     if POL_APPROX == 1:
         return simpson_rule3(f)
 
@@ -272,6 +273,7 @@ def gauss_integration(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem,de
     
     if POL_APPROX == 0:
         return 1.0/2.0 * fct(1.0/3.0, 1.0/3.0)
+#        return simpson_rule(fct)
     if POL_APPROX == 1:
         return simpson_rule3(fct)
 
@@ -282,6 +284,13 @@ def gauss_integration(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem,de
 #    return simpson_rule4(fct)
 #    return 1.0/2.0 * fct(1.0/3.0, 1.0/3.0)
 
+def gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_trans_fct,y_trans_fct,uh_elem,detJ):
+    J = 0
+    L = ui.size
+    for i in range(0,L):
+        for j in range(0,L):
+            J = J + wi[i] * wi[j] * ufunction(ui[i],ui[j],x_trans_fct,y_trans_fct,pConf,tConf,UConf,uh_elem,detJ)
+    return J
 
 def found_in_FEM(point_x,point_y,pConf,tConf,UConf):
     u_conf = 0
@@ -618,11 +627,25 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #            t = t + [[112, 113, 115, 51]]
 #            t = t + [[113, 114, 52, 115]]
 
-    K = sparse.lil_matrix((N,N))
-    F = sparse.lil_matrix((N,1))
+#    K = sparse.lil_matrix((N,N))
+#    F = sparse.lil_matrix((N,1))
 
-    print T ,' LENGTH OF t vector'
+#    K_coo = sparse.coo_matrix((N,N))
+#    F_coo = sparse.coo_matrix((N,1))
+    
+    nb = 4 # number of basis functions per element|
+    K_col = numpy.zeros((T * nb**2, 1))
+    K_row = numpy.zeros((T * nb**2, 1))
+    K_val = numpy.zeros((T * nb**2, 1))
+    
+    F_row = numpy.zeros((T * nb**2, 1))
+    F_val = numpy.zeros((T * nb**2, 1))
+    
+    print 'number of elements:', T
+    sstart = time.time()
     list_hanging_nodes = []
+    
+    
     for e in range(0,T): #800, 833
 #     for e in range(820, T):
 #     for e in range(833, T):
@@ -757,7 +780,8 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
         pxVal2 = image.GetPixel(int(p2.x), int(p2.y))
         pxVal3 = image.GetPixel(int(p3.x), int(p3.y))
         pxVal4 = image.GetPixel(int(p4.x), int(p4.y))
-    
+        
+        pxVals = [pxVal1,pxVal2,pxVal3,pxVal4]
         # 2-column matrix containing on each row the coordinates of each of the nodes
         coords = p[nodes,:]    
 
@@ -949,7 +973,8 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         K_cst = k1
                     else:
                         K_cst = k2                                                
-                
+
+
 #            # multiple inclusions:
 #            if ( (cornerA_s>Rs*Rs and cornerB_s>Rs*Rs and cornerC_s>Rs*Rs and cornerD_s>Rs*Rs) and 
 #                (cornerA_c1>R1*R1 and cornerB_c1>R1*R1 and cornerC_c1>R1*R1 and cornerD_c1>R1*R1) and 
@@ -1056,24 +1081,30 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
             for i in range(0,4):
                 for j in range(0,4):
 #                     if nodes[i] >=  nodes[j]:
-                        Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
-                        Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-
+                    if i>= j:
+                            Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
+                            Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
+#                            Ke[i,j] = gauss_quadrat(Kefunc,ui,wi)
+                            Ke[j,i] = Ke[i,j]
                 # construct the local load vector
                 fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
                 Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
-
+#                Fe[i] = gauss_quadrat(fv,ui,wi)
             
             # add the local stiffness matrix and local load vector to the global K and F
             for i in range(0,4):
                 for j in range(0,4):
 #                     if nodes[i] >= nodes[j]:
-                        K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+#                        K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
 #                         K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                F[nodes[i],0] = F[nodes[i],0] + Fe[i]
-
-    
+                        K_row = numpy.vstack([K_row,nodes[i]])
+                        K_col = numpy.vstack([K_col,nodes[j]])
+                        K_val = numpy.vstack([K_val,Ke[i,j]])
            
+#                F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+                F_row = numpy.vstack([F_row,nodes[i]])
+                F_val = numpy.vstack([F_val,Fe[i]])
+            
         else: # element has more than 4 nodes, it is an element that needs enrichment at these additional nodes
             enrich1 = np.array(p[nodes[4]])
 
@@ -1089,7 +1120,7 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
              # FALSE POSITIVIES: only corner is in a different material
              # HOMOGENEOUS element
                 if (corner1 == True or corner3 == True):
-                    print 'False positive: Odd diagonal '
+#                    print 'False positive: Odd diagonal '
                     elCorner = True
                     midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
                     
@@ -1105,25 +1136,32 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                     # construct the local matrix and local components of the load vector    
                     for i in range(0,4):
                         for j in range(0,4):
+                            if i>=j:
                                 Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
                                 Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-
+#                                Ke[i,j] = gauss_quadrat(Kefunc,ui,wi)
+                                Ke[j,i] = Ke[i,j]
                         # construct the local load vector
                         fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
                         Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
+#                        Fe[i]= gauss_quadrat(fv,ui,wi)               
 
             
                     # add the local stiffness matrix and local load vector to the global K and F
                     for i in range(0,4):
                         for j in range(0,4):
-                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
-            
+#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+                                K_row = numpy.vstack([K_row,nodes[i]])
+                                K_col = numpy.vstack([K_col,nodes[j]])
+                                K_val = numpy.vstack([K_val,Ke[i,j]])
+#                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+                        F_row = numpy.vstack([F_row,nodes[i]])
+                        F_val = numpy.vstack([F_val,Fe[i]])            
 
              # FALSE POSITIVIES: only corner is in a different material
              # HOMOGENEOUS element
                 if (corner0 == True or corner2 == True):
-                    print ' False positive: Even diagonal '
+#                    print ' False positive: Even diagonal '
                     elCorner = True
                     midInside = Point( (x0+x1)/2.0, (y0+y1)/2.0 )
                                         
@@ -1140,19 +1178,26 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                     # construct the local matrix and local components of the load vector    
                     for i in range(0,4):
                         for j in range(0,4):
+                            if i>= j:
                                 Kefunc = lambda x,y: K_cst * ( Nx[i](x,y) * Nx[j](x,y) + Ny[i](x,y) * Ny[j](x,y) )
                                 Ke[i,j] = quad2d(Kefunc,x0,x1,y0,y1,ui,wi)
-
+#                                Ke[i,j] = gauss_quadrat(Kefunc,ui,wi)
+                                Ke[j,i] = Ke[i,j]
                         # construct the local load vector
                         fv = lambda x,y: rhs(x,y) * Nbasis[i](x,y)
                         Fe[i] = quad2d(fv,x0,x1,y0,y1,ui,wi)
-
+#                        Fe[i] = gauss_quadrat(fv,ui,wi)
             
                     # add the local stiffness matrix and local load vector to the global K and F
                     for i in range(0,4):
                         for j in range(0,4):
-                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
-                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+#                                K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke[i,j]
+                                K_row = numpy.vstack([K_row,nodes[i]])
+                                K_col = numpy.vstack([K_col,nodes[j]])
+                                K_val = numpy.vstack([K_val,Ke[i,j]])
+#                        F[nodes[i],0] = F[nodes[i],0] + Fe[i]
+                        F_row = numpy.vstack([F_row,nodes[i]])
+                        F_val = numpy.vstack([F_val,Fe[i]])                        
 
 
             else: # or (len(nodes) == 6)
@@ -1171,7 +1216,7 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                 
                 # testing if interface is along a diagonal
                 if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
-                    print 'Diagonal, element ', e
+#                    print 'Diagonal, element ', e
                     Ke_trid1 = np.zeros((3,3))
                     Fe_trid1 = np.zeros((3,1))
                     Ke_trid2 = np.zeros((3,3))
@@ -1407,22 +1452,28 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         for j in range(0,3):
 #                             if nodes_trid1[i] >=  nodes_trid1[j]:
                                 Kefunc_trid1 = lambda e,n: K_cst_trid1 * ( Nx_trid1[i](x_fct_1(e,n), y_fct_1(e,n)) * Nx_trid1[j](x_fct_1(e,n), y_fct_1(e,n)) + Ny_trid1[i](x_fct_1(e,n), y_fct_1(e,n)) * Ny_trid1[j](x_fct_1(e,n), y_fct_1(e,n)) ) * det_J1(e,n)
-#                                Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
-                                Ke_trid1[i,j] = my_gauss_rule(Kefunc_trid1,ui,wi)
-
+                                Ke_trid1[i,j] = 1.0/2.0 * quad2d(Kefunc_trid1,x0,x1,y0,y1,ui,wi)
+#                                Ke_trid1[i,j] = 1.0/2.0 * gauss_quadrat(Kefunc_trid1,ui,wi)
                         # construct the local load vector
                         fv_trid1 = lambda x,y: rhs(x,y) * Nbasis_trid1[i](x,y)
-#                        Fe_trid1[i] = 1.0/2.0 * quad2d(fv_trid1,x0,x1,y0,y1,ui,wi)
-                        Fe_trid1[i] = my_gauss_rule(fv_trid1,ui,wi)
+                        Fe_trid1[i] = 1.0/2.0 * quad2d(fv_trid1,x0,x1,y0,y1,ui,wi)
+#                        Fe_trid1[i] = 1.0/2.0 * gauss_quadrat(fv_trid1,ui,wi)
+                        
 
             
                     # add the local stiffness matrix and local load vector to the global K and F
                     for i in range(0,3):
                         for j in range(0,3):
 #                             if nodes_trid1[i] >= nodes_trid1[j]:
-                                K[nodes_trid1[i],nodes_trid1[j]] = K[nodes_trid1[i],nodes_trid1[j]] + Ke_trid1[i,j]
+#                                K[nodes_trid1[i],nodes_trid1[j]] = K[nodes_trid1[i],nodes_trid1[j]] + Ke_trid1[i,j]
 #                                 K[nodes_trid1[j],nodes_trid1[i]] = K[nodes_trid1[i],nodes_trid1[j]]
-                        F[nodes_trid1[i],0] = F[nodes_trid1[i],0] + Fe_trid1[i]
+                                K_row = numpy.vstack([K_row,nodes_trid1[i]])
+                                K_col = numpy.vstack([K_col,nodes_trid1[j]])
+                                K_val = numpy.vstack([K_val,Ke_trid1[i,j]])
+                                
+#                        F[nodes_trid1[i],0] = F[nodes_trid1[i],0] + Fe_trid1[i]
+                        F_row = numpy.vstack([F_row,nodes_trid1[i]])
+                        F_val = numpy.vstack([F_val,Fe_trid1[i]])
                         
                     ## SECOND TRIANGLE
                     # construct the local matrix and local components of the load vector    
@@ -1430,23 +1481,28 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         for j in range(0,3):
 #                             if nodes_trid2[i] >=  nodes_trid2[j]:
                                 Kefunc_trid2 = lambda e,n: K_cst_trid2 * ( Nx_trid2[i](x_fct_2(e,n), y_fct_2(e,n)) * Nx_trid2[j](x_fct_2(e,n), y_fct_2(e,n)) + Ny_trid2[i](x_fct_2(e,n), y_fct_2(e,n)) * Ny_trid2[j](x_fct_2(e,n), y_fct_2(e,n)) )* det_J2(e,n)
-#                                Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
-                                Ke_trid2[i,j] = my_gauss_rule(Kefunc_trid2,ui,wi)
-
+                                Ke_trid2[i,j] = 1.0/2.0 * quad2d(Kefunc_trid2,x0,x1,y0,y1,ui,wi)
+#                                Ke_trid2[i,j] = 1.0/2.0 * gauss_quadrat(Kefunc_trid2,ui,wi)
+                                
+                                
                         # construct the local load vector
                         fv_trid2 = lambda x,y: rhs(x,y) * Nbasis_trid2[i](x,y)
-#                        Fe_trid2[i] = 1.0/2.0 * quad2d(fv_trid2,x0,x1,y0,y1,ui,wi)
-                        Fe_trid2[i] = my_gauss_rule(fv_trid2,ui,wi)
-
+                        Fe_trid2[i] = 1.0/2.0 * quad2d(fv_trid2,x0,x1,y0,y1,ui,wi)
+#                        Fe_trid2[i] = 1.0/2.0 * gauss_quadrat(fv_trid2,ui,wi)
 
             
                     # add the local stiffness matrix and local load vector to the global K and F
                     for i in range(0,3):
                         for j in range(0,3):
 #                             if nodes_trid2[i] >= nodes_trid2[j]:
-                                K[nodes_trid2[i],nodes_trid2[j]] = K[nodes_trid2[i],nodes_trid2[j]] + Ke_trid2[i,j]
+#                                K[nodes_trid2[i],nodes_trid2[j]] = K[nodes_trid2[i],nodes_trid2[j]] + Ke_trid2[i,j]
 #                                 K[nodes_trid2[j],nodes_trid2[i]] = K[nodes_trid2[i],nodes_trid2[j]]
-                        F[nodes_trid2[i],0] = F[nodes_trid2[i],0] + Fe_trid2[i]
+                                K_row = numpy.vstack([K_row,nodes_trid2[i]])
+                                K_col = numpy.vstack([K_col,nodes_trid2[j]])
+                                K_val = numpy.vstack([K_val,Ke_trid2[i,j]])
+#                        F[nodes_trid2[i],0] = F[nodes_trid2[i],0] + Fe_trid2[i]
+                        F_row = numpy.vstack([F_row,nodes_trid2[i]])
+                        F_val = numpy.vstack([F_val,Fe_trid2[i]])                        
                         
 
                 else:
@@ -1461,18 +1517,22 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
-                        print "NW corner"
-                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
+#                        print "NW corner"
+                        [Ke_NW,Fe_NW] = NW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals)
 
                         
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
 #                                 if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NW[i,j]
+#                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NW[i,j]
 #                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_NW[i]
-
+                                    K_row = numpy.vstack([K_row,nodes[i]])
+                                    K_col = numpy.vstack([K_col,nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_NW[i,j]])
+#                            F[nodes[i],0] = F[nodes[i],0] + Fe_NW[i]
+                            F_row = numpy.vstack([F_row,nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_NW[i]])
 
                     # the South-East corner is cut, 0-4-1, 1-5-2
                     if ( 
@@ -1483,18 +1543,23 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         not(on_corners(enrich1,coords)) and 
                         not(on_corners(enrich2,coords))                        
                         ):
-                        print 'SE corner'
+#                        print 'SE corner'
                         
-                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
+                        [Ke_SE,Fe_SE] = SE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
 #                                 if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SE[i,j]
+#                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SE[i,j]
 #                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_SE[i]
-    
+                                    K_row = numpy.vstack([K_row,nodes[i]])
+                                    K_col = numpy.vstack([K_col,nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_SE[i,j]])
+#                            F[nodes[i],0] = F[nodes[i],0] + Fe_SE[i]
+                            F_row = numpy.vstack([F_row,nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_SE[i]])
+                                
                     # the North East corner is cut, 1-4-2, 2-5-3
                     if ( 
                         ((enrich1[0] == x1 and enrich2[1] == y1) or
@@ -1504,17 +1569,22 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
-                        print "NE corner"
-                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
+#                        print "NE corner"
+                        [Ke_NE,Fe_NE] = NE_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals)
     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
 #                                 if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NE[i,j]
+#                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_NE[i,j]
 #                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_NE[i]
-
+                                    K_row = numpy.vstack([K_row,nodes[i]])
+                                    K_col = numpy.vstack([K_col,nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_NE[i,j]])
+#                            F[nodes[i],0] = F[nodes[i],0] + Fe_NE[i]
+                            F_row = numpy.vstack([F_row,nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_NE[i]])
+                            
                     # the South-West corner is cut, 0-4-1, and 0-5-3
                     if ( 
                         ((enrich1[1] == y0 and enrich2[0] == x0) or
@@ -1524,63 +1594,83 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich1,x0,y0,x1,y1)) and 
 #                         not(on_corners(enrich2,x0,y0,x1,y1))
                         ):
-                        print "SW corner"
-                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
+#                        print "SW corner"
+                        [Ke_SW,Fe_SW] = SW_corner(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals)
         
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
 #                                 if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
+#                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_SW[i,j]
 #                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
-                            
+                                    K_row = numpy.vstack([K_row,nodes[i]])
+                                    K_col = numpy.vstack([K_col,nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_SW[i,j]])
+#                            F[nodes[i],0] = F[nodes[i],0] + Fe_SW[i]
+                            F_row = numpy.vstack([F_row,nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_SW[i]])
+                                                       
+                    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+                    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+                    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+                    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) ) 
+                    
+                    pxVals2 = [pxVal14,pxVal12,pxVal23,pxVal34]
                     # the South edge
                     if (  ((enrich1[1] == y0 and enrich2[1] == y1) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x1) ) or
                         ( (enrich2[1] == y0 and enrich1[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1 ) ) ):
 
-                        print 'South edge'
+#                        print 'South edge'
                         if not(on_corners(enrich2,coords)) :
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)) :                            
                             south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5]]
                         else:
                             south_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image,nodes6,nodes7,nodes)
+                        [Ke_South,Fe_South] = South_edge(p,ui,wi,k1,k2,south_nodes,root,image,nodes6,nodes7,nodes,pxVals,pxVals2)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
                             for j in range(0,5):
 #                                 if south_nodes[i] >= south_nodes[j]:
-                                    K[south_nodes[i],south_nodes[j]] = K[south_nodes[i],south_nodes[j]] + Ke_South[i,j]
+#                                    K[south_nodes[i],south_nodes[j]] = K[south_nodes[i],south_nodes[j]] + Ke_South[i,j]
 #                                     K[south_nodes[j],south_nodes[i]] = K[south_nodes[i],south_nodes[j]]
-                            F[south_nodes[i],0] = F[south_nodes[i],0] + Fe_South[i]
-
+                                    K_row = numpy.vstack([K_row,south_nodes[i]])
+                                    K_col = numpy.vstack([K_col,south_nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_South[i,j]])
+#                            F[south_nodes[i],0] = F[south_nodes[i],0] + Fe_South[i]
+                            F_row = numpy.vstack([F_row,south_nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_South[i]])
+                            
                     # the North edge
                     if ( ( (enrich1[1] == y0 and enrich2[1] == y1) and (enrich1[0] == x0 or enrich1[0] == x1) and (enrich2[0] != x0 and enrich2[0] != x1)) or
                         ( (enrich1[1] == y1 and enrich2[1] == y0) and (enrich2[0] == x0 or enrich2[0] == x1) and (enrich1[0] != x0 and enrich1[0] != x0) )  ):
-                        print 'North edge'
+#                        print 'North edge'
 
                         if not(on_corners(enrich2,coords)):
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)):
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[5] ]
                         else:
                             north_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4] ]
-                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image,nodes6,nodes7,nodes)
+                        [Ke_North,Fe_North] = North_edge(p,ui,wi,k1,k2,north_nodes,root,image,nodes6,nodes7,nodes,pxVals,pxVals2)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
                             for j in range(0,5):
 #                                 if north_nodes[i] >= north_nodes[j]:
-                                    K[north_nodes[i],north_nodes[j]] = K[north_nodes[i],north_nodes[j]] + Ke_North[i,j]
+#                                    K[north_nodes[i],north_nodes[j]] = K[north_nodes[i],north_nodes[j]] + Ke_North[i,j]
 #                                     K[north_nodes[j],north_nodes[i]] = K[north_nodes[i],north_nodes[j]]
-                            F[north_nodes[i],0] = F[north_nodes[i],0] + Fe_North[i]
-
+                                    K_row = numpy.vstack([K_row,north_nodes[i]])
+                                    K_col = numpy.vstack([K_col,north_nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_North[i,j]])
+#                            F[north_nodes[i],0] = F[north_nodes[i],0] + Fe_North[i]
+                            F_row = numpy.vstack([F_row,north_nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_North[i]])
                     
                     # the West edge
                     if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1)) or
                         ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)  ) ):
-                        print 'West edge'
+#                        print 'West edge'
 
                         enrich1 = np.array(p[nodes[4]])
                         enrich2 = np.array(p[nodes[5]])
@@ -1591,22 +1681,26 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         else:
                             west_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image,nodes6,nodes7,nodes)
+                        [Ke_West,Fe_West] = West_edge(p,ui,wi,k1,k2,west_nodes,root,image,nodes6,nodes7,nodes,pxVals,pxVals2)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
                             for j in range(0,5):
 #                                 if west_nodes[i] >= west_nodes[j]:
-                                    K[west_nodes[i],west_nodes[j]] = K[west_nodes[i],west_nodes[j]] + Ke_West[i,j]
+#                                    K[west_nodes[i],west_nodes[j]] = K[west_nodes[i],west_nodes[j]] + Ke_West[i,j]
 #                                     K[west_nodes[j],west_nodes[i]] = K[west_nodes[i],west_nodes[j]]
-                            F[west_nodes[i],0] = F[west_nodes[i],0] + Fe_West[i]
-
+                                    K_row = numpy.vstack([K_row,west_nodes[i]])
+                                    K_col = numpy.vstack([K_col,west_nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_West[i,j]])
+#                            F[west_nodes[i],0] = F[west_nodes[i],0] + Fe_West[i]
+                            F_row = numpy.vstack([F_row,west_nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_West[i]])
 
 
                     # the East edge
                     if ( ( (enrich1[0] == x0 and enrich2[0] == x1) and (enrich1[1] == y0 or enrich1[1] == y1) and (enrich2[1] != y0 and enrich2[1] != y1)) or
                             ( (enrich2[0] == x0 and enrich1[0] == x1) and (enrich2[1] == y0 or enrich2[1] == y1) and (enrich1[1] != y0 and enrich1[1] != y1) )  ):
-                        print 'East edge'
+#                        print 'East edge'
 
 #                         if not(on_corners(enrich2,x0,y0,x1,y1)) :
                         if not(on_corners(enrich2,coords)) :
@@ -1615,16 +1709,20 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         else:
                             east_nodes = [nodes[0], nodes[1], nodes[2], nodes[3], nodes[4]]
 
-                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image,nodes6,nodes7,nodes)
+                        [Ke_East,Fe_East] = East_edge(p,ui,wi,k1,k2,east_nodes,root,image,nodes6,nodes7,nodes,pxVals,pxVals2)
 
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,5):
                             for j in range(0,5):
 #                                 if east_nodes[i] >= east_nodes[j]:
-                                    K[east_nodes[i],east_nodes[j]] = K[east_nodes[i],east_nodes[j]] + Ke_East[i,j]
+#                                    K[east_nodes[i],east_nodes[j]] = K[east_nodes[i],east_nodes[j]] + Ke_East[i,j]
 #                                     K[east_nodes[j],east_nodes[i]] = K[east_nodes[i],east_nodes[j]]
-                            F[east_nodes[i],0] = F[east_nodes[i],0] + Fe_East[i]
-    
+                                    K_row = numpy.vstack([K_row,east_nodes[i]])
+                                    K_col = numpy.vstack([K_col,east_nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_East[i,j]])
+#                            F[east_nodes[i],0] = F[east_nodes[i],0] + Fe_East[i]
+                            F_row = numpy.vstack([F_row,east_nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_East[i]])    
 
 #                     if e == 74:
 #                         print p1.x, p2.x, p1.y, p4.y, enrN1.x, enrN2.x
@@ -1655,17 +1753,21 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
                         not(on_corners(enrich2,coords)) ):
 
 
-                        print "horizontal slide: quad-quad"
-                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
+#                        print "horizontal slide: quad-quad"
+                        [Ke_Horiz,Fe_Horiz] = horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals)
                     
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
 #                                 if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Horiz[i,j]
+#                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Horiz[i,j]
 #                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_Horiz[i]
-            
+                                    K_row = numpy.vstack([K_row,nodes[i]])
+                                    K_col = numpy.vstack([K_col,nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_Horiz[i,j]])
+#                            F[nodes[i],0] = F[nodes[i],0] + Fe_Horiz[i]
+                            F_row = numpy.vstack([F_row,nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_Horiz[i]])            
 
                     # interface cuts the element vertically into two quads, 0-4-1, 3-5-2
                     if ( ((enrich1[1] == y0 and enrich2[1] == y1) or (enrich1[1] == y1 and enrich2[1] == y0 )) and 
@@ -1673,22 +1775,36 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
 #                         not(on_corners(enrich2,x0,y0,x1,y1)) ):
                         not(on_corners(enrich1,coords)) and 
                         not(on_corners(enrich2,coords)) ):
-                        print "vertical slide: quad-quad"
-                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7)
+#                        print "vertical slide: quad-quad"
+                        [Ke_Vertical,Fe_Vertical] = vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals)
                         # add the local stiffness matrix and local load vector to the global K and F
                         for i in range(0,6):
                             for j in range(0,6):
 #                                 if nodes[i] >= nodes[j]:
-                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Vertical[i,j]
+#                                    K[nodes[i],nodes[j]] = K[nodes[i],nodes[j]] + Ke_Vertical[i,j]
 #                                     K[nodes[j],nodes[i]] = K[nodes[i],nodes[j]]
-                            F[nodes[i],0] = F[nodes[i],0] + Fe_Vertical[i]
-            
+                                    K_row = numpy.vstack([K_row,nodes[i]])
+                                    K_col = numpy.vstack([K_col,nodes[j]])
+                                    K_val = numpy.vstack([K_val,Ke_Vertical[i,j]])
+#                            F[nodes[i],0] = F[nodes[i],0] + Fe_Vertical[i]
+                            F_row = numpy.vstack([F_row,nodes[i]])
+                            F_val = numpy.vstack([F_val,Fe_Vertical[i]])            
     # end of loop
     # BCs: a * U + b * dU/dx + c * dU/dy + d = 0
     # Dirichlet: b,c = 0, homogeneous Dirichlet: b,c = 0, d = 0
     # Neumann: a = 0, and b or c may be 0, but not both
 
-    U = sparse.lil_matrix((N,1))
+    K = sparse.coo_matrix((numpy.array(K_val.T)[0],(numpy.array(K_row.T)[0],numpy.array(K_col.T)[0])),shape=(len(p),len(p)))
+    K = K.tocsr()
+    
+    F_col = numpy.zeros((1,len(F_row)))[0]
+    F_val = numpy.array(F_val.T)[0]
+    F_row = numpy.array(F_row.T)[0]
+
+    F = sparse.coo_matrix((F_val,(F_row,F_col)),shape=(len(p),1))
+    F = F.tocsr()
+#    U = sparse.lil_matrix((N,1))
+    U = numpy.zeros((N,1))
 
     # Setting Dirichlet BCs
     # left side of the domain
@@ -1715,7 +1831,7 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
             U[l,0] = Temp_bottom
 
     
-    #F = F - np.dot(K,U)
+#    F = F - np.dot(K,U)
     F = F - K*U
 
     # in case the nodes have duplicate (x,y) coordinates 
@@ -1746,39 +1862,48 @@ def myquad(k1,k2,ui,wi,p,t,masterNode,llist,image,lenGridPts):
     # from all the nodes remove those corresponding to the left and right boundary
     FreeNodes = list( ((set( unique_nodes) - set(lbcs)) - set(rbcs)) - set(extraNodes))
 
-    Kb = K[:,:]
-    Fb = F[:]
-
+#    Kb = K[:,:]
+#    Fb = F[:]
 
 #     scipy.io.savemat('Kb1.mat', mdict={'Kb': Kb})
 #     scipy.io.savemat('Fb1.mat', mdict={'Fb': Fb})
 
+    eend2 = time.time()
+    
     # Need to reduce the Kb matrix in order to be able to use it with SpSolve
-    Kbreduced = sparse.lil_matrix((len(FreeNodes),len(FreeNodes)));
+#    Kbreduced = sparse.csr_matrix((len(FreeNodes),len(FreeNodes)))
+    Kbreduced = numpy.zeros((len(FreeNodes), len(FreeNodes)))
+    
+    eend3 = time.time()
     for i in range(0,len(FreeNodes)):
         for j in range(0,len(FreeNodes)):
-            Kbreduced[i,j] = Kb[FreeNodes[i],FreeNodes[j]]
-    Kbreduced = Kbreduced.tocsr()
+            Kbreduced[i,j] = K[FreeNodes[i],FreeNodes[j]]
+#    Kbreduced = Kbreduced.tocsr()
+    Kbreduced = sparse.csr_matrix(Kbreduced)
 
     # solve for the numerical solution
-    numericalSoln = linsolve.spsolve(Kbreduced,Fb[FreeNodes,0])
-    U[FreeNodes,0] = np.matrix(numericalSoln).T
-
-#     print 'matrix, vector:',Kbreduced, Fb[FreeNodes,0]
-    scipy.io.savemat('Uedge.mat', mdict={'U': U})
-    scipy.io.savemat('Kedge.mat', mdict={'Kbreduced': Kbreduced})
-    Fbreduced = Fb[FreeNodes,0]
-    scipy.io.savemat('Fedge.mat', mdict={'Fbreduced': Fbreduced})
+    numericalSoln = linsolve.spsolve(Kbreduced,F[FreeNodes,0])
     
-    # Getting the analytical solution and its vector form
-    #uexact = lambda x,y: ufct(x,loc,k1,k2) 
+    for i in range(0, len(FreeNodes)):
+        U[FreeNodes[i],0] = numericalSoln[0][i]
+#    U[FreeNodes,0] = np.matrix(numericalSoln).T
+
+    
+    eend = time.time()
+    print 'ELAPSED TIME = ', eend-sstart
+
+#    scipy.io.savemat('Uedge.mat', mdict={'U': U})
+#    scipy.io.savemat('Kedge.mat', mdict={'Kbreduced': Kbreduced})
+#    Fbreduced = F[FreeNodes,0]
+#    scipy.io.savemat('Fedge.mat', mdict={'Fbreduced': Fbreduced})
+    
 
 #     HANGING NODES implementation
     for i in range(0,len(list_hanging_nodes)):
         listHN = list_hanging_nodes[i]
         U[listHN[0],0] = ( U[listHN[1],0] + U[listHN[2],0] ) / 2.0
 
-    return  np.array(U) 
+    return  sparse.csr_matrix(U)
 
 # semi-circle def:
 def f_circle_s(x,y):
@@ -2198,7 +2323,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
          #            el_sum =  gauss_integration_HN(ui,wi,UConf,pConf,tConf,x_fct_HN,y_fct_HN,uh_elem,det_Jac)
                      
                      #el_sum =  gauss_integration(uiHN,wiHN,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
-                el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+                el_sum =  gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
                 
                 all_elems_sum = all_elems_sum + el_sum
         
@@ -2255,7 +2380,7 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
                         Jac = jacobian_mat( coords[:,0], coords[:,1] )
                         detJ = lambda eps,niu: determinant(Jac)(eps,niu)
      
-                        el_sum =  gauss_integration(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
+                        el_sum =  gauss_integration_quad(ui,wi,UConf,pConf,tConf,x_transform_fct,y_transform_fct,uh_elem,detJ)
      
                         all_elems_sum = all_elems_sum + el_sum;
 
@@ -2292,13 +2417,10 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
 #                 odd_even_diag = False
 #                 # testing if interface is along a diagonal
 #                 if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
-#                     print 'Diagonal'
 #                     odd_even_diag = True
 #                 else:
 #                     odd_even_diag = False
 # 
-#                 print 'Diagonal element: ', e, odd_even_diag
-#                 print corner0, corner1, corner2, corner3
 #                 if odd_even_diag == True:
                 if (corner0 == True and corner2 == True) or (corner1 == True and corner3 == True):
                     if(corner0 == True and corner2 == True):
@@ -6746,17 +6868,17 @@ def computeNorm(p,t,pConf,tConf,ui,wi,k1,k2,U,UConf,masterNode,llist, p_extra, P
     print 'Writing VTK file...' 
     print_vtk_file(p,Usolution,polygonList,p_extra)
     print ' Done.'
-    rtx = np.arange(0,1,0.01)
-    #yidx = []
-    ytriangle = []
-    for idx  in range(0, len(rtx)):
-        #yid = uexact(rtx[idx], xloc,k1,k2)
-        #yidx.append(yid)
-        ytriangle_Fct = found_in_FEM(rtx[idx],yloc,pConf,tConf,UConf)
-        ytriangle.append(ytriangle_Fct)
-
-    #pylab.plot(rtx,yidx)
-#     pylab.plot(rtx,ytriangle)
+#    rtx = np.arange(0,1,0.01)
+#    #yidx = []
+#    ytriangle = []
+#    for idx  in range(0, len(rtx)):
+#        #yid = uexact(rtx[idx], xloc,k1,k2)
+#        #yidx.append(yid)
+#        ytriangle_Fct = found_in_FEM(rtx[idx],yloc,pConf,tConf,UConf)
+#        ytriangle.append(ytriangle_Fct)
+#
+#    #pylab.plot(rtx,yidx)
+##     pylab.plot(rtx,ytriangle)
 
     #===========================================================================
     # pylab.xlabel('x')
@@ -6973,7 +7095,7 @@ def circumcenter_tri(coords):
 #     U.y = (a.y + b.y + c.y) / 3.0
     return U
     
-def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
+def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,pxVals):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -7019,12 +7141,16 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
 #     else:
 #         K_cst = [k2,k2,k2,k1]
     
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
     
     #if NW
     if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 > binBnd[1] and
@@ -7391,7 +7517,7 @@ def NW_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
     return [K,Fe]
 
 
-def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6,nodes7):
+def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6,nodes7,pxVals):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -7446,12 +7572,16 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6,nodes7):
     #    K_cst = [k1,k2,k2,k2]
         
 
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
     
     #if SW
     if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal4 > binBnd[1] and
@@ -7787,7 +7917,7 @@ def SW_corner(p,ui,wi,k1,k2,nodess, root, image,nodes6,nodes7):
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
+def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,pxVals):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
 
@@ -7835,12 +7965,16 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
 #     else:
 #         K_cst = [k2,k2,k2,k1]
         
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
     
     #if NE
     if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal2 > binBnd[1] and
@@ -8145,9 +8279,6 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
             integral3 = my_gauss_rule(Kefunc3,ui,wi)
             integral4 = my_gauss_rule(Kefunc4,ui,wi)
 
-#            print [i,j], integral2, my_gauss_rule4(Kefunc2), abs(integral2 - my_gauss_rule4(Kefunc2))
-#            print quad2d(Kefunc2,x0,x1,y0,y1,ui,wi)
-
             K[i,j] = integral1 + integral2 + integral3 + integral4
 
         # construct the local matrix and local components of the load vector
@@ -8160,12 +8291,10 @@ def NE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
 
             Fe[i] = my_gauss_rule(fv1,ui,wi) + my_gauss_rule(fv2,ui,wi) + my_gauss_rule(fv3,ui,wi) + my_gauss_rule(fv4,ui,wi)
 
-#    print K
-#    print Fe
     #NEUMANN BCS are zero - code not inserted here
     return [K,Fe]
 
-def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
+def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,pxVals):
 #def SE_corner(p,ui,wi,k1,k2,nodess,UConf,pConf,tConf):
     K = numpy.zeros((6,6))
     Fe = np.zeros((6,1))
@@ -8214,12 +8343,16 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
 #     else:
 #         K_cst = [k2,k2,k2,k1]
 
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
     
     #if SE
     if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 > binBnd[1] and
@@ -8591,7 +8724,7 @@ def SE_corner(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7):
     return [K,Fe]
 
 
-def East_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
+def East_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes,pxVals,pxVals2):
     K = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
@@ -8633,17 +8766,25 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
     #print    point_in_on_poly(x0,y1,domainInclusion),point_in_on_poly(x1,y1,domainInclusion)
     #print point_in_on_poly(x1,y0,domainInclusion)
 
-    p1,p2,p3,p4 = root.rect
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+#    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+#    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+#    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
     
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
-    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
-    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
-    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
-    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
-    
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
+    pxVal14 = pxVals2[0]
+    pxVal12 = pxVals2[1]
+    pxVal23 = pxVals2[2]
+    pxVal34 = pxVals2[3]
     
     #if SE - East
     if ( is_in_same_bin(pxVal3,pxVal2) == False and pxVal3 > binBnd[1] and
@@ -9075,7 +9216,7 @@ def East_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
     return [K,Fe]
     
 
-def South_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
+def South_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes, pxVals, pxVals2):
     
     Ke = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
@@ -9114,16 +9255,24 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
 #            ( not(point_in_on_poly(x0,y0,domainInclusion)) == True) ):
 #            K_cst = [k1,k2,k2]
 
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
-    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
-    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
-    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
-    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+#    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+#    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+#    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
+    pxVal14 = pxVals2[0]
+    pxVal12 = pxVals2[1]
+    pxVal23 = pxVals2[2]
+    pxVal34 = pxVals2[3]
     
     #if SE-South
     if ( is_in_same_bin(pxVal3,pxVal4) == False and pxVal3 > binBnd[1] and
@@ -9581,7 +9730,7 @@ def South_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
 #     print 'South EDGE:\n', Ke, Fe
     return [Ke,Fe]
 
-def North_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
+def North_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes,pxVals,pxVals2):
     K = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
@@ -9643,16 +9792,25 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
 #    else:
 #        if not(point_in_on_poly(x0,y1,domainInclusion)) and point_in_on_poly(x1,y0,domainInclusion) and point_in_on_poly(x1,y1,domainInclusion):
 #            K_cst = [k1,k2,k2]
-    p1,p2,p3,p4 = root.rect
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+#    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+#    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+#    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
     
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
-    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
-    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
-    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
-    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
+    pxVal14 = pxVals2[0]
+    pxVal12 = pxVals2[1]
+    pxVal23 = pxVals2[2]
+    pxVal34 = pxVals2[3]
     
     #if NW - North
     if ( is_in_same_bin(pxVal1,pxVal2) == False and pxVal1 > binBnd[1] and
@@ -10079,7 +10237,7 @@ def North_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7, full_nodes):
 
 
 
-def West_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
+def West_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes, pxVals, pxVals2):
     K = numpy.zeros((5,5))
     Fe = np.zeros((5,1))
 
@@ -10130,16 +10288,24 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
 #            ( point_in_on_poly(x0,y1,domainInclusion) ==True and point_in_on_poly(x1,y1,domainInclusion)==True )  ):
 #             K_cst = [k1,k2,k2]
     
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
-    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
-    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
-    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
-    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    pxVal14 = image.GetPixel(int( (p1.x+p4.x)/2.0),int( (p1.y+p4.y)/2.0) )
+#    pxVal12 = image.GetPixel(int( (p1.x+p2.x)/2.0),int( (p1.y+p2.y)/2.0) )
+#    pxVal23 = image.GetPixel(int( (p2.x+p3.x)/2.0),int( (p2.y+p3.y)/2.0) )
+#    pxVal34 = image.GetPixel(int( (p3.x+p4.x)/2.0),int( (p3.y+p4.y)/2.0) )
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
+    pxVal14 = pxVals2[0]
+    pxVal12 = pxVals2[1]
+    pxVal23 = pxVals2[2]
+    pxVal34 = pxVals2[3]
     
     #if NW - West
     if ( is_in_same_bin(pxVal1,pxVal4) == False and pxVal1 > binBnd[1] and
@@ -10581,7 +10747,7 @@ def West_edge(p,ui,wi,k1,k2,nodess,root,image,nodes6,nodes7,full_nodes):
 
     return [K,Fe]
 
-def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
+def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals):
 
     enrich1 = np.array(p[nodes[4]])
     enrich2 = np.array(p[nodes[5]])
@@ -10655,12 +10821,16 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
 #     else:
 #             K_cst = [k1,k2]
 
-    p1,p2,p3,p4 = root.rect
-    
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
     
     if ( is_in_same_bin(pxVal1,pxVal2) == True and pxVal1 < binBnd[1] and
          is_in_same_bin(pxVal3,pxVal4) == True and
@@ -10926,31 +11096,34 @@ def horizontal_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
     for i in range(0,6):
         for j in range(0,6):
 #            if nodes[i] >= nodes[j]:
+            if i>=j:
+                Kefunc1 = lambda e,n: K_cst[0] * ( Nx_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
+                                                    Nx_top[j](x_fct_T(e,n),y_fct_T(e,n)) + 
+                                                    Ny_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
+                                                    Ny_top[j](x_fct_T(e,n),y_fct_T(e,n)) ) * detJ_top(e,n) 
+                Kefunc2 = lambda e,n: K_cst[1] * ( Nx_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
+                                                    Nx_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) + 
+                                                    Ny_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
+                                                    Ny_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) ) * detJ_bottom(e,n)
+#                top_integral = gauss_quadrat(Kefunc1,ui,wi) 
+#                bottom_integral = gauss_quadrat(Kefunc2,ui,wi)
+                top_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
+                bottom_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
 
-            Kefunc1 = lambda e,n: K_cst[0] * ( Nx_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
-                                                Nx_top[j](x_fct_T(e,n),y_fct_T(e,n)) + 
-                                                Ny_top[i](x_fct_T(e,n),y_fct_T(e,n)) * 
-                                                Ny_top[j](x_fct_T(e,n),y_fct_T(e,n)) ) * detJ_top(e,n) 
-            Kefunc2 = lambda e,n: K_cst[1] * ( Nx_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
-                                                Nx_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) + 
-                                                Ny_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * 
-                                                Ny_bottom[j](x_fct_B(e,n),y_fct_B(e,n)) ) * detJ_bottom(e,n)
-            top_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
-            bottom_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
-
-            Ke_Horiz[i,j] = top_integral + bottom_integral
-
+                Ke_Horiz[i,j] = top_integral + bottom_integral
+                Ke_Horiz[j,i] = Ke_Horiz[i,j]
         # construct the local load vector
         fv1 = lambda e,n: rhs(e,n) * Nbasis_top[i](x_fct_T(e,n),y_fct_T(e,n)) * detJ_top(e,n)
         fv2 = lambda e,n: rhs(e,n) * Nbasis_bottom[i](x_fct_B(e,n),y_fct_B(e,n)) * detJ_bottom(e,n)
 
         Fe_Horiz[i] = quad2d(fv1,-1,1,-1,1,ui,wi) + quad2d(fv2,-1,1,-1,1,ui,wi)
+#        Fe_Horiz[i] = gauss_quadrat(fv1,ui,wi) + gauss_quadrat(fv2,ui,wi)
 
 
     return [Ke_Horiz,Fe_Horiz]
 
 
-def vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
+def vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7,pxVals):
     enrich1 = np.array(p[nodes[4]])
     enrich2 = np.array(p[nodes[5]])
 
@@ -11025,12 +11198,17 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
 #     else:
 #         K_cst = [k1,k2]
 
-    p1,p2,p3,p4 = root.rect
+#    p1,p2,p3,p4 = root.rect
+#    
+#    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
+#    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
+#    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
+#    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
+    pxVal1 = pxVals[0]
+    pxVal2 = pxVals[1]
+    pxVal3 = pxVals[2]
+    pxVal4 = pxVals[3]
     
-    pxVal1 = image.GetPixel(int(p1.x), int(p1.y));
-    pxVal2 = image.GetPixel(int(p2.x), int(p2.y));
-    pxVal3 = image.GetPixel(int(p3.x), int(p3.y));
-    pxVal4 = image.GetPixel(int(p4.x), int(p4.y));
     
     if ( is_in_same_bin(pxVal1,pxVal4) == True and is_in_same_bin(pxVal2,pxVal3) == True and pxVal4 > binBnd[1] and
         ( is_in_same_bin(pxVal1,pxVal2)== False and is_in_same_bin(pxVal4,pxVal3) == False) ):
@@ -11296,26 +11474,30 @@ def vertical_cut(p,ui,wi,k1,k2,nodes,root,image,nodes6,nodes7):
     for i in range(0,6):
         for j in range(0,6):
 #            if nodes[i] >= nodes[j]:
-
-            Kefunc1 = lambda e,n: K_cst[0] * ( Nx_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
-                                            Nx_left[j](x_fct_L(e,n),y_fct_L(e,n)) + 
-                                            Ny_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
-                                            Ny_left[j](x_fct_L(e,n),y_fct_L(e,n)) ) * detJ_left(e,n) 
-            Kefunc2 = lambda e,n: K_cst[1] * ( Nx_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
-                                            Nx_right[j](x_fct_R(e,n),y_fct_R(e,n)) + 
-                                            Ny_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
-                                            Ny_right[j](x_fct_R(e,n),y_fct_R(e,n)) ) * detJ_right(e,n)
-            left_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
-            right_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
-
-            Ke_Vertical[i,j] = left_integral + right_integral
-            #print i,j,left_integral, right_integral
+            if i>=j :
+                Kefunc1 = lambda e,n: K_cst[0] * ( Nx_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
+                                                Nx_left[j](x_fct_L(e,n),y_fct_L(e,n)) + 
+                                                Ny_left[i](x_fct_L(e,n),y_fct_L(e,n)) * 
+                                                Ny_left[j](x_fct_L(e,n),y_fct_L(e,n)) ) * detJ_left(e,n) 
+                Kefunc2 = lambda e,n: K_cst[1] * ( Nx_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
+                                                Nx_right[j](x_fct_R(e,n),y_fct_R(e,n)) + 
+                                                Ny_right[i](x_fct_R(e,n),y_fct_R(e,n)) * 
+                                                Ny_right[j](x_fct_R(e,n),y_fct_R(e,n)) ) * detJ_right(e,n)
+#                left_integral = gauss_quadrat(Kefunc1,ui,wi) 
+#                right_integral = gauss_quadrat(Kefunc2,ui,wi)
+                left_integral = quad2d(Kefunc1,-1,1,-1,1,ui,wi) 
+                right_integral = quad2d(Kefunc2,-1,1,-1,1,ui,wi)
+    
+                Ke_Vertical[i,j] = left_integral + right_integral
+                Ke_Vertical[j,i] = Ke_Vertical[i,j]
+                
 
         # construct the local load vector
         fv1 = lambda e,n: rhs(e,n) * Nbasis_left[i](x_fct_L(e,n),y_fct_L(e,n)) * detJ_left(e,n)
         fv2 = lambda e,n: rhs(e,n) * Nbasis_right[i](x_fct_R(e,n),y_fct_R(e,n)) * detJ_right(e,n)
     
         Fe_Vertical[i] = quad2d(fv1,-1,1,-1,1,ui,wi) + quad2d(fv2,-1,1,-1,1,ui,wi)
+#        Fe_Vertical[i] = gauss_quadrat(fv1,ui,wi) + gauss_quadrat(fv2,ui,wi)
     
     #    # Neumann BCs: n dot grad(u) = g1
     #    # left side boundary

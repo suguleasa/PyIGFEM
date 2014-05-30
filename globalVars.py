@@ -11,12 +11,12 @@ DIV_F = 1000.0
 #MIN_SIZE = 20#6
 
 # fake data
-#MAX_SIZE_X = 20
-#MAX_SIZE_Y = 20
-#MIN_SIZE = 20
-MAX_SIZE_X = 64
-MAX_SIZE_Y = 64
-MIN_SIZE = 64
+MAX_SIZE_X = 33
+MAX_SIZE_Y = 33
+MIN_SIZE = 33
+#MAX_SIZE_X = 17
+#MAX_SIZE_Y = 17
+#MIN_SIZE =  17 #17, 33, 64, 127, 256
 
 ALT_MIN_SIZE = 8
 TOL_LINEARS = 2.0
@@ -37,7 +37,7 @@ EPS_FACTOR = 1e-2
 # 1 for quadratics
 # 2 for cubics
 # 3 for NURBS 
-POL_APPROX = 1
+POL_APPROX = 2
 
 # activate norm computation: 1, else 0
 NORM_COMP = 1

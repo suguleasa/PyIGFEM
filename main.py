@@ -18,7 +18,10 @@ from readFile import *
 from findIntersection import *
 # from myplot import *
 import scipy.io
+import timeit
 
+import cProfile
+import re
 
 global P_quad 
 allnodes = 0
@@ -3583,40 +3586,41 @@ if __name__ == "__main__":
         p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
 
         ###
-#        m = 33
-#        p_reg_IDEAL = numpy.load('p_reg_32x32.npy')
-#        p_reg_extra = numpy.array(p_reg[m*m:])
-#        p_ideal_extra = numpy.array(p_reg_IDEAL[m*m:])
-#        
-#        for j in range(0, len(p_reg_extra)):
-#            val = Coordinate(p_reg_extra[j,0], p_reg_extra[j,1])
-#            dmin = 10000.0
-#            for i in range(0,len(p_ideal_extra)):
-#                kl = Coordinate(p_ideal_extra[i,0],p_ideal_extra[i,1])
-#                ddd = find_distance(kl,val)
-#                if ddd < dmin:
-#                    dmin = ddd
-#                    new_indx = numpy.where(numpy.all(p_ideal_extra==[kl.x,kl.y], axis=1))
-#            
-#            p_reg_extra[j] = [p_ideal_extra[new_indx,0][0,0],p_ideal_extra[new_indx,1][0,0]] 
-#            
-#            
-#        p_reg = numpy.vstack([numpy.array(p_reg[0:m*m]), numpy.array(p_reg_extra)])
+        m = 33
+        p_reg_IDEAL = numpy.load('p_reg_32x32.npy')
+        p_reg_extra = numpy.array(p_reg[m*m:])
+        p_ideal_extra = numpy.array(p_reg_IDEAL[m*m:])
+        
+        for j in range(0, len(p_reg_extra)):
+            val = Coordinate(p_reg_extra[j,0], p_reg_extra[j,1])
+            dmin = 10000.0
+            for i in range(0,len(p_ideal_extra)):
+                kl = Coordinate(p_ideal_extra[i,0],p_ideal_extra[i,1])
+                ddd = find_distance(kl,val)
+                if ddd < dmin:
+                    dmin = ddd
+                    new_indx = numpy.where(numpy.all(p_ideal_extra==[kl.x,kl.y], axis=1))
+            
+            p_reg_extra[j] = [p_ideal_extra[new_indx,0][0,0],p_ideal_extra[new_indx,1][0,0]] 
+            
+            
+        p_reg = numpy.vstack([numpy.array(p_reg[0:m*m]), numpy.array(p_reg_extra)])
         ##
-        print 'length of p vector: ______', len(p_reg)
+#        print 'length of p vector: ______', len(p_reg)
+#        print p_reg
         # material conductivities
         k1 = 10
         k2 = 1
         # generate Legendre-Gauss nodes and weights:
         if POL_APPROX == 0:
-            ruleOrder = 4
+            ruleOrder = 2
         else:
             ruleOrder = 5
         [ui,wi] = lgwt(ruleOrder,-1,1)
                
         # get triangular mesh data
-        f = open("multipleinclusions0.0005.res", "r")
-        f2 = open("multipleinclusions0.0005.ele", "r")
+        f = open("mesh160x160x96.res", "r")#open("multipleinclusions0.005.res", "r")
+        f2 = open("mesh160x160x96.1.ele", "r")# open("multipleinclusions0.005.ele", "r")
         [pTri,UTri] = read_p_U(f)
         tTri = read_corners(f2)
         f.close()
@@ -3626,15 +3630,16 @@ if __name__ == "__main__":
 #        p_n = numpy.save('before_p_reg.npy', p_reg)
 #        p_reg = numpy.load('p_reg_127x127.npy')
 #        p_reg = numpy.load('p_reg_256x256.npy')
-        p_reg = numpy.load('p_reg_64x64.npy') 
+#        p_reg = numpy.load('p_reg_64x64.npy') 
         
+#        cProfile.run('myquad(k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)','output.prof')
         UU = myquad(k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)
-        aa1 = numpy.array([UU])
-        ww1 = numpy.array(aa1[()])
-        UU = ww1[0].item()[:,:]
+#        aa1 = numpy.array([UU])
+#        ww1 = numpy.array(aa1[()])
+#        UU = ww1[0].item()[:,:]
            
-        print UU
 #        print p_reg
+        print UU
         
         print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist, p_extra, P_quad, P_cub)
 

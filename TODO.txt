@@ -1,5 +1,0 @@
-Left to do for the meshing:
-
-1. ALT_MIN not considered
-
-2. For the high-stress concentration constraint add up to 10 elements in between to be divided

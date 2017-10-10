@@ -135,7 +135,6 @@ class Node():
         self.children = [None, None, None, None]
         self.has_children = False
 
-#        self.maxdepth = 0
         if parent == None:
             self.depth = 0
             
@@ -155,23 +154,13 @@ class Node():
         self.index = '-1'
         [p1,p2,p3,p4] = rect
         
-###        dx = abs(p1.x-p2.x)+1
-###        dy = abs(p1.y-p4.y)+1
-####        ind_x = round(imageSize[0]/dx)
-####        ind_y = round(imageSize[1]/dy)
-###        self.i = p2.x / dx
-###        self.j = p4.y / dy
 
-
-#        self.mat = 'Epoxy'
         self.enrichNodes = []
         
         if self.parent == None:
             self.type = Node.ROOT
-#        #elif abs(p1.x - p2.x) <= MIN_SIZE:
         elif ( abs(p1.x - p2.x) <= MIN_SIZE or 
             (self.children[0]==None and self.children[1]== None and self.children[2] == None and self.children[3] == None) ):
-#            print self.rect
             self.type = Node.LEAF
         else:
             self.type = Node.BRANCH
@@ -188,8 +177,6 @@ class Node():
     # this method subdivides a node recursively if some
     # division criterion is satisfied
     
-#        if self.type == Node.LEAF:
-#            return
         
         p1,p2,p3,p4 = self.rect
         cMid12 = find_mid_point(p1,p2)
@@ -204,13 +191,8 @@ class Node():
         rects.append((cMid14,cMid24,cMid34,p4)) #SW child
         rects.append((cMid24,cMid23,p3,cMid34)) #SE child
 
-#        if p1.x == 0 and p2.x == 31 and p1.y == 467 and p3.y == 499:
-#            self.printRect()
-#            print self.division_criterion(rects[0], self.inImage, self.outImage),self.division_criterion(rects[1], self.inImage, self.outImage),self.division_criterion(rects[2], self.inImage, self.outImage),self.division_criterion(rects[3], self.inImage, self.outImage)
-#            print [ has_inclusions(self.inImage,p1,p2,p3,p4)]
         for n in range(len(rects)):
             span = self.division_criterion(rects[n], self.inImage, self.outImage)
-#            pi1,pi2,pi3,pi4 = self.children[n].rect
 
             if span == True:
                 self.children[n] = self.getinstance(rects[n], self.inImage, self.outImage,imageSize)
@@ -245,12 +227,6 @@ class Node():
         
                 self.children[n].subdivide()
                 
-#        if self.children == [None,None,None,None]:# and root.parent != None:
-#           self.has_children = False
-#        elif self.children != [None,None,None,None]:
-#            self.has_children = True       
-#        else:
-#            print 'why here?', self.children
         if ( self.children[0] != None and
              self.children[1] != None and
              self.children[2] != None and
@@ -291,10 +267,6 @@ class Node():
                 L2 = linear_search(self.inImage,p2r,p3r);
                 L3 = linear_search(self.inImage,p4r,p3r);
                 L4 = linear_search(self.inImage,p1r,p4r);
-#                L1 = search_in(LIST,p1,p2,self.inImage)
-#                L2 = search_in(LIST,p2,p3,self.inImage)
-#                L3 = search_in(LIST,p4,p3,self.inImage)
-#                L4 = search_in(LIST,p1,p4,self.inImage)
         
                 l1 = ends_in_same_bin(self.inImage,p1r,p2r);
                 l2 = ends_in_same_bin(self.inImage,p2r,p3r);
@@ -322,134 +294,7 @@ class Node():
                     if in_child_k(rects[n],L4) == True:
                         self.children[n].enrichNodes = self.children[n].enrichNodes + [L4]
                         self.children[n].ishomog = 0
-        
-#                 # NW
-#                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L1, L4)
-#                     
-#                 # NE
-#                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE):
-#                     
-#                     draw_line(self.outImage, L1, L2)
-#                 # SE
-#                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L2, L3)
-#                 # SW
-#                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L3, L4)
-#                 # vertical
-#                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L1, L3)
-#                 # horizontal
-#                 if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1r.x-p2r.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L4, L2)
-#                 
-#                 cMid12r = find_mid_point(p1r,p2r)
-#                 cMid14r = find_mid_point(p1r,p4r)
-#                 cMid24r = find_mid_point(p2r,p4r)
-#                 cMid23r = find_mid_point(p2r,p3r)
-#                 cMid34r = find_mid_point(p3r,p4r)
-#                 
-#                 # case 1: interface crossing through L1 and L4
-#                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
-#                 #print "case 1"
-#                     vecCoord1 = case_NW_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L1,L4,self);
-#                     self.ishomog = 0
-#                     if ( vecCoord1[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) ):
-# 
-#                         draw_line(self.outImage,cMid12r,cMid34r);
-#                         draw_line(self.outImage,cMid14r,cMid23r);               
-#                         return True
-#                     elif vecCoord1[0] != -1:
-#                         self.enrichNodes = vecCoord1#[L1, L4]   
-#                 
-#                 # case 2: interface crossing through L1 and L2
-#                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE):
-#                     vecCoord2 = case_NE_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L1,L2);
-#                     self.ishomog = 0
-#                     if(vecCoord2[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) ):
-#                     #print "case 2"
-# 
-#                         draw_line(self.outImage,cMid12r,cMid34r);
-#                         draw_line(self.outImage,cMid14r,cMid23r);
-#                         return True
-#                     elif vecCoord2[0] != -1:
-#                         self.enrichNodes = vecCoord2
-# #                        self.mat = 'Fluid'
-#                     
-#                         
-#                 # case 3: interface crossing through L2 and L3
-#                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
-#                 #print "case 3"
-#                     vecCoord3 = case_SE_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L2,L3);
-#                     if(vecCoord3[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
-# 
-#                         draw_line(self.outImage,cMid12r,cMid34r);
-#                         draw_line(self.outImage,cMid14r,cMid23r);
-#                         return True
-#                     elif vecCoord3[0].x != -1:
-#                         self.enrichNodes = vecCoord3
-# #                        self.mat = 'Fluid'
-#                     self.ishomog = 0   
-#                         
-#                 # case 4: interface crossing through L4 and L3
-#                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
-#                 #print "case 4"
-#                     vecCoord4 = case_SW_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L3,L4);
-#                     if(vecCoord4[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
-#  
-#                         draw_line(self.outImage,cMid12r,cMid34r);
-#                         draw_line(self.outImage,cMid14r,cMid23r);
-#                         return True
-#                     elif vecCoord4[0].x != -1:
-#                         self.enrichNodes = vecCoord4
-# #                        self.mat = 'Fluid'
-#                     self.ishomog = 0
-# 
-#                 # case 5: interface crossing through L1 and L3
-#                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
-#                     #print "case 5"
-#                     vecCoord5 = case_vertical_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L1,L3);
-#                     if(vecCoord5[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
-# 
-#                         draw_line(self.outImage,cMid12r,cMid34r);
-#                         draw_line(self.outImage,cMid14r,cMid23r);
-#                         return True
-#                     elif vecCoord5[0].x != -1:
-#                         self.enrichNodes = vecCoord5
-# #                        self.mat = 'Fluid'
-#                     self.ishomog = 0   
-#                     
-#                 # case 6: interface crossing through L4 and L2
-#                 if (l1==True and l2==False and l3==True and l4==False) and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE) :
-#                 #print "case 6"
-#                     vecCoord6 = case_horizontal_polynomial_test(self.inImage,self.outImage,p1r,p2r,p3r,p4r,L2,L4);
-#                     if(vecCoord6[0].x == -1 and (abs(p1r.x-p2r.x) >= 2*MIN_SIZE)):
-# 
-#                         draw_line(self.outImage,cMid12r,cMid34r);
-#                         draw_line(self.outImage,cMid14r,cMid23r);
-#                         return True
-#                     elif vecCoord6[0].x != -1:
-#                         self.enrichNodes = vecCoord6
-#                     self.ishomog = 0    
-# #                        self.mat = 'Fluid'
-#                                             
-#                  # case 7: one line crossing through L1 and L4 and one line crossing through L2 and L3
-#                  # 2-2 non adjacent corners are the same color (diagonally opposed)
-#                  # the case of 3 consecutive-adjacent materials
-#                 if (l1==0 and l2==0 and l3==0 and l4==0) :
-# #                    print "case 7"
-#                     self.ishomog = 0
-#                     draw_line(self.outImage,cMid12r,cMid34r);
-#                     draw_line(self.outImage,cMid14r,cMid23r);
-#                     return True
-#                 
-#                 if (l1==1 and l2==1 and l3==0 and l4==1) or (l1==1 and l2==1 and l3==1 and l4==0) or (l1==0 and l2==1 and l3==1 and l4==1) or (l1==1 and l2==0 and l3==1 and l4==1) :
-#                     self.ishomog = 0
-#                     draw_line(self.outImage,cMid12r,cMid34r);
-#                     draw_line(self.outImage,cMid14r,cMid23r);
-#                     return True
-                
+                  
                 
         if ( self.children[0] != None and
              self.children[1] != None and
@@ -513,7 +358,6 @@ class QuadTree(Node):
         west_sibling = root.parent.children[2]
         if west_sibling.has_children:
              if west_sibling.children[1].has_children or west_sibling.children[3].has_children:
-#                 print ' neighbors of SE: west'
                  root.divideOnce()
         
         
@@ -521,7 +365,6 @@ class QuadTree(Node):
         north_sibling = root.parent.children[1]
         if north_sibling.has_children:
             if north_sibling.children[2].has_children or north_sibling.children[3].has_children:
-#                print ' neighbors of SE: north'
                 root.divideOnce()       
                 
         # looking East:
@@ -533,7 +376,6 @@ class QuadTree(Node):
                 east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children:
                     if east_neighbor.children[0].has_children or east_neighbor.children[2].has_children:
-#                        print ' neighbors of SE: east'
                         root.divideOnce()
 
         # looking South:
@@ -547,7 +389,6 @@ class QuadTree(Node):
                 south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children:
                     if south_neighbor.children[0].has_children or south_neighbor.children[1].has_children:
-#                        print ' neighbors of SE: south'
                         root.divideOnce() 
   
         
@@ -558,7 +399,6 @@ class QuadTree(Node):
         north_sibling = root.parent.children[0]
         if north_sibling.has_children:
             if north_sibling.children[2].has_children or north_sibling.children[3].has_children:
-#                print ' neighbors of SW: north'
                 root.divideOnce()       
 
         
@@ -566,7 +406,6 @@ class QuadTree(Node):
         east_sibling = root.parent.children[3]
         if east_sibling.has_children:
             if east_sibling.children[0].has_children or east_sibling.children[2].has_children:
-#                print ' neighbors of SW: east'
                 root.divideOnce()
          
         
@@ -580,7 +419,6 @@ class QuadTree(Node):
                 west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children:
                     if west_neighbor.children[1].has_children or west_neighbor.children[3].has_children:
-#                        print ' neighbors of SW: west'
                         root.divideOnce()
         # looking South
         # look up index of South neighbor
@@ -591,7 +429,6 @@ class QuadTree(Node):
                 south_neighbor = get_node_of_neighbor(root, root.index, south_neigh_index)
                 if south_neighbor.has_children:
                     if south_neighbor.children[0].has_children or south_neighbor.children[1].has_children:
-#                        print ' neighbors of SW: south'
                         root.divideOnce() 
   
     
@@ -603,15 +440,12 @@ class QuadTree(Node):
         west_sibling = root.parent.children[0]
         if west_sibling.has_children:
              if west_sibling.children[1].has_children or west_sibling.children[3].has_children:
-#                 print ' neighbors of NE: west'
                  root.divideOnce()
-#                 root.parent.children[1].divideOnce()
         
         # looking South
         south_sibling = root.parent.children[3]
         if south_sibling.has_children:
             if south_sibling.children[0].has_children or south_sibling.children[1].has_children:
-#                print ' neighbors of NE: south'
                 root.divideOnce()
           
               
@@ -624,7 +458,6 @@ class QuadTree(Node):
                 east_neighbor = get_node_of_neighbor(root, root.index, east_neigh_index)
                 if east_neighbor.has_children:
                     if east_neighbor.children[0].has_children or east_neighbor.children[2].has_children:
-#                        print ' neighbors of NE: east'
                         root.divideOnce()
 
         # looking North
@@ -636,7 +469,6 @@ class QuadTree(Node):
                 north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children:
                     if north_neighbor.children[2].has_children or north_neighbor.children[3].has_children:
-#                        print ' neighbors of NE: north'
                         root.divideOnce()
 
             
@@ -647,14 +479,12 @@ class QuadTree(Node):
         east_sibling = root.parent.children[1]
         if east_sibling.has_children:
             if east_sibling.children[0].has_children or east_sibling.children[2].has_children:
-#                print ' neighbors of NW: east'
                 root.divideOnce()
 
         # looking South
         south_sibling = root.parent.children[2]
         if south_sibling.has_children:
             if south_sibling.children[0].has_children or south_sibling.children[1].has_children:
-#                print ' neighbors of NW: south'
                 root.divideOnce()
 
         
@@ -667,7 +497,6 @@ class QuadTree(Node):
                 west_neighbor = get_node_of_neighbor(root, root.index, west_neigh_index)
                 if west_neighbor.has_children:
                     if west_neighbor.children[1].has_children or west_neighbor.children[3].has_children:
-#                        print ' neighbors of NW: west'
                         root.divideOnce()
             
                 
@@ -680,7 +509,6 @@ class QuadTree(Node):
                 north_neighbor = get_node_of_neighbor(root, root.index, north_neigh_index)
                 if north_neighbor.has_children:
                     if north_neighbor.children[2].has_children or north_neighbor.children[3].has_children:
-#                        print ' neighbors of NW: north'
                         root.divideOnce()
         
 
@@ -688,9 +516,7 @@ class QuadTree(Node):
    
         p1,p2,p3,p4 = root.rect
             
-#        if root.i ==0 and root.j == 0:
-#            root.printRect()
-#            print root.index, root.depth
+
             
         if root.has_children == True:
             if root.children[0].has_children == False:
@@ -710,21 +536,8 @@ class QuadTree(Node):
             self.balance_tree(root.children[2],masterNode)
         if root.children[3] != None:
             self.balance_tree(root.children[3],masterNode)
-#        print 'maximum depth: ', CNode.MAX_DEPTH   
 
-#def height(root):
-#    if root.parent == None:
-#        return 0
-#    h1 = height(root.children[0])
-#    h2 = height(root.children[1])
-#        
-#    if (h1 == -1 or h2 == -1 or h1 < h2-1 or h1 > h2+1):
-#        return -1
-#    if h1>h2:
-#        return h1 + 1
-#    else:
-#        return h2 + 1
-        
+                    
 class CNode(Node):
     
     def getinstance(self,rect,inImage,outImage,imageSize):
@@ -744,31 +557,7 @@ class CNode(Node):
         l3 = ends_in_same_bin(self.inImage,p4,p3)
         l4 = ends_in_same_bin(self.inImage,p1,p4)
         
-#        L1 = linear_search(self.inImage,p1,p2);
-#        L2 = linear_search(self.inImage,p2,p3);
-#        L3 = linear_search(self.inImage,p4,p3);
-#        L4 = linear_search(self.inImage,p1,p4);
-        
-#        print len(self.enrichNodes)
-#        # case 6: interface crossing through L4 and L2
-#        if (l1==True and l2==False and l3==True and l4==False) :
-#            print "case 6"
-#            vecCoord6 = case_horizontal_polynomial_test(self.inImage,self.outImage,p1,p2,p3,p4,L2,L4);
-#            if(vecCoord6[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
-#                print 'ever here?'
-#                draw_line(self.outImage,cMid12,cMid34);
-#                draw_line(self.outImage,cMid14,cMid23);
-#                return True
-#            elif vecCoord6[0].x != -1:
-#                self.enrichNodes = vecCoord6
-#            self.ishomog = 0 
 
-
-#         if self.index == '2201':
-#             print 'whyyyy'
-#         if (l1 == 0 and l2 == 0 and l3==0 and l4==0):
-#             print self.index
-#             return True
         
         if abs(p1.x-p2.x) >= ALT_MIN_SIZE:
             draw_line(self.outImage,cMid12,cMid34)
@@ -818,10 +607,6 @@ class CNode(Node):
                 l3 = ends_in_same_bin(self.inImage,p4,p3);
                 l4 = ends_in_same_bin(self.inImage,p1,p4);
             
-#                 L1 = linear_search(self.inImage,p1,p2);
-#                 L2 = linear_search(self.inImage,p2,p3);
-#                 L3 = linear_search(self.inImage,p4,p3);
-#                 L4 = linear_search(self.inImage,p1,p4);
                 L1 = search_in(LIST,p1,p2,self.inImage)
                 L2 = search_in(LIST,p2,p3,self.inImage)
                 L3 = search_in(LIST,p4,p3,self.inImage)
@@ -829,7 +614,6 @@ class CNode(Node):
                 
                 if ( 
                     len(L2) > 1 or len(L4) > 1 or len(L1) > 1 or len(L3) > 1 
-                    # or len(L2) < 1 or len(L4) < 1 or len(L1) < 1 or len(L3) < 1
                      ):
                     # interface croses one edge multiple times
                     draw_line(self.outImage,cMid12,cMid34);
@@ -845,41 +629,29 @@ class CNode(Node):
                     if len(L4) == 1:
                         L4 = L4[0]
                         
-#                 print L1
-#                 print L1.x, L1.y
-#                 print L2.x, L2.y 
-#                 print L3.x, L3.y
-#                 print L4.x, L4.y
 
                 # NW
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     self.ishomog = 0
-#                     draw_line(self.outImage, L1, L4)
                     
                 # NE
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE):
-#                     draw_line(self.outImage, L1, L2)
                     self.ishomog = 0
                 # SE
                 if(l1==1 and l2==0 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L2, L3)
                     self.ishomog = 0
                 # SW
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L3, L4)
                     self.ishomog = 0
                 # vertical
                 if (l1==0 and l2==1 and l3==0 and l4==1) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L1, L3)
                     self.ishomog = 0
                 # horizontal
                 if (l1==1 and l2==0 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
-#                     draw_line(self.outImage, L4, L2)
                     self.ishomog = 0
                 
                 # case 1: interface crossing through L1 and L4
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
-#                    print "case 1"
                     if POL_APPROX != 3:
                         vecCoord1 = case_NW_polynomial_test(self.inImage,p1,p2,p3,p4,L1,L4);
                         self.ishomog = 0
@@ -896,8 +668,6 @@ class CNode(Node):
                             draw_line(self.outImage,cMid14,cMid23)
                             return True
 
-#                        self.mat = 'Fluid'
-#                        print self.en[0].x, self.en[0].y, self.en[1].x, self.en[1].y
 
                 # case 2: interface crossing through L1 and L2
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE):
@@ -912,7 +682,6 @@ class CNode(Node):
                             return True
                         elif vecCoord2[0] != -1:
                             self.enrichNodes = vecCoord2
-    #                        self.mat = 'Fluid'
                     else:
                         [t,P,x_is_F_of_y, test_approx]= Nurbs_NE_case(self.inImage,p1,p2,p3,p4,L1,L2)
                         if test_approx == False:
@@ -932,7 +701,6 @@ class CNode(Node):
                             return True
                         elif vecCoord3[0].x != -1:
                             self.enrichNodes = vecCoord3
-    #                        self.mat = 'Fluid'
                         self.ishomog = 0   
                     else:
                         [t,P,x_is_F_of_y, test_approx]= Nurbs_SE_case(self.inImage,p1,p2,p3,p4,L2,L3)
@@ -943,7 +711,6 @@ class CNode(Node):
                         
                 # case 4: interface crossing through L4 and L3
                 if (l1==1 and l2==1 and l3==0 and l4==0) and (abs(p1.x-p2.x) >= 2*MIN_SIZE) :
-                #print "case 4"
                     if POL_APPROX != 3:
                         vecCoord4 = case_SW_polynomial_test(self.inImage,p1,p2,p3,p4,L3,L4);
                         if(vecCoord4[0].x == -1 and (abs(p1.x-p2.x) >= 2*MIN_SIZE)):
@@ -953,7 +720,6 @@ class CNode(Node):
                             return True
                         elif vecCoord4[0].x != -1:
                             self.enrichNodes = vecCoord4
-    #                        self.mat = 'Fluid'
                         self.ishomog = 0
                     else:
                         [t,P,x_is_F_of_y, test_approx]= Nurbs_SW_case(self.inImage,p1,p2,p3,p4,L3,L4)
@@ -974,11 +740,9 @@ class CNode(Node):
                             return True
                         elif vecCoord5[0].x != -1:
                             self.enrichNodes = vecCoord5
-        #                        self.mat = 'Fluid'
                         self.ishomog = 0   
                     else:
                         [t,P,x_is_F_of_y, test_approx]= Nurbs_vertical_case(self.inImage,p1,p2,p3,p4,L1,L3)
-                        print '+++++++++++++0000----VERTICAL------------'
                         if test_approx == False:
                             draw_line(self.outImage,cMid12,cMid34)
                             draw_line(self.outImage,cMid14,cMid23)
@@ -997,10 +761,8 @@ class CNode(Node):
                         elif vecCoord6[0].x != -1:
                             self.enrichNodes = vecCoord6
                         self.ishomog = 0    
-    #                        self.mat = 'Fluid'
                     else:
                         [t,P,x_is_F_of_y, test_approx]= Nurbs_horizontal_case(self.inImage,p1,p2,p3,p4,L2,L4)
-                        print '+++++++++++++HORIZONTAL-----------'
                         if test_approx == False:
                             draw_line(self.outImage,cMid12,cMid34)
                             draw_line(self.outImage,cMid14,cMid23)
@@ -1011,7 +773,6 @@ class CNode(Node):
                  # 2-2 non adjacent corners are the same color (diagonally opposed)
                  # the case of 3 consecutive-adjacent materials
                 if (l1==0 and l2==0 and l3==0 and l4==0) :
-#                    print "case 7"
                     self.ishomog = 0
                     draw_line(self.outImage,cMid12,cMid34);
                     draw_line(self.outImage,cMid14,cMid23);
@@ -1088,9 +849,6 @@ def tree_balance(tree, root,masterNode):
    
         p1,p2,p3,p4 = root.rect
             
-#        if root.i ==0 and root.j == 0:
-#            root.printRect()
-#            print root.index, root.depth
             
         if root.has_children == True:
             
@@ -1102,7 +860,6 @@ def tree_balance(tree, root,masterNode):
                 tree.neighbors_of_SW(root.children[2],masterNode)  
             if root.children[3].has_children == False:
                 tree.neighbors_of_SE(root.children[3],masterNode)              
-#
         if root.children[0] != None:
             tree_balance(tree,root.children[0],masterNode)
         if root.children[1] != None:
@@ -1158,7 +915,6 @@ def ghost_nodes_enrichment_nodes(tree, root, masterNode):
             if (len(root.enrichNodes) > 0 and 
                 (west_has_children == True or east_has_children == True or
                  south_has_children == True or north_has_children == True)):
-#                print root.index
                 root.divideOnce()      
 
         if root.children[0] != None:
@@ -1172,10 +928,7 @@ def ghost_nodes_enrichment_nodes(tree, root, masterNode):
 
 def number_of_generations(tree, root, masterNode):
 
-#        if root.has_children == False:
-#            nrchildren = 0
-#        else:
-#            nrchildren = nrchildren + 1
+
     maxx = 0
     if root.has_children == True:
         
@@ -1200,10 +953,7 @@ def number_of_generations(tree, root, masterNode):
 
 def get_list_of_nodes(tree, root, masterNode,llist):
 
-#        if root.has_children == False:
-#            nrchildren = 0
-#        else:
-#            nrchildren = nrchildren + 1
+
         if root.has_children == False:
             llist.append([root.index]) 
             
@@ -1265,9 +1015,7 @@ def three_neighbor_rule(tree, root, masterNode):
                     north_has_children = True
                     counter += 1
             
-            #if west_has_children == True and east_has_children == True and south_has_children == True and north_has_children == True:
             if counter > 2:
-#                print '3 neigh-rule - ', root.index
                 root.divideOnce()      
 
                         
@@ -1280,18 +1028,7 @@ def three_neighbor_rule(tree, root, masterNode):
         if root.children[3] != None:
             three_neighbor_rule(tree,root.children[3],masterNode)
 
-#def stress_concentration_constraint(tree, root, masterNode):
-#
-#    print 'graph'
-##         if root.children[0] != None:
-##             stress_concentration_constraint(tree,root.children[0],masterNode)
-##         if root.children[1] != None:
-##             stress_concentration_constraint(tree,root.children[1],masterNode)
-##         if root.children[2] != None:
-##             stress_concentration_constraint(tree,root.children[2],masterNode)
-##         if root.children[3] != None:
-##             stress_concentration_constraint(tree,root.children[3],masterNode)
-#  
+
 def set_graph(masterNode,llist):
     # each node called ROOT has 8 neighbors: 
     #  NW   NC   NE 
@@ -1308,29 +1045,6 @@ def set_graph(masterNode,llist):
         
         p1,p2,p3,p4 = root.rect
         
-        # NORTH-WEST neighbor index:
-#         if p1.y > 0 and p1.x > 0:
-#             north_west_neigh_index = str(find_neighbor_of(root.index,'LU'))
-#             # checking to see if the north-west neighbor exists or is a ghost
-#             if node_exists(north_west_neigh_index,llist) == False: # node does not exist
-#                 
-#                 # check if one level above, the node exists:
-#                 if node_exists(str(north_west_neigh_index[:-1]),llist) == True:
-#                     north_west_neighbor = get_node_by_id(masterNode, [str(north_west_neigh_index)])
-#                     parent_north_west_neighbor = get_node_by_id(masterNode, [str(north_west_neigh_index[:-1])])
-#                     if parent_north_west_neighbor.has_children:
-#                         if north_west_neighbor.has_children:
-#                             north_west_neigh_index = [str(north_west_neighbor.children[3].index)]
-#                     else:
-#                         north_west_neigh_index = [str(parent_north_west_neighbor.index)]
-# #                 else:
-# #                     # check if two levels above the node exists:
-# #                     if node_exists(str(north_west_neigh_index[:-2]),llist) == True:
-#             else: # the node exists: done
-#                 north_west_neigh_index = [str(north_west_neigh_index)]
-#         else:
-#             north_west_neigh_index = ['-1']
-
         # NORTH-WEST neighbor index:
         if p1.y > 0 and p1.x > 0:
             north_west_neigh_index = str(find_neighbor_of(root.index,'LU'))
@@ -1351,31 +1065,7 @@ def set_graph(masterNode,llist):
         else:
             north_west_neigh_index = ['-1']
 
-#         # SOUTH-EAST neighbor index:
-#         if p3.y < 999 and p3.x < 999:
-#             south_east_neigh_index = str(find_neighbor_of(root.index,'RD'))
-#             south_east_neighbor = get_node_by_id(masterNode, [str(south_east_neigh_index)])
-# 
-#             # checking to see if the south-east neighbor exists or is a ghost
-#             if node_exists(str(south_east_neigh_index),llist) == False and south_east_neighbor.has_children == False:
-#                 #check if one level above, the node exisits:
-#                 if node_exists(str(south_east_neigh_index[:-1]),llist) == False:
-#                     #check if two levels above the node existS:
-#                     if node_exists(str(south_east_neigh_index[:-2]),llist) == False:
-#                         print 'ERROR: this case should NOT exist'
-#                         print str(south_east_neigh_index)
-#                         print root.index
-#                     else:
-#                         south_east_neigh_index = [str(south_east_neigh_index[:-2])]
-#                 else:
-#                     south_east_neigh_index = [str(south_east_neigh_index[:-1])]
-#             else:
-#                 south_east_neigh_index = [str(south_east_neigh_index)]
-#         else:
-#             south_east_neigh_index = ['-1']
-# 
-#         print south_east_neigh_index, [str(south_east_neigh_index)]
-        
+       
         # SOUTH-WEST neighbor index:
         if p3.y < 999 and p1.x > 0:
             south_west_neigh_index = str(find_neighbor_of(root.index,'LD'))
@@ -1432,22 +1122,6 @@ def set_graph(masterNode,llist):
         else:
             north_neigh_index = ['-1']
             
-#         # NORTH-EAST neighbor index:
-#         if p1.y > 0 and p2.x < 999:
-#             north_east_neigh_index = str(find_neighbor_of(root.index,'RU'))
-#             north_east_neighbor = get_node_by_id(masterNode, [str(north_east_neigh_index)])
-#             # checking to see if the north-east neighbor exists or is a ghost
-#             if node_exists(north_east_neigh_index,llist) == False:
-#                 parent_north_east_neighbor = get_node_by_id(masterNode, [str(north_east_neigh_index[:-1])])
-#                 if parent_north_east_neighbor.has_children:
-#                     if north_east_neighbor.has_children:
-#                         north_east_neigh_index = [str(north_east_neighbor.children[2].index)]
-#                 else:
-#                     north_east_neigh_index = [str(parent_north_east_neighbor.index)]
-#             else:
-#                 north_east_neigh_index = [str(north_east_neigh_index)]
-#         else:
-#             north_east_neigh_index = ['-1']            
 
 
         # WEST neighbor index:
@@ -1484,23 +1158,6 @@ def set_graph(masterNode,llist):
         else:
             east_neigh_index = ['-1'] 
 
-        
-#         # SOUTH-WEST neighbor index:
-#         if p3.y < 999 and p1.x > 0:
-#             south_west_neigh_index = str(find_neighbor_of(root.index,'LD'))
-#             south_west_neighbor = get_node_by_id(masterNode, [str(south_west_neigh_index)])
-#             # checking to see if the south-west neighbor exists or is a ghost
-#             if node_exists(south_west_neigh_index,llist) == False:
-#                 parent_south_west_neighbor = get_node_by_id(masterNode, [str(south_west_neigh_index[:-1])])                
-#                 if parent_south_west_neighbor.has_children: 
-#                     if south_west_neighbor.has_children:
-#                         south_west_neigh_index = [str(south_west_neighbor.children[1].index)]
-#                 else:
-#                     south_west_neigh_index = [str(parent_south_west_neighbor.index)]
-#             else:
-#                 south_west_neigh_index = [str(south_west_neigh_index)]
-#         else:
-#             south_west_neigh_index = ['-1']
 
 
         # SOUTH neighbor index:
@@ -1544,7 +1201,7 @@ def set_graph(masterNode,llist):
                 south_east_neigh_index = [str(south_east_neigh_index)]
         else:
             south_east_neigh_index = ['-1'] 
-#         
+         
         mesh_graph[str(root.index)] = {
                           'I': root.ishomog,
                           'NW': north_west_neigh_index,
@@ -1556,32 +1213,12 @@ def set_graph(masterNode,llist):
                           'S': south_neigh_index,
                           'SE': south_east_neigh_index
                            }
-#         graph_list = []
-#         if north_west_neigh_index != ['-1']:
-#             graph_list = graph_list + north_west_neigh_index
-#         if north_neigh_index != ['-1']:
-#             graph_list = graph_list + north_neigh_index
-#         if north_east_neigh_index != ['-1']:
-#             graph_list = graph_list +  north_east_neigh_index
-#         if west_neigh_index != ['-1']:
-#             graph_list = graph_list + west_neigh_index
-#         if east_neigh_index != ['-1']:
-#             graph_list = graph_list + east_neigh_index
-#         if south_west_neigh_index != ['-1']:
-#             graph_list = graph_list + south_west_neigh_index
-#         if south_neigh_index != ['-1']:
-#             graph_list = graph_list + south_neigh_index
-#         if south_east_neigh_index != ['-1']:
-#             graph_list = graph_list + south_east_neigh_index
-            
-             
-#         simple_graph[str(root.index)] = { graph_list}
+
     return mesh_graph
  
 def find_shortest_path(graph, start, end, path = []):
         start = '00'
         end = '11'
-#        print [start, end]
         path = path + [start]
         if start == end:
             return path
@@ -1589,12 +1226,7 @@ def find_shortest_path(graph, start, end, path = []):
             print 'no key', start
             return None
         shortest = None
-#         for node in graph[start]:
-#             if node not in path:
-#                 newpath = find_shortest_path(graph, node, end, path)
-#                 if newpath:
-#                     if not shortest or len(newpath) < len(shortest):
-#                         shortest = newpath
+
         return shortest
            
 def tomorton(x,y):
@@ -1624,7 +1256,6 @@ def convert_to_base_4(n):
         
     result.reverse()
     
-#    print 'reverse', result.reverse()
     
     return ''.join(result)
 
@@ -1639,7 +1270,6 @@ def morton_id(i,j):
     ind_base10 = int(sisj,2)
 
     
-#    return convert_to_base_4(ind_base10)
     return tomorton(i,j)
 
 def find_neighbor_of(index,direction):
@@ -1720,7 +1350,6 @@ def process_list_of_elements(llist,root):
     coordsList1 = [ key for key,_ in groupby(coordsList1)]
 
     lenClist1 = len(coordsList1)
-#    print 'inside process list',lenClist1
     
     coordsList2 = []
     #second, construct the pvec of the enrichment nodes
@@ -1732,30 +1361,10 @@ def process_list_of_elements(llist,root):
         
         if l > 0:
             
-#            enrN = root_i.enrichNodes[0]
-#            coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
-#    
-#            enrN = root_i.enrichNodes[1]
-#            coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
-#            for j in range(0,l):
-#                enrN = root_i.enrichNodes[j]
-#                coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
-
-#            if l >= 2:
-#                NR_ENRICH_NODES = 2
-#                for j in range(0,NR_ENRICH_NODES):
-#                    enrN = root_i.enrichNodes[j]
-#                    coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
-
-#            if l == 1:
-#                print '-----' 
-#                root_i.printRect()
-#                
             NR_ENRICH_NODES = 2
             for j in range(0,NR_ENRICH_NODES):
                 enrN = root_i.enrichNodes[j]
-#                print enrN.x, enrN.y
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
     cList2 = deepcopy(coordsList2)
@@ -1793,148 +1402,13 @@ def process_list_of_elements(llist,root):
     pvecCList = numpy.zeros((0,2))
     pvecCList = numpy.vstack([pvecCList,cList])
 
-#     pvec = pvec / DIV_F
-#     for i in range(0,len(pvec)):
-#         if pvec[i,0] != 0.0:
-#             pvec[i,0] += 0.001
-#         if pvec[i,1] != 0.0:
-#             pvec[i,1] += 0.001
-#              
-#     for i in range(0,len(pvecv)):
-#         pvec[i,1] = 1 - pvec[i,1] 
-
-#     print pvecCList
-    
-    # construct the corners list t:
-#     t = []
-# #     for i in range(0,n):
-# #         root_i = get_node_by_id(masterNode,llist[i])
-# #         p1,p2,p3,p4 = root_i.rect
-# #         
-# # #         p1.x = p1.x/DIV_F
-# # #         p1.y = p1.y/DIV_F
-# # #         if p1.x != 0.0:
-# # #             p1.x += 0.001
-# # #         if p1.y != 0.0:
-# # #             p1.y += 0.001
-# # #         p1.y = 1 - p1.y
-# #         
-# # #         p2.x = p2.x/DIV_F
-# # #         p2.y = p2.y/DIV_F
-# # #         if p2.x != 0.0:
-# # #             p2.x += 0.001
-# # #         if p2.y != 0.0:
-# # #             p2.y += 0.001
-# # #         p2.y = 1 - p2.y
-# #         
-# #         
-# # #         p3.x = p3.x/DIV_F
-# # #         p3.y = p3.y/DIV_F
-# # #         if p3.x != 0.0:
-# # #             p3.x += 0.001
-# # #         if p3.y != 0.0:
-# # #             p3.y += 0.001
-# # #         p3.y = 1 - p3.y
-# #         
-# #         
-# #         
-# # #         p4.x = p4.x/DIV_F
-# # #         p4.y = p4.y/DIV_F
-# # #         if p4.x != 0.0:
-# # #             p4.x += 0.001
-# # #         if p4.y != 0.0:
-# # #             p4.y += 0.001
-# # #         p4.y = 1 - p4.y
-# #         
-# #         
-# #         b1 = [p1.x, p1.y]
-# #         ind1 = numpy.where(numpy.all(pvecCList==b1,axis=1))
-# #         c1 = ind1[0][0]
-# #          
-# #         b2 = [p2.x, p2.y]
-# #         ind2 = numpy.where(numpy.all(pvecCList==b2,axis=1))
-# #         c2 = ind2[0][0]
-# #         
-# #         b3 = [p3.x, p3.y]
-# #         ind3 = numpy.where(numpy.all(pvecCList==b3,axis=1))
-# #         c3 = ind3[0][0]
-# #         
-# #         b4 = [p4.x, p4.y]
-# #         ind4 = numpy.where(numpy.all(pvecCList==b4,axis=1))
-# #         c4 = ind4[0][0]
-# #         
-# #         l = len(root_i.enrichNodes)
-# #         if l > 0:
-# #             if l == 1:
-# #                 enrN1 = root_i.enrichNodes[0]
-# #                 
-# # #                 enrN1.x = enrN1.x/DIV_F
-# # #                 enrN1.y = enrN1.y/DIV_F
-# # #                 if enrN1.x != 0.0:
-# # #                     enrN1.x += 0.001
-# # #                 if enrN1.y != 0.0:
-# # #                     enrN1.y += 0.001
-# # #                 enrN1.y = 1 - enrN1.y
-# #                 
-# #                 b5 = [enrN1.x, enrN1.y]
-# #                 ind5 = numpy.where(numpy.all(pvecCLisr==b5,axis=1))
-# #                 c5 = ind5[0][0]
-# # #                 t = t + [[c1,c2,c3,c4,c5]]
-# #                 t = t + [[c4,c3,c2,c1, c5]]
-# #                 
-# #             if l == 2:
-# #                 enrN1 = root_i.enrichNodes[0]
-# #                 
-# # #                 enrN1.x = enrN1.x/DIV_F
-# # #                 enrN1.y = enrN1.y/DIV_F
-# # #                 if enrN1.x != 0.0:
-# # #                     enrN1.x += 0.001
-# # #                 if enrN1.y != 0.0:
-# # #                     enrN1.y += 0.001
-# # #                 enrN1.y = 1 - enrN1.y
-# #                 
-# #                 b5 = [enrN1.x, enrN1.y]
-# #                 ind5 = numpy.where(numpy.all(pvecCList==b5,axis=1))
-# #                 c5 = ind5[0][0]
-# #                 
-# #                 enrN2 = root_i.enrichNodes[1]
-# #                 
-# # #                 enrN2.x = enrN2.x/DIV_F
-# # #                 enrN2.y = enrN2.y/DIV_F
-# # #                 if enrN2.x != 0.0:
-# # #                     enrN2.x += 0.001
-# # #                 if enrN2.y != 0.0:
-# # #                     enrN2.y += 0.001
-# # #                 enrN2.y = 1 - enrN2.y
-# #                 
-# #                 b6 = [enrN2.x, enrN2.y]
-# #                 ind6 = numpy.where(numpy.all(pvecCList==b6,axis=1))
-# #                 c6 = ind6[0][0]   
-# #                 
-# # #                 t = t + [[c1,c2,c3,c4,c5,c6]]
-# #                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
-# #         else:
-# # #             t = t + [[c1,c2,c3,c4]]
-# #             t = t + [[c4,c3,c2,c1]]
-            
 
         
     return [pvec,pvecCList,lenClist1]
  
 def numbering(pvec,pvecCList, llist, masterNode):
     n = len(llist)
-    
-#     for i in range(0,len(pvec)):
-#         pvec[i,1] = 1 - pvec[i,1] 
-#         
-#         
-#     for i in range(0,len(p_reg)):
-#         if pvec[i,0] != 0.0:
-#             pvec[i,0] -= 0.001
-#         if pvec[i,1] != 0.0:
-#             pvec[i,1] -= 0.001
-#     pvec = pvec * DIV_F
-       
+          
     t = []
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,llist[i])
@@ -1972,7 +1446,6 @@ def numbering(pvec,pvecCList, llist, masterNode):
                     t = t + [[c1,c2,c3,c4]]
                 else:
                     t = t + [[c1,c2,c3,c4,c5]]
-#                 t = t + [[c4,c3,c2,c1, c5]]
                   
             if l == 2 or l>2:
 
@@ -1989,34 +1462,25 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 if abs(enrN1.x - enrN2.x)<=TOL_error and abs(enrN1.y - enrN2.y)<=TOL_error:
                     t = t + [[c1,c2,c3,c4]]
                 else:
-#                     if c5>c6:
-#                         t = t + [[c1,c2,c3,c4,c5,c6]]
-#                     else:
-#                         t = t + [[c1,c2,c3,c4,c6,c5]]
+
                     if pvecCList[c5][1] < pvecCList[c6][1]:
                         mtl = [[c1,c2,c3,c4,c6,c5]]
                     else:
                         if pvecCList[c5][1] == pvecCList[c6][1]:
-#                             if c1 == 1147 and c2 == 1148:
-#                                 print pvecCList[1786], pvecCList[1785]
-#                                 print c5, c6         
+ 
                     
                             if pvecCList[c5][0] < pvecCList[c6][0]:
                                 mtl = [[c1,c2,c3,c4,c5,c6]]
-#                                 mtl = [[c1,c2,c3,c4,c6,c5]]
                             else:
                                 mtl =  [[c1,c2,c3,c4,c6,c5]]
-#                                 mtl = [[c1,c2,c3,c4,c6,c5]]
                         else:       
                             mtl =  [[c1,c2,c3,c4,c5,c6]]
                     
                     t = t + mtl
                     
-#                 t = t + [[c4,c3,c2,c1, c5, c6]]                             
         else:
             t = t + [[c1,c2,c3,c4]]
             
-#             t = t + [[c4,c3,c2,c1]]
         
     
         
@@ -2049,10 +1513,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
         if len(el) == 5:
                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4]]
         if len(el) == 6:
-#             if new_corners[5] < new_corners[4]:
-#                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
-#             else:
-#                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4], new_corners[5]]
+
             if pvec[new_corners[4]][1] < pvec[new_corners[5]][1]:
                 tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[4], new_corners[5]]
             else:
@@ -2064,14 +1525,6 @@ def numbering(pvec,pvecCList, llist, masterNode):
                 else:
                         tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
                  
-#             if tk[0] == 270 and tk[1] == 271:
-#                     print tk       
-#                     print new_corners
-#                     print pvec[1529],pvec[1528] 
-                    
-#             print '----',pvec[new_corners[4]], pvec[new_corners[5]]
-#             print tk
-#             print pvec[1041], pvec[1042]
                        
         tvec = tvec + [tk]
 
@@ -2127,7 +1580,6 @@ def set_nsew(llist, masterNode, full_vec):
                 x4 = find_nearest(full_vec,x4)
                 y4 = find_nearest(full_vec,y4)
                 root.hn[2] = Coordinate(x4, y4)
-#                east_has_children = True
 
         south_neigh_index = str(find_neighbor_of(root.index,'D'))  
         # checking to see if the west neighbor exists or is a ghost
@@ -2147,7 +1599,7 @@ def set_nsew(llist, masterNode, full_vec):
                 x2 = find_nearest(full_vec,x2)
                 y2 = find_nearest(full_vec,y2)
                 root.hn[1] = Coordinate(x2, y2)
-#        
+        
         north_neigh_index = str(find_neighbor_of(root.index,'U'))    
         # checking to see if the west neighbor exists or is a ghost
         if it_exists(north_neigh_index, masterNode):
@@ -2171,21 +1623,13 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 # correct p_vec of coordinates because of lost pixels in integer division
 # now pixel at location 62 is correctly set to be 0.0625 and not 0.63
     
-#     print 'start p-945',p[945]
        
     # go over the coordinates of the regular grid in the p vector  
     for i in range(0, lenClist1):
         for j in [0,1]:
             val = find_nearest(full_vec,p[i,j])
 
-#             # go over the coordinates of the intersection nodes in the pvecor
-#             for k in range(lenClist1,len(p)):
-#                 # if any of the coordinates of the intersection nodes corresponds
-#                 # to a coordinate value on the grid, correct it
-#                 if p[k,0] == p[i,j]: 
-#                     p[k,0] = val
-#                 if p[k,1] == p[i,j]:
-#                     p[k,1] = val
+
             p[i,j] = val
 
     # go over the coordinates of the intersection nodes
@@ -2205,81 +1649,15 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
         # look to see if the element has enrichment nodes
         if len(tl) > 4:
             
-#             enrich1 = [root.enrichNodes[0].x, root.enrichNodes[0].y]
-#             enrich2 = [root.enrichNodes[1].x, root.enrichNodes[1].y]
-
             enrich1 = pvecPx[tp[4]]
             enrich2 = pvecPx[tp[5]]
             coords = numpy.array([[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
             
-#             if pvecPx[tp[4]][1] < pvecPx[tp[5]][1]:
-#                 enrich1 = pvecPx[tp[5]]
-#                 enrich2 = pvecPx[tp[4]]
-#             else:
-#                 if pvecPx[tp[4]][1] == pvecPx[tp[5]][1]:
-#                     if pvecPx[tp[4]][0] < pvecPx[tp[5]][0]:
-#                         
-#                         enrich1 = pvecPx[tp[4]]
-#                         enrich2 = pvecPx[tp[5]]
-#                     else:
-#                         enrich1 = pvecPx[tp[5]]
-#                         enrich2 = pvecPx[tp[4]]
                         
             ind1 = tl[4]
             ind2 = tl[5]
             
-#            if ind2 == 1059:
-#                print tl, tp
-#                print enrich1
-#                print enrich2
-#                root.printRect()
-#                print not(on_corners(enrich1,coords)) , not(on_corners(enrich2,coords))
-#             if ind2 == 1059:
-#                 print p[1059]
-#                 print 'ce faci aici ba?', tl, root.printRect()
-#                 print 'iteration 2', i
-          
-#             if ind1 == 1059:
-#                 print 'iteration 1', i
-#                 print p[1528]
-#                 print enrich1[0], enrich1[1]
-#                 print not(on_corners(enrich1,coords)) , not(on_corners(enrich2,coords))
 
-#             # enrichment node 1 is one of the corners of the element
-#             if on_corners(enrich1,p1.x,p1.y,p3.x,p3.y):
-#                 x1 = enrich1[0] / DIV_F
-#                 y1 = enrich1[1] / DIV_F
-#                 if x1 != 0.0:
-#                     x1 += 0.001
-#                 if y1 != 0.0:
-#                     y1 += 0.001            
-#                 y1 = 1 - y1
-#                 valx1 = find_nearest(full_vec,x1)
-#                 valy1 = find_nearest(full_vec,y1)
-#   
-#                 # update the coordinates to the nearest "point on the grid"                
-#                 p[ind1,0] = valx1
-#                 p[ind1,1] = valy1
-#                
-#                
-#             # enrichment node 2 is one of the corners of the element   
-#             if on_corners(enrich2,p1.x,p1.y,p3.x,p3.y):
-#                 x2 = enrich2[0] / DIV_F
-#                 y2 = enrich2[1] / DIV_F
-#                 if x2 != 0.0:
-#                     x2 += 0.001
-#                 if y2 != 0.0:
-#                     y2 += 0.001            
-#                 y2 = 1 - y2
-#                 valx2 = find_nearest(full_vec,x2)
-#                 valy2 = find_nearest(full_vec,y2)
-#                   
-#                 # update the coordinates to the nearest "point on the grid"
-#                 p[ind2,0] = valx2
-#                 p[ind2,1] = valy2
-# #                  
-            # enrichment node 1 is on an edge
-#             if not(on_corners(enrich1,p1.x,p1.y,p3.x,p3.y)):
 
             if ( not(on_corners(enrich1,coords)) and (on_corners(enrich2,coords)) ):
                 x1 = enrich1[0] / DIV_F
@@ -2300,17 +1678,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the X - coordinate to the nearest "point on the grid"
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
-#                     if ind1 == 1528 or ind2 == 1528:
-#                         print 'rerwrewrwerwerewrewrwrew'
-#                         print valx1, find_nearest(full_vec,x1)
-#                         print x1, y1
-#                         print p[ind1,0], ind1, ind2
-#                         print 'tl', tl
-#                         print 'tp', tp
-#                         print enrich1[0], enrich1[1]
-#                         print enrich2[0], enrich2[1]
-#                         print p1.x, p3.x
-#                         print p1.y, p3.y
                                     
                 if ((enrich1[0] != p1.x and enrich1[0] != p3.x) and 
                  (enrich1[1] == p1.y or enrich1[1] == p3.y)):  
@@ -2342,11 +1709,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1
                     
-#                     if ind1 == 1528 or ind2 == 1528:
-#                         print 'inside first part'
-#                         print find_nearest(full_vec,0.203125)
-#                         print x1,y1
-#                         print valx1
                         
                 if ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
                  (enrich2[1] == p1.y or enrich2[1] == p3.y)):                
@@ -2380,18 +1742,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the X - coordinate to the nearest "point on the grid"
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
-#                     if ind1 == 1528 or ind2 == 1528:
-#                         print 'rerwrewrwerwerewrewrwrew'
-#                         print valx1, find_nearest(full_vec,x1)
-#                         print x1, y1
-#                         print p[ind1,0], ind1, ind2
-#                         print 'tl', tl
-#                         print 'tp', tp
-#                         print enrich1[0], enrich1[1]
-#                         print enrich2[0], enrich2[1]
-#                         print p1.x, p3.x
-#                         print p1.y, p3.y
-                                    
+                    
                 if ((enrich1[0] != p1.x and enrich1[0] != p3.x) and 
                  (enrich1[1] == p1.y or enrich1[1] == p3.y)):  
                      
@@ -2406,15 +1757,8 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             coords = numpy.array( [[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
                             
             if (not(on_corners(enrich2,coords)) and not(on_corners(enrich1,coords))
-                #and not(ind2 in vec_indices) 
                 ):
-#                 if ind1 == 1528:
-#                         print 'inside third after',p[1528]  
-#                         print ((enrich2[0] == p1.x or enrich2[0] == p3.x) and 
-#                  (enrich2[1] != p1.y and enrich2[1] != p3.y))
-#                         print ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
-#                  (enrich2[1] == p1.y or enrich2[1] == p3.y))
-                        
+
                 x1 = enrich2[0] / DIV_F
                 y1 = enrich2[1] / DIV_F
                 if x1 != 0.0:
@@ -2433,11 +1777,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1
                     
-#                     if ind1 == 1528 or ind2 == 1528:
-#                         print 'inside first part'
-#                         print find_nearest(full_vec,0.203125)
-#                         print x1,y1
-#                         print valx1
                         
                 if ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
                  (enrich2[1] == p1.y or enrich2[1] == p3.y)):                
@@ -2447,11 +1786,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the Y - coordinate to the nearest "point on the grid"    
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1                  
-#                     if ind2 == 1528 or ind1==1528:
-#                         print 'inside second part'
-#                         print find_nearest(full_vec,0.203125)
-#                         print x1,y1
-#                         print valx1
     
             if enrich1[0] == enrich2[0] or enrich1[1] == enrich2[1]:
                 root.ishomog = 1
@@ -2482,7 +1816,6 @@ def set_homogOLD(masterNode,llist,pvecPx):
         else:
             root.ishomog = 1
 
-#        print root.index, root.ishomog
 
 def find_index(array,value):
     idx = (numpy.abs(array-value)) == 0
@@ -2519,11 +1852,6 @@ def element_normal_intersection(pt1,pt2,node,image):
     
     p1,p2,p3,p4 = node.rect
 
-#    print dx, dy, dx_m, dy_m
-#    print ptN.x, ptN.y
-#    print 'first pt',pt1.x, pt1.y
-#    print pt2.x, pt2.y
-#    print midpt.x, midpt.y
     
     #Compute the intersection of the normal with the 4 sides of an element
     if dx_m == 0: #vertical
@@ -2596,44 +1924,35 @@ def element_normal_intersection(pt1,pt2,node,image):
     direction_list = []
     whichSide = []
     
-#    node.printRect()
-#    print side1.x, side1.y
-#    print side2.x, side2.y
-#    print side3.x, side3.y
-#    print side4.x, side4.y
+
     
     
     if (side1.x != NoneINT and side1.x != p1.x and side1.x != p2.x and
         side1.y != NoneINT and (side1.y == p1.y or side1.y == p2.y) ):
-#         print 'normal going through North edge' 
         N_edge = 1
         direction_list.append('U')
         whichSide.append(side1)
         
     if (side2.x != NoneINT and (side2.x == p3.x or side2.x == p2.x) and
         side2.y != NoneINT and side2.y != p3.y and side2.y != p2.y):
-#         print 'normal going through East edge' 
-#         print p2.x, p3.x, p3.y, p2.y, side2.x, side2.y
+
         E_edge = 1
         direction_list.append('R')
         whichSide.append(side2)
         
     if (side3.x != NoneINT and side3.x != p3.x and side3.x != p4.x and
         side3.y != NoneINT and (side3.y == p3.y or side3.y == p4.y) ):
-#         print 'normal going through South edge' 
         S_edge = 1
         direction_list.append('D')
         whichSide.append(side3)
         
     if (side4.x != NoneINT and (side4.x == p1.x or side4.x == p4.x) and
         side4.y != NoneINT and side4.y != p1.y and side4.y != p4.y):
-#         print 'normal going through West edge' 
         W_edge = 1
         direction_list.append('L')
         whichSide.append(side4)
         
     if (side1.x == p2.x and side1.y == p2.y) or (side2.x == p2.x and side2.y == p2.y):
-#         print 'normal going through North East corner' 
         NE_edge = 1
         direction_list.append('RU')
         if (side1.x == p2.x and side1.y == p2.y) :
@@ -2642,7 +1961,6 @@ def element_normal_intersection(pt1,pt2,node,image):
             whichSide.append(side2)
         
     if (side1.x == p1.x and side1.y == p1.y) or (side4.x == p1.x and side4.y == p1.y):
-#         print 'normal going through North West corner'
         NW_edge = 1
         direction_list.append('LU')
         if (side1.x == p1.x and side1.y == p1.y):
@@ -2651,7 +1969,6 @@ def element_normal_intersection(pt1,pt2,node,image):
             whichSide.append(side4)
     
     if (side2.x == p3.x and side2.y == p3.y) or (side3.x == p3.x and side3.y == p3.y):
-#         print 'normal going through South East corner' 
         SE_edge = 1
         direction_list.append('RD')
         if (side2.x == p3.x and side2.y == p3.y):
@@ -2660,7 +1977,6 @@ def element_normal_intersection(pt1,pt2,node,image):
             whichSide.append(side3)
         
     if (side3.x == p4.x and side3.y == p4.y) or (side4.x == p4.x and side4.y == p4.y):
-#         print 'normal going through South West edge' 
         SW_edge = 1
         direction_list.append('LD')
         if (side3.x == p4.x and side3.y == p4.y) :
@@ -2677,18 +1993,12 @@ def set_homog(masterNode,llist):
     for i in range(0,n):
         root = get_node_by_id(masterNode,llist[i])
 
-#        if len(root.enrichNodes)>1:
-#            print root.index
             
 def find_neighbor_index_of(index,direction, masterNode, llist):
     loc = str(index)
-    llist_str = list(loc)
-
-    
-    
+    llist_str = list(loc)  
     
     for i in range(len(loc)-1,-1,-1):
-#        print str(loc[i]), direction, loc
         new_quadrant =  D[str(loc[i])][direction]['Quadrant']
         new_direction = D[str(loc[i])][direction]['Direction']
         
@@ -2701,7 +2011,6 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
         else:
             
             llist_str[i] = str(new_quadrant)
-#             return str("".join(llist_str))
             break
 
     node = get_node_by_id(masterNode,[str(index)])
@@ -2751,7 +2060,6 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
         if direction == 'RD' and p3.x == widthSize and p3.y == lengthSize:
             return []
                     
-#        print str(index), neigh_index, parent_of_neigh_index
         if uncle_node.has_children == False:
    
             if direction == 'U' and p1.y != 0:
@@ -2761,7 +2069,6 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
             if direction == 'L' and p1.x != 0:
                 return [str(parent_of_neigh_index)]
             if direction == 'R' and p3.x != widthSize:
-#                 print 'yayayayayayayayaydadadadad'
                 return [str(parent_of_neigh_index)]
             if direction == 'LU' and p1.x != 0 and p1.y != 0:
                 return [str(parent_of_neigh_index)]
@@ -2895,11 +2202,6 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     side4.y = side4N.y
                     
                  
-#             print root_i.index
-#             print list1   
-            #===================================================================
-#             divide_high_stress_elements(list1,masterNode)
-            #===================================================================
             full_list.append(list1)
             
             [side1,side2,side3,side4,neigh_list,dir_list,whichSide] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], root_i,image)
@@ -2980,10 +2282,7 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     side4.x = side4N.x
                     side4.y = side4N.y
                     
-#             print list2
-            #===================================================================
-#             masterNode = divide_high_stress_elements(list2,masterNode)
-            #===================================================================
+
             full_list.append(list2)
 
     return full_list
@@ -3064,20 +2363,14 @@ def divide_high_stress_elements(full_list, masterNode,image):
                         
                         
                 if len(llist) == 2 + 1:
-    #                 print 'only one homog elem in between'
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
                     node1.divideOnce()
-#                    extra_list.append(node1)
 
                     if STRESS_MIN == 2:
                         divide_twice(node1)
                     
                     if STRESS_MIN == 3 or STRESS_MIN == 4:
-#                        node0 = get_node_by_id(masterNode, [str(llist[0])])
-#                        node2 = get_node_by_id(masterNode, [str(llist[2])])
-#                        divide_twice(node0)
-#                        divide_twice(node1)
-#                        divide_twice(node2)
+
                         divide_thrice(node1)
                         
                     if STRESS_MIN == 5 or STRESS_MIN == 6 or STRESS_MIN == 7 or STRESS_MIN == 8:
@@ -3086,7 +2379,6 @@ def divide_high_stress_elements(full_list, masterNode,image):
                     
                         
                 if len(llist) == 2 + 2:
-    #                 print 'only 2 homog elems in between'
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
                     node1.divideOnce()
                     node2 =  get_node_by_id(masterNode, [str(llist[2])])
@@ -3097,7 +2389,6 @@ def divide_high_stress_elements(full_list, masterNode,image):
                         divide_twice(node2)
                         
                 if len(llist) == 2 + 3:
-    #                 print 'only 3 homog elems in between'
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
                     node2 = get_node_by_id(masterNode, [str(llist[2])])
                     node3 = get_node_by_id(masterNode, [str(llist[3])])
@@ -3110,7 +2401,6 @@ def divide_high_stress_elements(full_list, masterNode,image):
                         divide_twice(node2)
                         
                 if len(llist) == 2 + 4:
-    #                 print 'only 4 homog elems in between'
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
                     node2 = get_node_by_id(masterNode, [str(llist[2])])
                     node3 = get_node_by_id(masterNode, [str(llist[3])])
@@ -3120,27 +2410,11 @@ def divide_high_stress_elements(full_list, masterNode,image):
                     node2.divideOnce()
                     node3.divideOnce()
                     node4.divideOnce()
-                    
-                                                                                           
-                    
-
-#    for j in range(0, len(extra_list)):
-#        node1 = extra_list[j]
-#        if node1.has_children:
-#            node1.children[0].divideOnce()
-#            node1.children[1].divideOnce()
-#            node1.children[2].divideOnce()
-#            node1.children[3].divideOnce()
-                    
-                        
+              
 def swap_directions(dirlistN,sides,sidesN):
-#   
-#    print 'inside swap_direction'
+
     myTOL = 2
-#    print dirlistN
-#    print sides[0].x, sides[0].y, sides[1].x, sides[1].y
-#    print sidesN[0].x, sidesN[0].y, sidesN[1].x, sidesN[1].y
-    
+
     if abs(sidesN[0].x - sidesN[1].x)<=1 and abs(sidesN[0].y - sidesN[1].y)<=1:
         if abs(sides[0].x - sidesN[0].x)<=1 and abs(sides[0].y - sidesN[0].y)<=1:
             return swap_edges(dirlistN[1],dirlistN)
@@ -3159,7 +2433,6 @@ def swap_directions(dirlistN,sides,sidesN):
     if abs(sides[1].x - sidesN[1].x)<=myTOL and abs(sides[1].y - sidesN[1].y)<=myTOL:
         return dirlistN[0]
     
-#    return swap_edges(dirlistN[0],dirlistN)
 def swap_edges(whichEdge, dirlist):
 # swapping whichEdge in dirlist with the other edge left in dirlist
 # dirlist always has two edges     
@@ -3203,8 +2476,6 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
     # for each node in the tree:
     for i in range(0,n):
         root_i = get_node_by_id(masterNode,tree_list[i])    
-         
-#             root_i.divideOnce()
         
         if len(root_i.enrichNodes) > 1:
             if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
@@ -3264,7 +2535,6 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                             root_i.enrichNodes = vecCoord
         
         
-        #            print len(root_i.enrichNodes)
                     
                     if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
                         P1 = root_i.enrichNodes[0]
@@ -3275,7 +2545,6 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                                     
                 if len(root_i.enrichNodes) == 2:
                     draw_line(image,P1, P2)
-    #                 print 'linears'
                     
                 if len(root_i.enrichNodes) == 3:
                     P_quad += 1 
@@ -3409,18 +2678,10 @@ def create_corners_list(m,n,p,loc_x_fcn):
              
 if __name__ == "__main__":
     print "Reading image in..."
-#     inputImage = sitk.ReadImage("images/channelsCircles.png");
-#     outputImage = sitk.ReadImage("images/channelsCircles.png");
-#    inputImage = sitk.ReadImage("images/green1.png");
-#    outputImage = sitk.ReadImage("images/green1.png");
+
     inputImage = sitk.ReadImage("images/circles.png");
     outputImage = sitk.ReadImage("images/circles.png");
         
-#    inputImage = sitk.ReadImage("images/horseshoe.png");
-#    outputImage = sitk.ReadImage("images/horseshoe.png");
-#   
-#    inputImage = sitk.ReadImage("images/channelsSharp.png");
-#    outputImage = sitk.ReadImage("images/channelsSharp.png");
 #    inputImage = sitk.ReadImage((sys.argv[1]));
 #    outputImage = sitk.ReadImage((sys.argv[1]));
 
@@ -3438,12 +2699,8 @@ if __name__ == "__main__":
     rect = [p1,p2,p3,p4]
     rootNode = CNode(None,rect,inputImage,outputImage,imageSize)
     tree = CQuadTree(rootNode)
-#    
+    
     masterNode = CNode(None,rect,inputImage,outputImage,imageSize)    
-#    tree = CQuadTree(masterNode)
-#    masterNode = rootNode
-#    tree.balance_tree(rootNode,masterNode)
- 
     
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
@@ -3455,9 +2712,7 @@ if __name__ == "__main__":
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
           
     masterNode = rootNode
-      
-    
-       
+        
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
          
@@ -3468,7 +2723,6 @@ if __name__ == "__main__":
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
 
-#     sitk.WriteImage(outputImage,'outCircs_before3neighborrule.png')
     
       
     masterNode = rootNode
@@ -3483,69 +2737,20 @@ if __name__ == "__main__":
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
      
     print 'total number of element nodes', newTotalNumberOfNodes
-#     sitk.WriteImage(outputImage,'outCircs_after3neighborrule.png')
+
     
     masterNode = rootNode
     
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
-#    Beginning high stress concentration constraint and all the additional passes needed for rebalancing
-#    full_list = stress_concentration_constraint(tree_list_of_nodes, rootNode,outputImage)
-#    divide_high_stress_elements(full_list,rootNode, outputImage)
-##     
-#    masterNode = rootNode
-#        
-#    
-#    llist = []
-#    tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-#    
-#    
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#       print 'No enrichment nodes and hanging nodes in the same element '
-#       totalNumberOfNodes = newTotalNumberOfNodes
-#       masterNode = rootNode
-#       ghost_nodes_enrichment_nodes(tree, rootNode, masterNode)
-#       newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#           
-#    masterNode = rootNode
-#         
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#        
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#       print 'Rebalancing tree by multiple passes '
-#       masterNode = rootNode
-#       totalNumberOfNodes = newTotalNumberOfNodes
-#       tree_balance(tree,rootNode,masterNode)
-#       newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#    
-#       
-#    masterNode = rootNode
-#    totalNumberOfNodes = tree.count_nodes(rootNode)
-#    newTotalNumberOfNodes = -1
-#    
-#       
-#    while totalNumberOfNodes != newTotalNumberOfNodes:
-#       print '3 neighbor rule'
-#       totalNumberOfNodes = newTotalNumberOfNodes
-#       masterNode = rootNode
-#       three_neighbor_rule(tree, rootNode, masterNode)
-#       newTotalNumberOfNodes = tree.count_nodes(rootNode)
-#         
-#    print 'total number of element nodes', newTotalNumberOfNodes
     
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
     [P_quad,P_cub, p_extra] = draw_interface(outputImage, inputImage, tree_list, masterNode, POL_APPROX)
     p_extra = numpy.array(p_extra)
-#    llist = []
-#    tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
-#    draw_interface(outputImage, inputImage, tree_list, masterNode, 0)  
-    
+
     
     print 'writing the image out'
  
@@ -3553,23 +2758,6 @@ if __name__ == "__main__":
     sitk.WriteImage(outputImage,nameOutputImage);
 
 
-    print 'values', P_quad, P_cub 
-    
-#    root = get_node_by_id(masterNode,['23203'])
-#    root.printRect()
-#    print len(root.enrichNodes)
-#    print root.enrichNodes[0].x, root.enrichNodes[0].y
-#    print root.enrichNodes[1].x, root.enrichNodes[1].y
-    
-#    n = len(tree_list)
-#
-#    # for each node in the tree:
-#    for i in range(0,n):
-#        root_i = get_node_by_id(masterNode,tree_list[i])    
-#         
-#        if len(root_i.enrichNodes) > 1:
-#            print '# of enrich Nodes:', len(root_i.enrichNodes)
-            
             
 # Commenting out the solver 
     if POL_APPROX != 3 :#and NORM_COMP != 0:
@@ -3585,7 +2773,7 @@ if __name__ == "__main__":
            
         p_reg = correct_pvec( p_reg, full_vec, lenClist1, llist, p_regCList)
 
-        ###
+     
         m = 33
         p_reg_IDEAL = numpy.load('p_reg_32x32.npy')
         p_reg_extra = numpy.array(p_reg[m*m:])
@@ -3605,9 +2793,7 @@ if __name__ == "__main__":
             
             
         p_reg = numpy.vstack([numpy.array(p_reg[0:m*m]), numpy.array(p_reg_extra)])
-        ##
-#        print 'length of p vector: ______', len(p_reg)
-#        print p_reg
+
         # material conductivities
         k1 = 10
         k2 = 1
@@ -3625,22 +2811,10 @@ if __name__ == "__main__":
         tTri = read_corners(f2)
         f.close()
         f2.close()
-           
-        
-#        p_n = numpy.save('before_p_reg.npy', p_reg)
-#        p_reg = numpy.load('p_reg_127x127.npy')
-#        p_reg = numpy.load('p_reg_256x256.npy')
-#        p_reg = numpy.load('p_reg_64x64.npy') 
-        
-#        cProfile.run('myquad(k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)','output.prof')
+
+
         UU = myquad(k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)
-#        aa1 = numpy.array([UU])
-#        ww1 = numpy.array(aa1[()])
-#        UU = ww1[0].item()[:,:]
-           
-#        print p_reg
-        print UU
-        
+
         print 'L-2 Norm: ',  computeNorm(p_reg,t_reg,pTri,tTri,ui,wi,k1,k2,UU,UTri,masterNode,llist, p_extra, P_quad, P_cub)
 
         print MAX_SIZE_X, MIN_SIZE

@@ -2,7 +2,6 @@ import sys
 from meshgeneration import *
 import collections
 import math
-# import auxfcts
 from itertools import groupby
 
 #define a class to represent the x and y coordinates of points
@@ -132,17 +131,6 @@ def diamond_intersection(m,A,B,C,D,pp):
 	ccoords = [ key for key,_ in groupby(ccoords)]
 	pp = numpy.vstack([pp,ccoords])
 
-
-	
-	#excludedIndex = []
-	#nrOrig = (m+1)*(m+1)
-	#nrEnr = len(pp) - nrOrig
-	#for i in range(0,nrEnr):
-	#	for j in range(0,nrOrig):
-	#		if pp[j,0] == pp[nrOrig+i,0] and pp[j,1] == pp[nrOrig+i,1]:
-	#			excludedIndex = excludedIndex + [nrOrig + i]
-#
-#	pp = numpy.delete(pp,excludedIndex,0)
 	return pp 
 		
 def find_intersection_semicircle(m,a,b,r,pp):
@@ -198,9 +186,8 @@ def find_intersection(m,a,b,r,pp):
 
 	# sort the coordinates first by y, and then by x
 	ccoords = sorted(ccoords, key=lambda x: (x[1],x[0]))
-	#pp = numpy.vstack([pp,ccoords])
 
-	return ccoords#pp 
+	return ccoords
 
 def line_seg(A,B,C,D):
 
@@ -243,7 +230,6 @@ def main():
 	a = 0.5
 	b = 0.5
 	r = 1.0/3.0#.25
-	# pp = find_intersection(m,a,b,r,pp)				
 	
 	# Rhombus - meshgrid intersection
 	A = Point(0.5, 1.0/3.0)
@@ -270,11 +256,7 @@ def number_nodes(m,pp,tt):
 		for k in range(nr_of_nodes+1,len(pp)):
 			in_poly = point_in_square(pp[k][0],pp[k][1],x0,y0,x1,y1)
 			if in_poly == True:
-				tt[e] =  tt[e] + [k]#numpy.hstack((tt[e],k))
-
-#	for i in range(0,len(tt) ):
-#		if len(tt[i]) == 5 :
-#			tt[i] = tt[i][0:4]
+				tt[e] =  tt[e] + [k]
 
 	return tt
 

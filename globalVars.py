@@ -1,3 +1,6 @@
+#Uncomment/Comment accordingly to your experiment.
+# See the images folder for the "real slice", fake images, and "doughnut image"
+
 #binBnd = [0,180,256] # for real slice
 binBnd = [0,110,256] # for fake images
 #binBnd = [0,50,256] # for doughnut image

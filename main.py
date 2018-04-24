@@ -16,7 +16,6 @@ import scipy
 from lgwt import *
 from readFile import *
 from findIntersection import *
-# from myplot import *
 import scipy.io
 import timeit
 
@@ -556,9 +555,7 @@ class CNode(Node):
         l2 = ends_in_same_bin(self.inImage,p2,p3)
         l3 = ends_in_same_bin(self.inImage,p4,p3)
         l4 = ends_in_same_bin(self.inImage,p1,p4)
-        
-
-        
+               
         if abs(p1.x-p2.x) >= ALT_MIN_SIZE:
             draw_line(self.outImage,cMid12,cMid34)
             draw_line(self.outImage,cMid14,cMid23)
@@ -575,9 +572,7 @@ class CNode(Node):
         cMid24 = find_mid_point(p2,p4)
         cMid23 = find_mid_point(p2,p3)
         cMid34 = find_mid_point(p3,p4)
-        
-
-        
+                
         if abs(p1.x - p2.x) >= MAX_SIZE_X or abs(p1.y - p4.y)>= MAX_SIZE_Y:               
             draw_line(self.outImage,cMid12,cMid34);
             draw_line(self.outImage,cMid14,cMid23);
@@ -629,7 +624,6 @@ class CNode(Node):
                     if len(L4) == 1:
                         L4 = L4[0]
                         
-
                 # NW
                 if (l1==0 and l2==1 and l3==1 and l4==0) and (abs(p1.x-p2.x) < 2*MIN_SIZE) :
                     self.ishomog = 0
@@ -667,7 +661,6 @@ class CNode(Node):
                             draw_line(self.outImage,cMid12,cMid34)
                             draw_line(self.outImage,cMid14,cMid23)
                             return True
-
 
                 # case 2: interface crossing through L1 and L2
                 if (l1==0 and l2==0 and l3==1 and l4==1) and (abs(p1.x-p2.x) >= 2*MIN_SIZE):
@@ -848,8 +841,7 @@ def node_exists(index,list):
 def tree_balance(tree, root,masterNode):
    
         p1,p2,p3,p4 = root.rect
-            
-            
+                        
         if root.has_children == True:
             
             if root.children[0].has_children == False:
@@ -868,7 +860,6 @@ def tree_balance(tree, root,masterNode):
             tree_balance(tree,root.children[2],masterNode)
         if root.children[3] != None:
             tree_balance(tree,root.children[3],masterNode)
-
 
 def ghost_nodes_enrichment_nodes(tree, root, masterNode):
 
@@ -1360,15 +1351,12 @@ def process_list_of_elements(llist,root):
         p1,p2,p3,p4 = root_i.rect
         
         if l > 0:
-            
-
             NR_ENRICH_NODES = 2
             for j in range(0,NR_ENRICH_NODES):
                 enrN = root_i.enrichNodes[j]
                 coordsList2 = coordsList2 + [[enrN.x, enrN.y]]
 
     cList2 = deepcopy(coordsList2)
-    
     
     for i in range(0, len(coordsList2)):
         coordsList2[i][0] = coordsList2[i][0] / DIV_F
@@ -1401,8 +1389,6 @@ def process_list_of_elements(llist,root):
     cList = remove_duplicates(cList)
     pvecCList = numpy.zeros((0,2))
     pvecCList = numpy.vstack([pvecCList,cList])
-
-
         
     return [pvec,pvecCList,lenClist1]
  
@@ -1480,10 +1466,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
                     
         else:
             t = t + [[c1,c2,c3,c4]]
-            
-        
-    
-        
+                    
     # convert from numbering system for Image Coordinate with (0,0) in the NW corner, to 
     # Euclidean coordinate system with (0,0) in the SW corner
     tvec = []
@@ -1524,8 +1507,7 @@ def numbering(pvec,pvecCList, llist, masterNode):
                         tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
                 else:
                         tk = [new_corners[3], new_corners[2], new_corners[1], new_corners[0], new_corners[5], new_corners[4]]
-                 
-                       
+                                        
         tvec = tvec + [tk]
 
     for i in range(0,n):
@@ -1623,13 +1605,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
 # correct p_vec of coordinates because of lost pixels in integer division
 # now pixel at location 62 is correctly set to be 0.0625 and not 0.63
     
-       
     # go over the coordinates of the regular grid in the p vector  
     for i in range(0, lenClist1):
         for j in [0,1]:
             val = find_nearest(full_vec,p[i,j])
-
-
             p[i,j] = val
 
     # go over the coordinates of the intersection nodes
@@ -1644,7 +1623,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
         
         tl = root.tlist
         tp = root.tpix
-
         
         # look to see if the element has enrichment nodes
         if len(tl) > 4:
@@ -1652,13 +1630,10 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
             enrich1 = pvecPx[tp[4]]
             enrich2 = pvecPx[tp[5]]
             coords = numpy.array([[p1.x, p1.y],[p2.x,p2.y],[p3.x,p3.y],[p4.x,p4.y]])
-            
-                        
+                                    
             ind1 = tl[4]
             ind2 = tl[5]
             
-
-
             if ( not(on_corners(enrich1,coords)) and (on_corners(enrich2,coords)) ):
                 x1 = enrich1[0] / DIV_F
                 y1 = enrich1[1] / DIV_F
@@ -1667,8 +1642,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                 if y1 != 0.0:
                     y1 += 0.001            
                 y1 = 1 - y1
-                
-                        
+                                        
                 if ((enrich1[0] == p1.x or enrich1[0] == p3.x) and 
                  (enrich1[1] != p1.y and enrich1[1] != p3.y)):
                 
@@ -1689,7 +1663,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind1,0] = valx1
                     p[ind1,1] = valy1
                     
-
             if ( on_corners(enrich1,coords) and not(on_corners(enrich2,coords)) ):
                 x1 = enrich2[0] / DIV_F
                 y1 = enrich2[1] / DIV_F
@@ -1708,8 +1681,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     # update the X - coordinate to the nearest "point on the grid"
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1
-                    
-                        
+                                            
                 if ((enrich2[0] != p1.x and enrich2[0] != p3.x) and 
                  (enrich2[1] == p1.y or enrich2[1] == p3.y)):                
                     valx1 = x1
@@ -1719,7 +1691,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                     p[ind2,0] = valx1
                     p[ind2,1] = valy1                  
                     
-
             if (not(on_corners(enrich1,coords)) and not(on_corners(enrich2,coords))
                # and not(ind1 in vec_indices) #and not(ind2 in vec_indices)
                 ):
@@ -1731,8 +1702,7 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                 if y1 != 0.0:
                     y1 += 0.001            
                 y1 = 1 - y1
-                
-                        
+                                        
                 if ((enrich1[0] == p1.x or enrich1[0] == p3.x) and 
                  (enrich1[1] != p1.y and enrich1[1] != p3.y)):
                 
@@ -1794,7 +1764,6 @@ def correct_pvec(p,full_vec,lenClist1,llist,pvecPx):
                 
             
             vec_indices = vec_indices + [ind1, ind2]
-
     
     return p
 
@@ -1815,7 +1784,6 @@ def set_homogOLD(masterNode,llist,pvecPx):
                 root.ishomog = 0
         else:
             root.ishomog = 1
-
 
 def find_index(array,value):
     idx = (numpy.abs(array-value)) == 0
@@ -1849,9 +1817,7 @@ def element_normal_intersection(pt1,pt2,node,image):
     dx_m = ptN.x - midpt.x
     dy_m = ptN.y - midpt.y
 
-    
     p1,p2,p3,p4 = node.rect
-
     
     #Compute the intersection of the normal with the 4 sides of an element
     if dx_m == 0: #vertical
@@ -1923,9 +1889,6 @@ def element_normal_intersection(pt1,pt2,node,image):
     SW_edge = 0
     direction_list = []
     whichSide = []
-    
-
-    
     
     if (side1.x != NoneINT and side1.x != p1.x and side1.x != p2.x and
         side1.y != NoneINT and (side1.y == p1.y or side1.y == p2.y) ):
@@ -2095,11 +2058,9 @@ def find_neighbor_index_of(index,direction, masterNode, llist):
                 return [str(neigh_index) + '0']
             if direction == 'LD' and p4.x != 0 and p4.y != lengthSize:
                 return [str(neigh_index) + '1']
-
         
     return []
   
-
 def stress_concentration_constraint(tree_list, masterNode, image):
 
     n = len(tree_list)
@@ -2200,8 +2161,7 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     side3.y = side3N.y
                     side4.x = side4N.x
                     side4.y = side4N.y
-                    
-                 
+                                 
             full_list.append(list1)
             
             [side1,side2,side3,side4,neigh_list,dir_list,whichSide] = element_normal_intersection(root_i.enrichNodes[0], root_i.enrichNodes[1], root_i,image)
@@ -2282,7 +2242,6 @@ def stress_concentration_constraint(tree_list, masterNode, image):
                     side4.x = side4N.x
                     side4.y = side4N.y
                     
-
             full_list.append(list2)
 
     return full_list
@@ -2321,8 +2280,6 @@ def divide_four_times(node):
                 node.children[k].children[j].divideOnce()
                 for i in range(0,4):
                     node.children[k].children[j].children[i].divideOnce()
-            
-                        
             
 def divide_high_stress_elements(full_list, masterNode,image):
     # processing the list with elements in between interfaces
@@ -2375,8 +2332,6 @@ def divide_high_stress_elements(full_list, masterNode,image):
                         
                     if STRESS_MIN == 5 or STRESS_MIN == 6 or STRESS_MIN == 7 or STRESS_MIN == 8:
                         divide_four_times(node1)
-
-                    
                         
                 if len(llist) == 2 + 2:
                     node1 = get_node_by_id(masterNode, [str(llist[1])])
@@ -2533,8 +2488,6 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                         vecCoord = case_SW_polynomial_test(inImage,p1,p2,p3,p4,P2,P1, poly_opt=POL_APPROX_OPT);
                         if len(vecCoord) > 1 :
                             root_i.enrichNodes = vecCoord
-        
-        
                     
                     if root_i.enrichNodes[0].x <= root_i.enrichNodes[1].x:
                         P1 = root_i.enrichNodes[0]
@@ -2632,7 +2585,6 @@ def draw_interface(image, inImage, tree_list, masterNode, POL_APPROX_OPT):
                     draw_nurbs(image,t,P,x_is_F_of_y,p1,p2,p4)         
                          
     return P_quad, P_cub, p_extra
-
              
 def fake_reg_grid(m,n):
   p = numpy.zeros(((n+1)*(m+1),2))
@@ -2672,9 +2624,7 @@ def create_corners_list(m,n,p,loc_x_fcn):
       else:
         t = t + [[c1,c2,c4,c3]]
 
-  return t
-
-                                                                                                                     
+  return t                                                                                                                    
              
 if __name__ == "__main__":
     print "Reading image in..."
@@ -2723,8 +2673,6 @@ if __name__ == "__main__":
         tree_balance(tree,rootNode,masterNode)
         newTotalNumberOfNodes = tree.count_nodes(rootNode)
 
-    
-      
     masterNode = rootNode
     totalNumberOfNodes = tree.count_nodes(rootNode)
     newTotalNumberOfNodes = -1
@@ -2738,29 +2686,23 @@ if __name__ == "__main__":
      
     print 'total number of element nodes', newTotalNumberOfNodes
 
-    
     masterNode = rootNode
     
     llist = []
     tree_list_of_nodes = get_list_of_nodes(tree,masterNode,masterNode,llist)
-
     
     llist = []
     tree_list = get_list_of_nodes(tree,masterNode,masterNode,llist)
 
     [P_quad,P_cub, p_extra] = draw_interface(outputImage, inputImage, tree_list, masterNode, POL_APPROX)
     p_extra = numpy.array(p_extra)
-
     
     print 'writing the image out'
- 
     
     sitk.WriteImage(outputImage,nameOutputImage);
 
-
-            
-# Commenting out the solver 
-    if POL_APPROX != 3 :#and NORM_COMP != 0:
+# Comment out the solver as needed
+    if POL_APPROX != 3 :
         [p_reg,p_regCList,lenClist1] = process_list_of_elements(llist,masterNode)
         
         numpy.set_printoptions(threshold=numpy.nan)
@@ -2791,7 +2733,6 @@ if __name__ == "__main__":
             
             p_reg_extra[j] = [p_ideal_extra[new_indx,0][0,0],p_ideal_extra[new_indx,1][0,0]] 
             
-            
         p_reg = numpy.vstack([numpy.array(p_reg[0:m*m]), numpy.array(p_reg_extra)])
 
         # material conductivities
@@ -2805,13 +2746,12 @@ if __name__ == "__main__":
         [ui,wi] = lgwt(ruleOrder,-1,1)
                
         # get triangular mesh data
-        f = open("mesh160x160x96.res", "r")#open("multipleinclusions0.005.res", "r")
-        f2 = open("mesh160x160x96.1.ele", "r")# open("multipleinclusions0.005.ele", "r")
+        f = open("mesh160x160x96.res", "r")
+        f2 = open("mesh160x160x96.1.ele", "r")
         [pTri,UTri] = read_p_U(f)
         tTri = read_corners(f2)
         f.close()
         f2.close()
-
 
         UU = myquad(k1,k2,ui,wi,p_reg,t_reg,masterNode,llist,inputImage,lenClist1)
 

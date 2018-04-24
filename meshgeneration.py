@@ -40,20 +40,11 @@ def fake_reg_grid(m,n):
 	return p			 
 
 def g_of_y(y):
-	#return y + 2.0/3.0 #SE/NW
-	#return 0.1 - y # SW
-	#return y - 0.9 # NW
-	#return  1.9 - y # NE
 	return y + 0.9 # SE
-	#return (y - 0.57)/0.03 # horizontal slanted
+	
 def f_of_x(x):
-	#return x - 2.0/3.0 #SE/NW
-	#return 0.1 - x # SW
-	#return x + 0.9 # NW
-	#return  1.9 - x # NE
 	return x - 0.9 # SE
-	#return x*0.03 + 0.57 # horizontal slanted
-
+	
 def fake_data_triangle_right_corner(pvec,hx,hy):
 #lower right corner
 
@@ -65,8 +56,6 @@ def fake_data_triangle_right_corner(pvec,hx,hy):
 			y_pi = y_co
 			newRow = [x_pi,y_pi]
 			pvec = numpy.vstack([pvec,newRow])
-
-		#if (pvec[i,1] <= f_of_x(x_co) and f_of_x(x_co) <= pvec[i+1,1] and f_of_x(x_co)<=1):
 		if (pvec[i,1] <= f_of_x(x_co) and f_of_x(x_co) <= pvec[i,1]+hy and f_of_x(x_co)<=1):
 			x_pi = x_co
 			y_pi = f_of_x(x_co)#0.15
@@ -88,20 +77,6 @@ def check_interface_alignment_H(p,loc_y_fcn,m):
 				y_pi = loc_y_fcn(x_pi)
 				newRow = [x_pi,y_pi]
 				p = numpy.vstack([p,newRow])
-#			else: 
-#				if (p[i,1] <= loc_y_fcn(p[i,0]) and loc_y_fcn(p[i,0]) <= p[i%m + m *(i/m+1), 1] and loc_y_fcn(p[i,0])<=1.0):
-#					print p[i,1],p[i%m+m*(i/m+1),1], [i,i%m+m*(i/m+1)],loc_y_fcn(0.0), loc_y_fcn(1.0)
-#					print p[i,1]
-#					y_pi = p[i%m+m*(i/m+1),1]
-#					x_pi = (y_pi - 0.57) / 0.03
-#					if x_pi<=1.0:
-#						newRow = [x_pi,y_pi]
-#						p = numpy.vstack([p,newRow])
-#			if (p[i,1]>=loc_y_fcn(p[i,0])) and p[i+1,1]<=loc_y_fcn(p[i+1,0]): 
-#				x_pi = p[i+1,0]
-#				print 'dfs'
-
-
 	return p
 	
 
@@ -144,9 +119,8 @@ def fake_corners_list(m,n,p):
 			part1 = p[c1,0] <= g_of_y(p[c1,1]) and g_of_y(p[c2,1]) <= p[c2,0]
 			part2 = p[c1,1] <= f_of_x(p[c1,0]) and f_of_x(p[c3,0]) <= p[c3,1]
 			part3 = p[c2,1] <= f_of_x(p[c2,0]) and f_of_x(p[c4,0]) <= p[c4,1]
-			#part3 = p[c2,1] <= f_of_x(p[c2,0]) and f_of_x(p[c4,0]) <= p[c3,1]
 			comp = (part1 or part4) and ( part2 or part3)
-			#if k1 != k2 and comp:
+
 			if comp or ( (part1 and part4) or (part2 and part3) ):
 				en1 = m*n + enr_node_iter
 				en2 = en1 + 1

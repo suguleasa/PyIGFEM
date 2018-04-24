@@ -59,8 +59,6 @@ def hexagon_intersection(m,A,B,C,D,E,F,pp):
 		if x_FE != 0 and y_FE != 0:
 			ccoords = ccoords + [[x_FE,y_FE]]
 
-
-
 		[x_AF,y_AF] = line_seg(A,F,Point(x,0),Point(x,1))
 		if x_AF != 0 and y_AF != 0:
 			ccoords = ccoords + [[x_AF,y_AF]]
@@ -160,9 +158,8 @@ def find_intersection_semicircle(m,a,b,r,pp):
 
 	# sort the coordinates first by y, and then by x
 	ccoords = sorted(ccoords, key=lambda x: (x[1],x[0]))
-	#pp = numpy.vstack([pp,ccoords])
 
-	return ccoords#pp 
+	return ccoords 
 		
 def find_intersection(m,a,b,r,pp):
 	hx = 1.0 / m

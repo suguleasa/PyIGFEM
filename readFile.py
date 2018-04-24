@@ -65,11 +65,8 @@ def return_ptU():
 	f = open(sys.argv[1], "r")
 	f2 = open(sys.argv[2], "r")
 	[p,U] = read_p_U(f)
-#	print numpy.array(p)
-#	print numpy.array(U)
 
 	t = read_corners(f2)
-#	print numpy.array(t)
 
 	f.close()
 	f2.close()
